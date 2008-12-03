@@ -1,0 +1,212 @@
+/*
+;**************************************************** 
+;程序名称：演示CRC32原理 
+;作者：罗聪 
+;日期：2002-8-24 
+;出处：http://laoluoc.yeah.net（老罗的缤纷天地） 
+;注意事项：如欲转载，请保持本程序的完整，并注明：转载自“老罗的缤纷天地”（http://laoluoc.yeah.net） 
+; 
+;特别感谢Win32ASM高手—— dREAMtHEATER 为我的代码作了相当好的优化！ 
+;请各位前去 http://NoteXPad.yeah.net 下载他的小巧的“cool 记事本”—— NoteXPad 来试用！（100% Win32ASM 编写） 
+; 
+;**************************************************** 
+
+.386 
+.model flat, stdcall 
+option casemap:none 
+
+include windows.inc 
+include kernel32.inc 
+include user32.inc 
+includelib kernel32.lib 
+includelib user32.lib 
+
+WndProc            proto WORD, WORD, WORD, WORD 
+init_crc32table    proto 
+arraycrc32         proto 
+
+.const 
+IDC_BUTTON_OPEN        equ    3000 
+IDC_EDIT_INPUT         equ    3001 
+
+.data 
+szDlgName         db    "lc_dialog", 0 
+szTitle           db    "CRC demo by LC", 0 
+szTemplate        db    "字符串 ""%s"" 的 CRC32 值是：%X", 0 
+crc32tbl          dd    256 dup(0)    ;CRC-32 table 
+szBuffer          db    255 dup(0) 
+
+.data? 
+szText            db    300 dup(?) 
+
+.code 
+main: 
+    invoke GetModuleHandle, NULL 
+    invoke DialogBoxParam, eax, offset szDlgName, 0, WndProc, 0 
+    invoke ExitProcess, eax 
+
+WndProc proc uses ebx hWnd:HWND, uMsg:UINT, wParam:WPARAM, lParam:LPARAM 
+
+    .if uMsg == WM_CLOSE 
+        invoke EndDialog, hWnd, 0 
+         
+    .elseif uMsg == WM_COMMAND 
+        mov eax,wParam 
+        mov edx,eax 
+        shr edx,16 
+        movzx eax, ax 
+        .if edx == BN_CLICKED 
+            .IF eax == IDCANCEL 
+                invoke EndDialog, hWnd, NULL 
+            .ELSEIF eax == IDC_BUTTON_OPEN || eax == IDOK         
+                ;****************************************** 
+                ;关键代码开始：（当当当当……） 
+                ;****************************************** 
+                ;取得用户输入的字符串： 
+                invoke GetDlgItemText, hWnd, IDC_EDIT_INPUT, addr szBuffer, 255 
+
+                ;初始化crc32table： 
+                invoke init_crc32table 
+
+                ;下面赋值给寄存器ebx，以便进行crc32转换： 
+                ;EBX是待转换的字符串的首地址： 
+                lea ebx, szBuffer 
+
+                ;进行crc32转换： 
+                invoke arraycrc32 
+
+                ;格式化输出： 
+                invoke wsprintf, addr szText, addr szTemplate, addr szBuffer, eax 
+
+                ;好啦，让我们显示结果： 
+                invoke MessageBox, hWnd, addr szText, addr szTitle, MB_OK 
+            .ENDIF 
+        .endif 
+    .ELSE 
+        mov eax,FALSE 
+        ret 
+    .ENDIF 
+    mov eax,TRUE 
+    ret 
+WndProc endp 
+
+;********************************************************** 
+;函数功能：生成CRC-32表 
+;********************************************************** 
+init_crc32table    proc 
+
+        ;如果用C语言来表示，应该如下： 
+        ; 
+        ;    for (i = 0; i < 256; i++) 
+        ;    { 
+        ;        crc = i; 
+        ;        for (j = 0; j < 8; j++) 
+        ;        { 
+        ;            if (crc & 1) 
+        ;                crc = (crc >> 1) ^ 0xEDB88320; 
+        ;            else 
+        ;                crc >>= 1; 
+        ;        } 
+        ;        crc32tbl[i] = crc; 
+        ;    } 
+        ; 
+        ;呵呵，让我们把上面的语句改成assembly的： 
+
+        mov     ecx, 256        ; repeat for every DWORD in table 
+        mov     edx, 0EDB88320h 
+$BigLoop: 
+        lea     eax, [ecx-1] 
+        push    ecx 
+        mov     ecx, 8 
+$SmallLoop: 
+        shr     eax, 1 
+        jnc     @F 
+        xor     eax, edx 
+@@: 
+        dec     ecx 
+        jne     $SmallLoop 
+        pop     ecx 
+        mov     [crc32tbl+ecx*4-4], eax 
+        dec     ecx 
+        jne     $BigLoop 
+
+        ret 
+init_crc32table      endp 
+
+
+;************************************************************** 
+;函数功能：计算CRC-32 
+;************************************************************** 
+arraycrc32    proc 
+
+        ;计算 CRC-32 ，我采用的是把整个字符串当作一个数组，然后把这个数组的首地址赋值给 EBX，把数组的长度赋值给 ECX，然后循环计算，返回值（计算出来的 CRC-32 值）储存在 EAX 中： 
+        ; 
+        ; 参数： 
+        ;       EBX = address of first byte 
+        ; 返回值： 
+        ;       EAX = CRC-32 of the entire array 
+        ;       EBX = ? 
+        ;       ECX = 0 
+        ;       EDX = ? 
+
+        mov     eax, -1 ; 先初始化eax 
+        or      ebx, ebx 
+        jz      $Done   ; 避免出现空指针 
+@@: 
+        mov     dl, [ebx] 
+        or      dl, dl 
+        je      $Done    ;判断是否对字符串扫描完毕 
+         
+        ;这里我用查表法来计算 CRC-32 ，因此非常快速： 
+        ;因为这是assembly代码，所以不需要给这个过程传递参数，只需要把oldcrc赋值给EAX，以及把byte赋值给DL： 
+        ; 
+        ; 在C语言中的形式： 
+        ; 
+        ;   temp = (oldcrc ^ abyte) & 0x000000FF; 
+        ;   crc  = (( oldcrc >>  & 0x00FFFFFF) ^ crc32tbl[temp]; 
+        ; 
+        ; 参数： 
+        ;       EAX = old CRC-32 
+        ;        DL = a byte 
+        ; 返回值： 
+        ;       EAX = new CRC-32 
+        ;       EDX = ? 
+               
+        xor     dl, al 
+        movzx   edx, dl 
+        shr     eax, 8 
+        xor     eax, [crc32tbl+edx*4] 
+         
+        inc     ebx         
+        jmp     @B 
+
+$Done: 
+        not     eax 
+        ret 
+arraycrc32      endp 
+
+end main 
+;********************    over    ******************** 
+;by LC 
+
+
+下面是它的资源文件： 
+
+
+#include "resource.h" 
+
+#define IDC_BUTTON_OPEN    3000 
+#define IDC_EDIT_INPUT 3001 
+#define IDC_STATIC -1 
+
+LC_DIALOG DIALOGEX 10, 10, 195, 60 
+STYLE DS_SETFONT | DS_CENTER | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU 
+CAPTION "lc’s assembly framework" 
+FONT 9, "宋体", 0, 0, 0x0 
+BEGIN 
+    LTEXT           "请输入一个字符串（区分大小写）：",IDC_STATIC,11,7,130,10 
+    EDITTEXT        IDC_EDIT_INPUT,11,20,173,12,ES_AUTOHSCROLL 
+    DEFPUSHBUTTON   "Ca&lc",IDC_BUTTON_OPEN,71,39,52,15 
+END
+*/
