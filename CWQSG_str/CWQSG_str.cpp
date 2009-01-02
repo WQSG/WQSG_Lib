@@ -15,18 +15,18 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-//#include "StdAfx.h"
-#include "CWQSG_str.h"
-//----------------------------------------------------------------
-template <>
-__i__			CWQSG_strT<char>::~CWQSG_strT()
-{
-	    SetNull();
-}
-//----------------------------------------------------------------
-template <>
-__i__			CWQSG_strT<wchar_t>::~CWQSG_strT()
-{
-	    SetNull();
-}
+//#include "StdAfx.h"
+#include "CWQSG_str.h"
+//----------------------------------------------------------------
+template <>
+__i__			CWQSG_strT<char>::~CWQSG_strT()
+{
+	    SetNull();
+}
+//----------------------------------------------------------------
+template <>
+__i__			CWQSG_strT<wchar_t>::~CWQSG_strT()
+{
+	    SetNull();
+}
 //----------------------------------------------------------------*/

@@ -15,25 +15,25 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#ifndef _WQSG_NET_LIB_H_
-#define _WQSG_NET_LIB_H_
-
-#include "WQSG_NET.h"
-
-
-//---------------------------------------------------------
-#if defined(_DEBUG)
-#if defined(_DLL)///------------------------------------
-#pragma comment(lib, "WQSG_NET_lib_Debug_MD.lib")
-#else
-#pragma comment(lib, "WQSG_NET_lib_Debug_MT.lib")
-#endif
-#else///------------------------------------
-#if defined(_DLL)
-#pragma comment(lib, "WQSG_NET_lib_Release_MD.lib")
-#else
-#pragma comment(lib, "WQSG_NET_lib_Release_MT.lib")
-#endif
-#endif///------------------------------------
-//---------------------------------------------------------
-#endif
+#ifndef _WQSG_NET_LIB_H_
+#define _WQSG_NET_LIB_H_
+
+#include "WQSG_NET.h"
+
+
+//---------------------------------------------------------
+#if defined(_DEBUG)
+#if defined(_DLL)///------------------------------------
+#pragma comment(lib, "WQSG_NET_lib_Debug_MD.lib")
+#else
+#pragma comment(lib, "WQSG_NET_lib_Debug_MT.lib")
+#endif
+#else///------------------------------------
+#if defined(_DLL)
+#pragma comment(lib, "WQSG_NET_lib_Release_MD.lib")
+#else
+#pragma comment(lib, "WQSG_NET_lib_Release_MT.lib")
+#endif
+#endif///------------------------------------
+//---------------------------------------------------------
+#endif

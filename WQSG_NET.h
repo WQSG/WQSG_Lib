@@ -15,10 +15,10 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#ifndef __WQSG_NET_H__
-#define __WQSG_NET_H__
-
-#include "Net/WQSG_socket.h"
-#include "Net/WQSG_Http.h"
-
-#endif
+#ifndef __WQSG_NET_H__
+#define __WQSG_NET_H__
+
+#include "Net/WQSG_socket.h"
+#include "Net/WQSG_Http.h"
+
+#endif

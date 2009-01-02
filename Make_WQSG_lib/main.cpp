@@ -15,24 +15,24 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#ifdef __TEST_DEBUG__
-#include<WQSG.h>
-#include "WQSG_CxFile.h"
-void XX()
-{
-}
-#include<malloc.h>
-#include <ISO/WQSG_UMD.h>
-int _tmain(int argc, _TCHAR* argv[])
-{
-	
-	CWQSG_CmemFILE fp;
-
-	char ddd[100];
-
-	fp.fopen( ddd , sizeof(ddd) , true );
-	return 0;
-}
-
-
+#ifdef __TEST_DEBUG__
+#include<WQSG.h>
+#include "WQSG_CxFile.h"
+void XX()
+{
+}
+#include<malloc.h>
+#include <ISO/WQSG_UMD.h>
+int _tmain(int argc, _TCHAR* argv[])
+{
+	
+	CWQSG_CmemFILE fp;
+
+	char ddd[100];
+
+	fp.fopen( ddd , sizeof(ddd) , true );
+	return 0;
+}
+
+
 #endif
