@@ -20,9 +20,9 @@
 #define _WQSG_ISO_BASE_
 #include <WQSG.h>
 #include <atlstr.h>
-#define DEF_ERRMSG( __def_tISO_File , __def_msg ) {\
+#define DEF_ERRMSG( __def_msg ) {\
 	CString str;str = __FILE__;CString str2;str2.Format( L"file: %s\r\nline: %d\r\n%s" , str.GetBuffer() , __LINE__ , (__def_msg) );\
-	(__def_tISO_File).SetErrMsg( str2.GetBuffer() ); }
+	SetErrMsg( str2.GetBuffer() ); }
 #pragma pack(1)
 struct _tISO_DirEnt
 {
@@ -32,16 +32,26 @@ struct _tISO_DirEnt
 	s32 lba_be;
 	s32	size_le;
 	s32	size_be;
-	u8	time[7];
+	struct
+	{
+		u8	uYear;
+		u8	uMonth;
+		u8	uDay;
+		u8	uHours;
+		u8	uMinutes;
+		u8	uSeconds;
+		u8	uUnknown;	//24
+	}time;
 	u8	attr;
 	u8	sp1;
 	u8	sp2;
 	u16	sp3_le;
 	u16	sp3_be;
 	u8 nameLen;
-	bool 校验();
+	bool cheak();
 };
-struct _tISO_Head
+
+struct _tISO_Head2048
 {
 	union
 	{
@@ -103,6 +113,73 @@ struct _tISO_Head
 	u8				AppUse[0x200];
 	u8				Unused_8[0x28D];		//0
 };
+// 
+// struct _tISO_Head2352
+// {
+// 	union
+// 	{
+// 		struct _tISO_HeadMode1
+// 		{
+// 			u8 m_Sync[12];
+// 			u8 m_szMode1[4];
+// 			_tISO_Head2048 m_Head;
+// 			u8 m_x1[288];
+// 		};
+// 		struct _tISO_HeadMode2
+// 		{
+// 			u8 m_Sync[0x12];
+// 			u8 m_szMode2[0x12];
+// 			_tISO_Head2048 m_Head;
+// 			u8 m_x2[280];
+// 		};
+// 		_tISO_Head2048 m_Head;
+// 	};
+// };
+// 
+// struct _tISO_HeadMode1
+// {
+// 	u8 m_Sync[12];
+// 	u8 m_szMode1[4];
+// 	_tISO_Head2048 m_Head;
+// 	u8 m_x1[288];
+// };
+// struct _tISO_HeadMode2
+// {
+// 	u8 m_Sync[0x12];
+// 	u8 m_szMode2[0x12];
+// 	_tISO_Head2048 m_Head;
+// 	u8 m_x2[280];
+// };
+
+
+
+union _tISO_Head2352
+{
+	struct
+	{
+		u8 m_Sync[12];
+		u8 m_XX[3];
+		u8 m_uMode;
+		union
+		{
+			struct// _tISO_HeadMode1
+			{
+				_tISO_Head2048 m_Head1;
+				u8 m_x1[288];
+			};
+			struct// _tISO_HeadMode2
+			{
+				u8 m_szMode2[8];
+				_tISO_Head2048 m_Head2;
+				u8 m_x2[280];
+			};
+		};
+	};
+
+	_tISO_Head2048 m_Head2048;
+};
+
+
 /*struct _tISO_DirEntInfo
 {
 	s32 lba;
@@ -120,33 +197,85 @@ struct _tISO_HeadInfo
 	u8		FileStructureVersion;	//1 , UMD 2
 };*/
 #pragma pack()
-struct _tISO_File
-{
-	BOOL					m_bCanWrite;
-	_tISO_Head				m_tHead;		//完整的头部
-	CWQSG_File				m_ISOfp;		//文件流
-	CWQSG_PartitionList*	m_pLBA_List;	//扇区分配表
 
-	CStringW				m_errStr;
-	_tISO_File() : m_pLBA_List( NULL ){}
-	void SetErrMsg( WCHAR const*const msg )
+
+class CWQSG_ISO_Base
+{
+	inline BOOL XXX_遍历目录申请( const _tISO_DirEnt& a_tDirEnt_in );
+public:
+protected:
+	CWQSG_ISO_Base();
+	virtual ~CWQSG_ISO_Base();
+
+	BOOL Open( const WCHAR*const a_strISOPathName , const BOOL a_bCanWrite );
+	void Close();
+
+	s32 ReadDirEnt( const _tISO_DirEnt& a_tDirEnt_in , const s32 a_dirOffset ,
+		_tISO_DirEnt& a_tDirEnt , char*const a_strFileName , const BOOL a_bFindFree );
+
+	inline s32 SectorSeek( s32 a_nLbaID , s32 a_nLbaOffset );
+protected:
+	BOOL m_bCanWrite;
+	s32 m_nSectorSize;
+	s32 m_nLbaSize;
+	s32 m_nHeadOffset;
+
+	CWQSG_File m_ISOfp; //文件流
+	CWQSG_PartitionList* m_pLBA_List; //扇区分配表
+
+	_tISO_Head2352 m_tHead0; //完整的头部
+	_tISO_Head2048* m_pHead0;
+
+	CStringW m_strErrorStr;
+
+	void SetErrMsg( WCHAR const*const a_msg )
 	{
-		m_errStr = msg;
-	//	CString str1;str1 = __FILE__;
-	//	m_errStr.Format( L"file: %s\r\nline: %d\r\n%s" , str1.GetBuffer() , __LINE__ , msg );
+		m_strErrorStr = a_msg;
 	}
-	void SetErrMsg( char const*const msg )
+
+	void SetErrMsg( char const*const a_msg )
 	{
-		m_errStr = msg;
-	//	CString str1;str1 = __FILE__;
-	//	CString str2;str2 = msg;
-	//	m_errStr.Format( L"file: %s\r\nline: %d\r\n%s" , str1.GetBuffer() , __LINE__ , str2.GetBuffer() );
+		m_strErrorStr = a_msg;
+	}
+private:
+	inline	s32		zzz_FindFile( const _tISO_DirEnt& a_tDirEnt_in , s32 a_offset ,
+		const char*const a_strFileName , _tISO_DirEnt& a_tDirEnt  , const bool a_bFindFree );
+public:
+	//成功返回 dirOffset , 失败 -1
+	__i__	s32		FindFile( const _tISO_DirEnt& a_tDirEnt_in , const char*const a_strFileName , _tISO_DirEnt& a_tDirEnt );
+
+	__i__	BOOL	ReadFile( const _tISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
+		CWQSG_xFile& buffp , const s32 a_buflen , const s32 a_startOffset );
+	//------------------------------------------
+	__i__	BOOL	WriteFile( const _tISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
+		const void* buffer , const s32 a_buflen , const s32 insertOffset , const BOOL isNew );
+
+	__i__	BOOL	WriteFile( const _tISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
+		CWQSG_xFile& buffp , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_isNew , const BOOL a_isDir );
+	//------------------------------------------
+	__i__	BOOL	CreateDir( const _tISO_DirEnt& a_tDirEnt_in , char const*const a_dirName );
+
+	virtual	BOOL	IsOpen()
+	{
+		return m_ISOfp.IsOpen();
+	}
+
+	BOOL GetRootDirEnt( _tISO_DirEnt& a_tDirEnt )
+	{
+		if( IsOpen() )
+		{
+			memcpy( &a_tDirEnt , &m_pHead0->rootDirEnt , sizeof(a_tDirEnt) );
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	s32 ReadDirEnt( const _tISO_DirEnt& tDirEnt_in , const s32 dirOffset , _tISO_DirEnt& tDirEnt , char*const strFileName )
+	{
+		return ReadDirEnt( tDirEnt_in , dirOffset , tDirEnt , strFileName , false );
 	}
 };
 
-BOOL	WQSG_ISO_Open		( _tISO_File*const ptISOFile , WCHAR const*const strISOPathName , const BOOL bCanWrite );
-void	WQSG_ISO_Close		( _tISO_File*const ptISOFile );
-s32		WQSG_ISO_FindFile	( _tISO_File*const ptISOFile , const s32 dirLBA , char const*const fileName , _tISO_DirEnt& dirEntx , s32& offset );
-s32		WQSG_ISO_ReadDirEnt	( _tISO_File*const ptISOFile , _tISO_DirEnt const*const tDirEnt_in , const s32 _dirOffset
-						 , _tISO_DirEnt*const ptDirEnt , char*const strFileName , const bool bFindFree );
+//s32		WQSG_ISO_FindFile	( _tISO_File*const ptISOFile , const s32 dirLBA , char const*const fileName , _tISO_DirEnt& dirEntx , s32& offset );
+
 #endif

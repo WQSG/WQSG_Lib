@@ -17,54 +17,59 @@
 */
 #pragma once
 #include "WQSG_ISO_BASE.h"
-class CWQSG_UMD
+
+class CWQSG_UMD : public CWQSG_ISO_Base
 {
 public:
 	//------------------------------------------
 private:
 protected:
-	_tISO_File		m_isoFile;
 	//----------------------------------------------
-	__i__	s32		zzz_FindFile( const _tISO_DirEnt& tDirEnt_in , s32 offset , char const*const strFileName , _tISO_DirEnt& tDirEnt  , const bool bFindFree );
 public:
-	CStringW	GetErrStr(){	return m_isoFile.m_errStr;	}
+	inline	CStringW	GetErrStr()
+	{
+		return m_strErrorStr;
+	}
 	//------------------------------------------
 	CWQSG_UMD(void);
 	virtual ~CWQSG_UMD(void);
 	//------------------------------------------
-	virtual	BOOL	OpenISO( WCHAR const*const isoPathName , const BOOL bCanWrite );
+	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
 	virtual	void	CloseISO();
-	//³É¹¦·µ»Ø dirOffset , Ê§°Ü -1
-	__i__	s32		FindFile( const _tISO_DirEnt& tDirEnt_in , char const*const strFileName , _tISO_DirEnt& tDirEnt );
 	//------------------------------------------
-	__i__	BOOL	WriteFile( const _tISO_DirEnt& tDirEnt_in , char const*const fileName
-		, const void* buffer , const s32 buflen , const s32 insertOffset , const BOOL isNew );
-	__i__	BOOL	WriteFile( const _tISO_DirEnt& tDirEnt_in , char const*const fileName
-		, CWQSG_xFile& buffp , const s32 buflen , const s32 insertOffset , const BOOL isNew , const BOOL isDir );
-	__i__	BOOL	ReadFile( const _tISO_DirEnt& tDirEnt_in , char const*const fileName
-		, CWQSG_xFile& buffp , const s32 buflen , const s32 startOffset );
-	//------------------------------------------
-	__i__	BOOL	IsOpen(){	return m_isoFile.m_ISOfp.IsOpen();	}
-	//------------------------------------------
-	__i__	BOOL	CreateDir( const _tISO_DirEnt& tDirEnt_in , char const*const dirName );
-};
-class CWQSG_UMD_kernel :public CWQSG_UMD
-{
-public:
-	CWQSG_UMD_kernel(){}
-	~CWQSG_UMD_kernel(){}
-	s32		ReadDirEnt	( const _tISO_DirEnt& tDirEnt_in , const s32 dirOffset , _tISO_DirEnt& tDirEnt , char*const strFileName )
-	{
-		return ::WQSG_ISO_ReadDirEnt( &m_isoFile , &tDirEnt_in , dirOffset , &tDirEnt , strFileName , false );
-	}
-	BOOL	GetRootDirEnt( _tISO_DirEnt& tDirEnt )
+	BOOL GetRootDirEnt( _tISO_DirEnt& a_tDirEnt )
 	{
 		if( IsOpen() )
 		{
-			memcpy( &tDirEnt , &m_isoFile.m_tHead.rootDirEnt , sizeof(tDirEnt) );
+			memcpy( &a_tDirEnt , &m_pHead0->rootDirEnt , sizeof(a_tDirEnt) );
 			return TRUE;
 		}
 		return FALSE;
 	}
+
+	s32 ReadDirEnt( const _tISO_DirEnt& tDirEnt_in , const s32 dirOffset , _tISO_DirEnt& tDirEnt , char*const strFileName )
+	{
+		return CWQSG_ISO_Base::ReadDirEnt( tDirEnt_in , dirOffset , tDirEnt , strFileName , false );
+	}
 };
-/**/
+
+class CWQSG_PsxISO : public CWQSG_ISO_Base
+{
+public:
+	//------------------------------------------
+private:
+protected:
+	//----------------------------------------------
+public:
+	inline	CStringW	GetErrStr()
+	{
+		return m_strErrorStr;
+	}
+	//------------------------------------------
+	CWQSG_PsxISO(void){}
+	virtual ~CWQSG_PsxISO(void){}
+	//------------------------------------------
+	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
+	virtual	void	CloseISO();
+	//------------------------------------------
+};

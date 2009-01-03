@@ -1889,7 +1889,7 @@ BOOL	C内存文本_W::关联( WCHAR const*const p文本 )
 
 
 
-	m_CP = WQSG_enCP::en_CP_UNICODE;
+	m_CP = en_CP_UNICODE;
 
 	m_TXT = m_文本 = (WCHAR*)p文本;
 

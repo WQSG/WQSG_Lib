@@ -32,6 +32,11 @@ typedef signed	short		s16;
 typedef signed	long		s32;
 typedef signed	__int64		s64;
 
+typedef s8	n8;
+typedef s16	n16;
+typedef s32	n32;
+typedef s64	n64;
+
 typedef unsigned char		u8;
 typedef unsigned short		u16;
 typedef unsigned long		u32;
