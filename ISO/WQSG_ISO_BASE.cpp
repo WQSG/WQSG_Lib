@@ -684,6 +684,8 @@ __gtReTest:
 		if( sizeof(data) != memfp.Write( data , sizeof(data) ) )
 			return FALSE;
 
+		memfp.Seek(0);
+
 		buffp_tmp = &memfp;
 		bufLen_tmp = sizeof(data);
 		offset_tmp = 0;
@@ -704,7 +706,7 @@ __gtReTest:
 
 	while( bufLen_tmp > 0 )
 	{
-		u32 需要读取 = SectorSeek( a_tDirEnt_in.lba_le , nDirOffset );
+		u32 需要读取 = SectorSeek( dirEnt.lba_le , offset_tmp );
 
 		u8 buffer[2352];
 
