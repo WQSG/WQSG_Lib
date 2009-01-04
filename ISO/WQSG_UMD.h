@@ -37,39 +37,4 @@ public:
 	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
 	virtual	void	CloseISO();
 	//------------------------------------------
-	BOOL GetRootDirEnt( _tISO_DirEnt& a_tDirEnt )
-	{
-		if( IsOpen() )
-		{
-			memcpy( &a_tDirEnt , &m_pHead0->rootDirEnt , sizeof(a_tDirEnt) );
-			return TRUE;
-		}
-		return FALSE;
-	}
-
-	s32 ReadDirEnt( const _tISO_DirEnt& tDirEnt_in , const s32 dirOffset , _tISO_DirEnt& tDirEnt , char*const strFileName )
-	{
-		return CWQSG_ISO_Base::ReadDirEnt( tDirEnt_in , dirOffset , tDirEnt , strFileName , false );
-	}
-};
-
-class CWQSG_PsxISO : public CWQSG_ISO_Base
-{
-public:
-	//------------------------------------------
-private:
-protected:
-	//----------------------------------------------
-public:
-	inline	CStringW	GetErrStr()
-	{
-		return m_strErrorStr;
-	}
-	//------------------------------------------
-	CWQSG_PsxISO(void){}
-	virtual ~CWQSG_PsxISO(void){}
-	//------------------------------------------
-	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
-	virtual	void	CloseISO();
-	//------------------------------------------
 };

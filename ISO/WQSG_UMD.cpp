@@ -18,8 +18,6 @@
 
 #include "WQSG_UMD.h"
 //--------------------------------------------------------------------------------------------------
-
-//--------------------------------------------------------------------------------------------------
 CWQSG_UMD::CWQSG_UMD(void)
 {
 }
@@ -43,24 +41,6 @@ BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWri
 }
 
 void CWQSG_UMD::CloseISO()
-{
-	CWQSG_ISO_Base::Close();
-}
-
-BOOL CWQSG_PsxISO::OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite )
-{
-	if( CWQSG_ISO_Base::Open( a_isoPathName , a_bCanWrite  ) )
-	{
-		if( m_pHead0->FileStructureVersion == 1 )
-			return TRUE;
-		DEF_ERRMSG( L"文件结构版本不为 1" );
-	}
-
-	CloseISO();
-	return FALSE;
-}
-
-void CWQSG_PsxISO::CloseISO()
 {
 	CWQSG_ISO_Base::Close();
 }

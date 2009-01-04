@@ -401,6 +401,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\ISO\WQSG_PsxISO.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\ISO\WQSG_UMD.cpp"
 					>
 				</File>
@@ -468,6 +472,10 @@
 				>
 				<File
 					RelativePath="..\ISO\WQSG_ISO_BASE.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ISO\WQSG_PsxISO.h"
 					>
 				</File>
 				<File

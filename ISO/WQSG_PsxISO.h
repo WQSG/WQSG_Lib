@@ -15,28 +15,26 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#ifndef __WQSG_LIB_H__
-#define	__WQSG_LIB_H__
+#pragma once
+#include "WQSG_ISO_BASE.h"
 
-#if WIN32
-#include "WQSG.h"
-#include "ISO/WQSG_UMD.h"
-#include "ISO/WQSG_PsxISO.h"
-//---------------------------------------------------------
-#if defined(_DEBUG)
-#if defined(_DLL)///------------------------------------
-#pragma comment(lib, "WQSG_lib_Debug_MD.lib")
-#else
-#pragma comment(lib, "WQSG_lib_Debug_MT.lib")
-#endif
-#else///------------------------------------
-#if defined(_DLL)
-#pragma comment(lib, "WQSG_lib_Release_MD.lib")
-#else
-#pragma comment(lib, "WQSG_lib_Release_MT.lib")
-#endif
-#endif///------------------------------------
-//---------------------------------------------------------
-#endif
-
-#endif
+class CWQSG_PsxISO : public CWQSG_ISO_Base
+{
+public:
+	//------------------------------------------
+private:
+protected:
+	//----------------------------------------------
+public:
+	inline	CStringW	GetErrStr()
+	{
+		return m_strErrorStr;
+	}
+	//------------------------------------------
+	CWQSG_PsxISO(void){}
+	virtual ~CWQSG_PsxISO(void){}
+	//------------------------------------------
+	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
+	virtual	void	CloseISO();
+	//------------------------------------------
+};

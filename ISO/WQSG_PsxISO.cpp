@@ -15,28 +15,23 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#ifndef __WQSG_LIB_H__
-#define	__WQSG_LIB_H__
 
-#if WIN32
-#include "WQSG.h"
-#include "ISO/WQSG_UMD.h"
-#include "ISO/WQSG_PsxISO.h"
-//---------------------------------------------------------
-#if defined(_DEBUG)
-#if defined(_DLL)///------------------------------------
-#pragma comment(lib, "WQSG_lib_Debug_MD.lib")
-#else
-#pragma comment(lib, "WQSG_lib_Debug_MT.lib")
-#endif
-#else///------------------------------------
-#if defined(_DLL)
-#pragma comment(lib, "WQSG_lib_Release_MD.lib")
-#else
-#pragma comment(lib, "WQSG_lib_Release_MT.lib")
-#endif
-#endif///------------------------------------
-//---------------------------------------------------------
-#endif
+#include "WQSG_PsxISO.h"
+//--------------------------------------------------------------------------------------------------
+BOOL CWQSG_PsxISO::OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite )
+{
+	if( CWQSG_ISO_Base::Open( a_isoPathName , a_bCanWrite  ) )
+	{
+		if( m_pHead0->FileStructureVersion == 1 )
+			return TRUE;
+		DEF_ERRMSG( L"文件结构版本不为 1" );
+	}
 
-#endif
+	CloseISO();
+	return FALSE;
+}
+
+void CWQSG_PsxISO::CloseISO()
+{
+	CWQSG_ISO_Base::Close();
+}
