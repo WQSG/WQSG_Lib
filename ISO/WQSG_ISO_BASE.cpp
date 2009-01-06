@@ -17,7 +17,7 @@
 */
 
 #include "WQSG_ISO_BASE.h"
-inline	static bool xx_cmpeq( void const*const bufferLE , void const*const bufferBE , const size_t len )
+inline static bool xx_cmpeq( void const*const bufferLE , void const*const bufferBE , const size_t len )
 {
 	u8 const* buf1 = (u8 const*const)bufferLE;
 	u8 const* buf2 = (u8 const*const)bufferBE;
@@ -37,319 +37,385 @@ inline	static bool xx_cmpeq( void const*const bufferLE , void const*const buffer
 	}
 	return true;
 }
-bool _tISO_DirEnt::cheak()
+static inline void memcpyR( void* a_dst , const void* a_src , const size_t a_size )
 {
-#if 0
-	return ( xx_cmpeq( &lba_le , &lba_be , sizeof(lba_le) ) &&
-		xx_cmpeq( &size_le , &size_be , sizeof(size_le) ) &&
-		xx_cmpeq( &sp3_le , &sp3_be , sizeof(sp3_le) ) &&
-		( (len&1) == 0 ) &&	( len > 0 ) && ( len_ex == 0 ) &&
-		(nameLen > 0) && (nameLen<=127) && ( size_le >= 0)
-		);
-#else
-	return ( xx_cmpeq( &lba_le , &lba_be , sizeof(lba_le) ) &&
-		xx_cmpeq( &sp3_le , &sp3_be , sizeof(sp3_le) ) &&
-		( (len&1) == 0 ) && ( len > 0 ) && ( len_ex == 0 ) &&
-		(nameLen > 0) && (nameLen<=127) && ( size_le >= 0)
-		);
-#endif
-}
-//-------------------------------------------------------------------------------------------------
-#if _DEBUG
-#define W_ASSERT( _def ) do{if( !(_def) ) __asm{int 3};}while(0)
-#else
-#define W_ASSERT( _def )
-#endif
+	u8* dp = (u8*)a_dst;
+	const u8* sp = (const u8*)a_src;
 
+	for( size_t i = 0 ; i < a_size ; ++i )
+		dp[i] = sp[a_size-i-1];
+}
+//----------------------------------------------------------------------------------------------------
+static const u8 g_fileLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x0D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+static const u8 g_dirLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define DEF_FN_make_DirLen( __def_nameLen ) (0x21 + ((((__def_nameLen)&1)==1)?(__def_nameLen):((__def_nameLen)+1)) + sizeof(g_fileLastData))
+//|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 CWQSG_ISO_Base::CWQSG_ISO_Base()
 : m_pLBA_List(NULL)
 {
-#if _DEBUG
-	int ddd2048 = sizeof( _tISO_Head2048 );
-	int ddd2352 = sizeof( _tISO_Head2352 );
-#endif
-	W_ASSERT( 2048 == sizeof( _tISO_Head2048 ) );
-	W_ASSERT( 2352 == sizeof( _tISO_Head2352 ) );
-}
 
+}
+//----------------------------------------------------------------------------------------------------
 CWQSG_ISO_Base::~CWQSG_ISO_Base()
 {
-	Close();
-}
 
+}
+//----------------------------------------------------------------------------------------------------
 BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCanWrite )
 {
-	if( (!a_strISOPathName) )
-	{
-		DEF_ERRMSG( L"传入参数错误" );
-		return FALSE;
-	}
+	if( !CWQSG_ISO_Raw::OpenFile( a_strISOPathName , a_bCanWrite ) )
+		goto __gtOpenErr;
 
-	Close();
-
-	m_bCanWrite = a_bCanWrite;
-
-	if( !m_ISOfp.OpenFile( a_strISOPathName , (a_bCanWrite?3:1) , 3 ) )
-	{
-		DEF_ERRMSG( L"打开ISO文件失败" );
-		goto __gtErr;
-	}
-
-	{
-		_tISO_Head2352 testHead;
-		m_ISOfp.Seek( 0x0 );
-		if( sizeof(testHead) != m_ISOfp.Read( &testHead , sizeof(testHead) ) )
-		{
-			DEF_ERRMSG( L"读取ISO信息失败" );
-			goto __gtErr;
-		}
-
-		const u8 szSync[] = {0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x00};
-		if( memcmp( testHead.m_Sync , szSync , 12 ) != 0 )
-			m_nSectorSize = 2048;
-		else
-			m_nSectorSize = 2352;
-	}
-
-	m_ISOfp.Seek( 0x10 * m_nSectorSize );
-	if( m_nSectorSize != m_ISOfp.Read( &m_tHead0 , m_nSectorSize ) )
+	if( !ReadUserData( &m_tHead , 16 ) )
 	{
 		DEF_ERRMSG( L"读取ISO信息失败" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
 
-	if( m_nSectorSize == 2352 )
-	{
-		switch( m_tHead0.m_uMode )
-		{
-		case 1://Mode1
-			m_pHead0 = &(m_tHead0.m_Head1);
-			break;
-		case 2://Mode2 Form1
-			m_pHead0 = &(m_tHead0.m_Head2);
-			break;
-		default:
-			DEF_ERRMSG( L"未知的 2352 Mode" );
-			goto __gtErr;
-		}
-	}
-	else
-	{
-		m_pHead0 = &(m_tHead0.m_Head2048);
-	}
-
-	m_nHeadOffset = (s32)((u8*)m_pHead0 - (u8*)&m_tHead0);
-
-	if( 0 != memcmp( m_pHead0->CD001 , "CD001" , 5 ) )
+	if( 0 != memcmp( m_tHead.CD001 , "CD001" , 5 ) )
 	{
 		DEF_ERRMSG( L"不是 CD001" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
 
-	if( ( m_pHead0->Volume_Descriptor_Type != 1 ) ||
-		( m_pHead0->Volume_Descriptor_Version != 1 ) )
+	if( m_tHead.Volume_Descriptor_Type != 1 || m_tHead.Volume_Descriptor_Version != 1 )
 	{
 		CString msg;
-		msg.Format( L"不支持的 卷描述 %d.%d" , m_pHead0->Volume_Descriptor_Type ,
-			m_pHead0->Volume_Descriptor_Version );
+		msg.Format( L"不支持的 卷描述 %d.%d" , m_tHead.Volume_Descriptor_Type ,
+			m_tHead.Volume_Descriptor_Version );
 		DEF_ERRMSG( msg.GetBuffer() );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
 
-	if( !xx_cmpeq( &m_pHead0->LB_Size_LE ,
-		&m_pHead0->LB_Size_BE , sizeof(m_pHead0->LB_Size_LE) ) )
+	if( !xx_cmpeq( &m_tHead.LB_Size_LE ,
+		&m_tHead.LB_Size_BE , sizeof(m_tHead.LB_Size_LE) ) )
 	{
 		DEF_ERRMSG( L"逻辑块大小数不同" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
-	if( m_pHead0->LB_Size_LE != 2048 )
+
+	if( m_tHead.LB_Size_LE != 2048 )
 	{
 		CString msg;
-		msg.Format( L"逻辑块Size不为 2048 , (%d)" , m_pHead0->LB_Size_LE );
+		msg.Format( L"逻辑块Size不为 2048 , (%d)" , m_tHead.LB_Size_LE );
 		DEF_ERRMSG( msg.GetBuffer() );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
 
-	m_nLbaSize = m_pHead0->LB_Size_LE;
-
-	if( m_pHead0->rootDirEnt.len != sizeof(m_pHead0->rootDitBin) )
+	if( m_tHead.rootDirEnt.len != sizeof(m_tHead.rootDitBin) )
 	{
 		DEF_ERRMSG( L"根目录 size 错误" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
 
-	if( !xx_cmpeq( &m_pHead0->VolumeLBA_Total_LE ,
-		&m_pHead0->VolumeLBA_Total_BE , sizeof(m_pHead0->VolumeLBA_Total_LE) ) )
+	if( !xx_cmpeq( &m_tHead.VolumeLBA_Total_LE ,
+		&m_tHead.VolumeLBA_Total_BE , sizeof(m_tHead.VolumeLBA_Total_LE) ) )
 	{
 		DEF_ERRMSG( L"LBA大小总数不同" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
 
-	if( !xx_cmpeq( &m_pHead0->PathTableSize_LE ,
-		&m_pHead0->PathTableSize_BE , sizeof(m_pHead0->PathTableSize_LE) ) )
+	if( !xx_cmpeq( &m_tHead.PathTableSize_LE ,
+		&m_tHead.PathTableSize_BE , sizeof(m_tHead.PathTableSize_LE) ) )
 	{
 		DEF_ERRMSG( L"LBAPathTableSize大小不同" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
-	if( !xx_cmpeq( &m_pHead0->v6_LE , &m_pHead0->v6_BE ,
-		sizeof(m_pHead0->v6_LE) ) )
+
+	if( !xx_cmpeq( &m_tHead.v6_LE , &m_tHead.v6_BE , sizeof(m_tHead.v6_LE) ) )
 	{
 		DEF_ERRMSG( L"v6大小不同" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
-	if( !m_pHead0->rootDirEnt.cheak() )
+
+	if( !m_tHead.rootDirEnt.cheak() )
 	{
 		DEF_ERRMSG( L"根目录校验失败" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
-	m_pLBA_List = new CWQSG_PartitionList( m_pHead0->VolumeLBA_Total_LE );
+
+	u8 szBuffer[2048];
+
+	if( !ReadUserData( szBuffer , 16+1 ) )
+	{
+		DEF_ERRMSG( L"读取ISO信息失败" );
+		goto __gtOpenErr;
+	}
+
+	if( *szBuffer != 0xFF )
+	{
+		CString str;
+		switch( *szBuffer )
+		{
+		case 1:
+			str = "ISO9660"; break;
+		case 2:
+			str = "JOLIET"; break;
+		default:
+			str = "未知"; break;
+		}
+
+		DEF_ERRMSG( L"不支持的子ISO系统(" + str + L")" );
+		goto __gtOpenErr;
+	}
+
+	m_pLBA_List = new CWQSG_PartitionList( m_tHead.VolumeLBA_Total_LE );
 	if( NULL == m_pLBA_List )
 	{
 		DEF_ERRMSG( L"创建LBA分配表失败" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
-	if( 0 != m_pLBA_List->申请( m_pHead0->rootDirEnt.lba_le ) )
+
+	if( 0 != m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le ) )
 	{
 		DEF_ERRMSG( L"设置LBA保留区失败" );
-		goto __gtErr;
+		goto __gtOpenErr;
 	}
+
+	if( (m_tHead.rootDirEnt.size_le < 2048) ||
+		((m_tHead.rootDirEnt.size_le % 2048)!=0) ||
+		(!m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le , m_tHead.rootDirEnt.size_le/2048 )) )
 	{
-		if( (m_pHead0->rootDirEnt.size_le < m_nLbaSize) ||
-			((m_pHead0->rootDirEnt.size_le%m_nLbaSize)!=0) ||
-			(!m_pLBA_List->申请( m_pHead0->rootDirEnt.lba_le , m_pHead0->rootDirEnt.size_le/m_nLbaSize )) )
-		{
-			DEF_ERRMSG( L"分配 根目录LBA失败" );
-			goto __gtErr;
-		}
+		DEF_ERRMSG( L"分配 根目录LBA失败" );
+		goto __gtOpenErr;
 	}
-	if( !XXX_遍历目录申请( m_pHead0->rootDirEnt ) )
-		goto __gtErr;
+
+	if( !XXX_遍历目录申请( m_tHead.rootDirEnt ) )
+		goto __gtOpenErr;
 
 	return TRUE;
-__gtErr:
-	Close( );
+__gtOpenErr:
+	Close();
 	return FALSE;
 }
 
+//----------------------------------------------------------------------------------------------------
 void CWQSG_ISO_Base::Close()
 {
-	m_ISOfp.Close();
-	if( m_pLBA_List )
-	{
-		delete m_pLBA_List;
-		m_pLBA_List = NULL;
-	}
+	CWQSG_ISO_Raw::CloseFile();
 }
-
-inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const _tISO_DirEnt& a_tDirEnt_in )
+//----------------------------------------------------------------------------------------------------
+s32 CWQSG_ISO_Base::ReadDirEnt( SISO_DirEnt& a_tDirEnt , char*const a_strFileName ,
+								const SISO_DirEnt& a_ParentDirEnt , s32 a_nOffset , BOOL a_bNext )
 {
-	if( (a_tDirEnt_in.lba_le < m_pHead0->rootDirEnt.lba_le ) ||
-		( (a_tDirEnt_in.size_le%m_nLbaSize) != 0 )
-		)
-	{
-		DEF_ERRMSG( L"参数错误" );
-		return FALSE;
-	}
-
-	_tISO_DirEnt dirEnt;
-	if( 0 != ReadDirEnt( a_tDirEnt_in  , 0 , dirEnt , NULL , false ) ||
-		( dirEnt.len != 0x30 ) || ( dirEnt.nameLen != 1 ) ||
-		(dirEnt.lba_le != a_tDirEnt_in.lba_le) )
-	{
-		DEF_ERRMSG( L"不是文件夹1" );
-		return FALSE;
-	}
-
-	if( 0x30 != ReadDirEnt( a_tDirEnt_in , 0x30 , dirEnt , NULL , false ) ||
-		( dirEnt.len != 0x30 ) || ( dirEnt.nameLen != 1 ) )
-	{
-		DEF_ERRMSG( L"不是文件夹2" );
-		return FALSE;
-	}
-
-	for( s32 offset = 0x60 ; offset < a_tDirEnt_in.size_le ; )
-	{
-		{
-			const s32 newOffset( ReadDirEnt( a_tDirEnt_in , offset , dirEnt , NULL , false ) );
-			if( newOffset < 0 )
-				return FALSE;
-
-			offset = newOffset;
-		}
-		if( dirEnt.len == 0 )
-			break;
-
-		offset += dirEnt.len;
-
-		const s32 LBAcount = (dirEnt.size_le/m_nLbaSize) + (( (dirEnt.size_le%m_nLbaSize)>0 )?1:0);
-		if( !m_pLBA_List->申请( dirEnt.lba_le , (LBAcount==0)?1:LBAcount ) )
-		{
-			DEF_ERRMSG( L"申请LBA失败" );
-			return FALSE;
-		}
-
-		if( dirEnt.attr & 2 )
-			if( !XXX_遍历目录申请( dirEnt ) )
-				return FALSE;
-	}
-	return TRUE;
-}
-
-s32 CWQSG_ISO_Base::ReadDirEnt( const _tISO_DirEnt& a_tDirEnt_in , const s32 a_dirOffset ,
-						 _tISO_DirEnt& a_tDirEnt , char*const a_strFileName , const BOOL a_bFindFree )
-{
-	if( (!m_ISOfp.IsOpen()) ||
-		(a_tDirEnt_in.lba_le < m_pHead0->rootDirEnt.lba_le ) ||
-		(a_dirOffset < 0) )
+	if( !a_ParentDirEnt.cheak() || a_ParentDirEnt.lba_le < m_tHead.rootDirEnt.lba_le ||
+		a_nOffset < 0 || (a_nOffset%2) != 0 )
 	{
 		DEF_ERRMSG( L"参数错误" );
 		return -1;
 	}
-	s32 nDirOffset( a_dirOffset );
-	BOOL bReRead = TRUE;
 
-__gtRead:
-	SectorSeek( a_tDirEnt_in.lba_le , nDirOffset );
+	const s32 nLbaCount = a_ParentDirEnt.size_le/2048;
+__gtReRead:
+	const s32 nLbaIndex = a_nOffset / 2048;
+	const s32 nLbaOffset = a_nOffset % 2048;
 
-	if( sizeof(_tISO_DirEnt) == m_ISOfp.Read( &a_tDirEnt , sizeof(_tISO_DirEnt) ) )
+	if( nLbaIndex >= nLbaCount || nLbaOffset > (2048-DEF_FN_make_DirLen(0)) )
 	{
-		if( 0 == a_tDirEnt.len )
-		{
-			const s32 nFixOffset = nDirOffset - ( nDirOffset % m_nLbaSize ) + m_nLbaSize;
-			if( (!a_bFindFree) && bReRead && (nFixOffset > nDirOffset) &&
-				(nFixOffset < a_tDirEnt_in.size_le) )
-			{
-				bReRead = FALSE;
-				nDirOffset = nFixOffset;
-				goto __gtRead;
-			}
-			return nDirOffset;
-		}
-
-		if( a_tDirEnt.cheak() )
-		{
-			if( a_strFileName &&
-				(a_tDirEnt.nameLen == m_ISOfp.Read( a_strFileName , a_tDirEnt.nameLen ) ) )
-				a_strFileName[a_tDirEnt.nameLen] = '\0';
-
-			return nDirOffset;
-		}
-		DEF_ERRMSG( L"错误的目录项" );
+		DEF_ERRMSG( L"参数错误" );
 		return -1;
 	}
-	DEF_ERRMSG( L"读取目录项失败" );
+
+	u8 szBuffer[2048];
+
+	if( !ReadUserData( szBuffer , a_ParentDirEnt.lba_le + nLbaIndex ) )
+	{
+		DEF_ERRMSG( L"读数据出错" );
+		return -1;
+	}
+
+	const SISO_DirEnt*const pDirEnt = (SISO_DirEnt*)(szBuffer + nLbaOffset);
+
+	if( 0 == pDirEnt->len )
+	{
+		a_tDirEnt = *pDirEnt;
+		return a_nOffset;
+	}
+
+	if( pDirEnt->cheak() )
+	{
+		if( a_nOffset > (2048 - DEF_FN_make_DirLen(pDirEnt->nameLen)) )
+		{
+			DEF_ERRMSG( L"错误的目录项,文件名长度错误" );
+			return -1;
+		}
+
+		if( a_bNext )
+		{
+			a_nOffset += pDirEnt->len;
+
+			if( ( a_nOffset % 2 ) != 0 )
+				++a_nOffset;
+
+			a_bNext = FALSE;
+			goto __gtReRead;
+		}
+
+		if( a_strFileName )
+		{
+			memcpy( a_strFileName , (szBuffer + nLbaOffset + sizeof(SISO_DirEnt)) ,
+				pDirEnt->nameLen );
+
+			*(a_strFileName + pDirEnt->nameLen) = '\0';
+		}
+
+		a_tDirEnt = *pDirEnt;
+		return a_nOffset;
+	}
+
+	DEF_ERRMSG( L"错误的目录项,目录项校验错误" );
 	return -1;
 }
 //----------------------------------------------------------------------------------------------------
-static const unsigned char fileLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x0D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-static const unsigned char dirLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#define DEF_FN_make_DirLen( __def_nameLen ) (0x21 + ((((__def_nameLen)&1)==1)?(__def_nameLen):((__def_nameLen)+1)) + sizeof(fileLastData))
-BOOL CWQSG_ISO_Base::ReadFile( const _tISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
-						 CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_startOffset )
+inline BOOL CWQSG_ISO_Base::IsDirEnt( const SISO_DirEnt& a_ParentDirEnt )
 {
-	if( ( !a_buffp.IsOpen() ) || ( a_buflen < 0 ) ||
-		( a_fileName == NULL ) || ( strlen(a_fileName) > 120 ) ||
-		( a_startOffset < 0 ) || ( (a_startOffset+a_buflen) < 0 )
+	if( (a_ParentDirEnt.attr & 2) != 2 || !a_ParentDirEnt.cheak() ||
+		a_ParentDirEnt.lba_le < m_tHead.rootDirEnt.lba_le )
+	{
+		DEF_ERRMSG( L"参数错误,错误的DirEnt" );
+		return FALSE;
+	}
+
+	SISO_DirEnt sDirEnt;
+	s32 nOffset;
+
+	nOffset = 0;
+	if( nOffset != ReadDirEnt( sDirEnt , NULL , a_ParentDirEnt , nOffset , FALSE ) ||
+		( sDirEnt.len != 0x30 ) || ( sDirEnt.nameLen != 1 ) ||
+		(sDirEnt.lba_le != a_ParentDirEnt.lba_le) )
+	{
+		DEF_ERRMSG( L"不是DirEnt(1)" );
+		return FALSE;
+	}
+
+	nOffset = 0x30;
+	if( nOffset != ReadDirEnt( sDirEnt , NULL , a_ParentDirEnt , nOffset , FALSE ) ||
+		( sDirEnt.len != 0x30 ) || ( sDirEnt.nameLen != 1 ) )
+	{
+		DEF_ERRMSG( L"不是DirEnt(2)" );
+		return FALSE;
+	}
+
+	return TRUE;
+}
+//----------------------------------------------------------------------------------------------------
+inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const SISO_DirEnt& a_ParentDirEnt )
+{
+	if( !IsDirEnt( a_ParentDirEnt ) )
+		return FALSE;
+
+	SISO_DirEnt sDirEnt;
+	s32 nOffset = 0x30;
+
+	do
+	{
+		{
+			const s32 nOffsetNew = ReadDirEnt( sDirEnt , NULL , a_ParentDirEnt , nOffset , TRUE );
+			if( nOffsetNew < 0 )
+				return FALSE;
+
+			nOffset = nOffsetNew;
+		}
+
+		if( 0 == sDirEnt.len )
+			return TRUE;
+
+		{
+			const n32 nLbaCount = ((sDirEnt.size_le%2048)==0)?(sDirEnt.size_le/2048):(sDirEnt.size_le/2048) + 1;
+
+			if( !m_pLBA_List->申请( sDirEnt.lba_le , nLbaCount ) )
+			{
+				DEF_ERRMSG( L"申请LBA失败" );
+				return FALSE;
+			}
+		}
+
+		if( sDirEnt.attr & 2 )
+		{
+			if( !XXX_遍历目录申请( sDirEnt ) )
+				return FALSE;
+		}
+	}
+	while(TRUE);
+
+	return FALSE;
+}
+//----------------------------------------------------------------------------------------------------
+inline s32 CWQSG_ISO_Base::zzz_FindFile(  SISO_DirEnt& a_DirEnt , const SISO_DirEnt& a_ParentDirEnt ,
+										s32 a_offset , const char*const a_strFileName )
+{
+	if( !IsDirEnt( a_ParentDirEnt ) )
+		return -1;
+
+	CStringA fileName;
+	if( a_strFileName )
+	{
+		fileName = a_strFileName;
+		if( fileName.GetLength() <= 0 )
+		{
+			DEF_ERRMSG( L"不能查找空文件名" );
+			return -1;
+		}
+		fileName.MakeLower();
+	}
+
+	char nameBuffer[256];
+	SISO_DirEnt dirEnt;
+
+	do 
+	{
+		{
+			const s32 newOffset( ReadDirEnt( dirEnt , nameBuffer , a_ParentDirEnt , a_offset , TRUE ) );
+			if( newOffset < 0 )
+				return -1;
+
+			a_offset = newOffset;
+		}
+
+		if( dirEnt.len == 0 )
+		{
+			if( a_strFileName )
+				break;
+
+			a_DirEnt = dirEnt;
+			return a_offset;
+		}
+		else if( a_strFileName )
+		{
+			CStringA name( nameBuffer );
+// 			if( 2352 == m_nSectorSize )
+// 			{
+// 				const int pos = name.Find( ';' );
+// 				if( pos != -1 )
+// 				{
+// 					nameBuffer[pos] = '\0';
+// 					name.Delete( pos , name.GetLength() );
+// 				}
+// 			}
+			if( fileName == name.MakeLower() )
+			{
+				a_DirEnt = dirEnt;
+				return a_offset;
+			}
+		}
+	}
+	while(TRUE);
+
+	DEF_ERRMSG( L"没找到文件" );
+	return -1;
+}
+//----------------------------------------------------------------------------------------------------
+s32 CWQSG_ISO_Base::FindFile( SISO_DirEnt& a_DirEnt , const SISO_DirEnt& a_ParentDirEnt , const char*const a_strFileName )
+{
+	return zzz_FindFile( a_DirEnt , a_ParentDirEnt , 0x30 , a_strFileName );
+}
+//----------------------------------------------------------------------------------------------------
+BOOL CWQSG_ISO_Base::ReadFile( const SISO_DirEnt& a_tDirEnt_Path , const char*const a_fileName ,
+							  CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_startOffset )
+{
+	if( !IsDirEnt( a_tDirEnt_Path ) ||
+		a_buflen < 0 || a_fileName == NULL || strlen(a_fileName) > 120 ||
+		a_startOffset < 0 || (a_startOffset+a_buflen) < 0
 		)
 	{
 		DEF_ERRMSG( L"参数错误" );
@@ -365,14 +431,14 @@ BOOL CWQSG_ISO_Base::ReadFile( const _tISO_DirEnt& a_tDirEnt_in , const char*con
 	}
 
 	//-----------------------------------------------------------------
-	_tISO_DirEnt dirEnt;
-	s32 dirOffset;
+	SISO_DirEnt sDirEnt;
+	s32 nDirOffset;
 
-	if( ( dirOffset = FindFile( a_tDirEnt_in , a_fileName , dirEnt ) ) < 0 )
+	if( ( nDirOffset = FindFile( sDirEnt , a_tDirEnt_Path , a_fileName ) ) < 0 )
 		return FALSE;
 
-	if( dirEnt.len != (u8)预定长度 )
- 	{
+	if( sDirEnt.len != (u8)预定长度 )
+	{
 // 		if( 2352 != m_nSectorSize )
 // 		{
 // 			DEF_ERRMSG( L"dir实际长度 != 预定长度" );
@@ -385,135 +451,60 @@ BOOL CWQSG_ISO_Base::ReadFile( const _tISO_DirEnt& a_tDirEnt_in , const char*con
 		}
 	}
 
-	if( ( dirEnt.size_le - a_startOffset ) < a_buflen )
+	if( ( sDirEnt.size_le - a_startOffset ) < a_buflen )
 	{
 		DEF_ERRMSG( L"文件长度不足" );
 		return FALSE;
 	}
 
 	u8 buffer[2352];
+#if 1
+	n32 nLbaIndex = a_startOffset / 2048 + sDirEnt.lba_le;
+	n32 nLbaOffset = a_startOffset % 2048;
 
-	s32 nStartOffset = a_startOffset;
 	s32 nBuflen = a_buflen;
 	while( nBuflen > 0 )
 	{
-		s32 nLen = SectorSeek( dirEnt.lba_le , nStartOffset );
-		if( nLen > nBuflen )
-			nLen = nBuflen;
-
-		if( nLen != m_ISOfp.Read( buffer , nLen ) )
+		if( !ReadUserData( buffer , nLbaIndex ) )
 		{
 			DEF_ERRMSG( L"读取数据错误" );
 			return FALSE;
 		}
 
-		if( nLen != a_buffp.Write( buffer , nLen ) )
+		s32 nLen = 2048 - nLbaOffset;
+		if( nBuflen < nLen )
+			nLen = nBuflen;
+
+		if( nLen != a_buffp.Write( buffer + nLbaOffset , nLen ) )
 		{
 			DEF_ERRMSG( L"输出数据错误" );
 			return FALSE;
 		}
 
-		nStartOffset += nLen;
+		nLbaOffset = 0;
+		++nLbaIndex;
 		nBuflen -= nLen;
 	}
-
+#endif
 	return TRUE;
 }
-
-inline s32 CWQSG_ISO_Base::zzz_FindFile( const _tISO_DirEnt& tDirEnt_in , s32 offset , char const*const strFileName , _tISO_DirEnt& tDirEnt  , const bool bFindFree )
-{
-	if( (0 != ReadDirEnt( tDirEnt_in , 0 , tDirEnt , NULL , false )) ||
-		(tDirEnt.len != 0x30) || (tDirEnt.attr !=2 ) || (tDirEnt.nameLen != 1) ||
-		(tDirEnt.lba_le != tDirEnt_in.lba_le) || (tDirEnt_in.size_le != tDirEnt_in.size_le) ||
-		(0x30 != ReadDirEnt( tDirEnt_in , 0x30 , tDirEnt ,NULL , false )) ||
-		(tDirEnt.len != 0x30) || (tDirEnt.attr != 2) || (tDirEnt.nameLen != 1)
-		)
-	{
-		DEF_ERRMSG( L"参数错误" );
-		return -1;
-	}
-
-	CStringA fileName;
-	if( strFileName )
-	{
-		fileName = strFileName;
-		if( fileName.GetLength() <= 0 )
-		{
-			DEF_ERRMSG( L"不能查找空文件名" );
-			return -1;
-		}
-		fileName.MakeLower();
-	}
-
-	char nameBuffer[256];
-	for( ; offset < tDirEnt_in.size_le ; )
-	{
-		{
-			const s32 newOffset( ReadDirEnt( tDirEnt_in , offset , tDirEnt , nameBuffer , bFindFree ) );
-			if( newOffset < 0 )
-				break;
-
-			offset = newOffset;
-		}
-
-		if( tDirEnt.len == 0 )
-		{
-			if( strFileName )
-				break;
-
-			return offset;
-		}
-		else
-		{
-			CStringA name( nameBuffer );
-// 			if( 2352 == m_nSectorSize )
-// 			{
-// 				const int pos = name.Find( ';' );
-// 				if( pos != -1 )
-// 				{
-// 					nameBuffer[pos] = '\0';
-// 					name.Delete( pos , name.GetLength() );
-// 				}
-// 			}
-			if( fileName == name.MakeLower() )
-				return offset;
-		}
-		offset += tDirEnt.len;
-	}
-	DEF_ERRMSG( L"没找到文件" );
-	return -1;
-}
-
-s32 CWQSG_ISO_Base::FindFile( const _tISO_DirEnt& a_tDirEnt_in , char const*const a_strFileName , _tISO_DirEnt& a_tDirEnt )
-{
-	return zzz_FindFile( a_tDirEnt_in , 0x60 , a_strFileName , a_tDirEnt , false );
-}
-
-//--------------------------------------------------------------------------------------------------
-static inline void memcpyR( void* a_dst , const void* a_src , const size_t a_size )
-{
-	u8* dp = (u8*)a_dst;
-	const u8* sp = (const u8*)a_src;
-
-	for( size_t i = 0 ; i < a_size ; ++i )
-		dp[i] = sp[a_size-i-1];
-}
-//--------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 #define DEF_FN_toLBA( __def_size , __def_LBA ) ((__def_size/__def_LBA) + (((__def_size%__def_LBA)>0)?1:0))
-BOOL CWQSG_ISO_Base::WriteFile( const _tISO_DirEnt& a_tDirEnt_in , char const*const a_fileName ,
-						  const void* a_buffer , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_isNew )
+const u8 g_DirData0[] = {
+	0x30, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 
+	0x08, 0x00, 0x6C, 0x01, 0x0B, 0x0C, 0x00, 0x00, 0x24, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 
+	0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x30, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 
+	0x08, 0x00, 0x6C, 0x01, 0x0B, 0x0C, 0x00, 0x00, 0x24, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 
+	0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*const a_fileName ,
+							   CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_insertOffset ,
+							   const BOOL a_bNew , const BOOL a_bDir )
 {
-	return WriteFile( a_tDirEnt_in , a_fileName , CWQSG_bufFile( (void*)a_buffer , a_buflen , FALSE ) , a_buflen , a_insertOffset , a_isNew , FALSE );
-}
-//--------------------------------------------------------------------------------------------------
-BOOL CWQSG_ISO_Base::WriteFile( const _tISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
-						  CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_insertOffset ,
-						  const BOOL a_isNew , const BOOL a_isDir )
-{
-	if( (!m_bCanWrite) ||
-		( !a_buffp.IsOpen() ) || ( a_buflen < 0 ) ||
-		(a_fileName == NULL) || ( strlen(a_fileName) > 120 ) ||
-		( a_insertOffset < 0 ) || ( (a_insertOffset+a_buflen) < 0 )
+	if( !IsDirEnt( a_tDirEnt_Path ) ||
+		!a_fileName || strlen(a_fileName) > 120 ||
+		a_buflen < 0 || a_insertOffset < 0 || (a_insertOffset+a_buflen) < 0
 		)
 	{
 		DEF_ERRMSG( L"参数错误" );
@@ -527,66 +518,74 @@ BOOL CWQSG_ISO_Base::WriteFile( const _tISO_DirEnt& a_tDirEnt_in , const char*co
 		return FALSE;
 	}
 	//-----------------------------------------------------------------
-	_tISO_DirEnt dirEnt;
+	SISO_DirEnt dirEnt_File;
 
 	BOOL b新 = FALSE;
-	s32 nDirOffset ;
-	//	nDirOffset = FindFile( tDirEnt_in , fileName , dirEnt );
-
+	s32 nDirOffset;
 
 	s32 最终fileSize = a_insertOffset + a_buflen;
-	if( ( nDirOffset = FindFile( a_tDirEnt_in , a_fileName , dirEnt ) ) >= 0 )
+	if( ( nDirOffset = FindFile( dirEnt_File , a_tDirEnt_Path , a_fileName ) ) >= 0 )
 	{
-		if( dirEnt.attr & 2 )
+		if( dirEnt_File.attr & 2 )
 		{
-			if( a_isDir )
+			if( a_bDir )
 				return TRUE;
 
 			DEF_ERRMSG( L"不能写目录" );
 			return FALSE;
 		}
-		else if( a_isDir )
+		else if( a_bDir )
 		{
 			DEF_ERRMSG( L"创建目录失败,已存在同名文件" );
 			return FALSE;
 		}
 
-		if( dirEnt.len != (u8)n预定长度 )
+		if( dirEnt_File.len != (u8)n预定长度 )
 		{
 			DEF_ERRMSG( L"目录项长度 与 预定长度不符" );
 			return FALSE;
 		}
 
-		if( !a_isNew )
-			最终fileSize = ((最终fileSize>dirEnt.size_le)?(最终fileSize):dirEnt.size_le);
+		if( !a_bNew )
+			最终fileSize = ((最终fileSize>dirEnt_File.size_le)?(最终fileSize):dirEnt_File.size_le);
 
-		const s32 需要的LBA = DEF_FN_toLBA( 最终fileSize , m_nLbaSize );
-		const s32 拥有LBA = DEF_FN_toLBA( dirEnt.size_le , m_nLbaSize );
+		const s32 需要的LBA = DEF_FN_toLBA( 最终fileSize , 2048 );
+		const s32 拥有LBA = DEF_FN_toLBA( dirEnt_File.size_le , 2048 );
 
 		if( 拥有LBA != 需要的LBA )
 		{
-			if( !m_pLBA_List->释放( dirEnt.lba_le ) )
+			const s32 nOldLba = dirEnt_File.lba_le;
+
+			if( !m_pLBA_List->释放( nOldLba ) )
 			{
 				DEF_ERRMSG( L"释放LBA失败" );
 				return FALSE;
 			}
 
-			if( 拥有LBA < 需要的LBA )
-				dirEnt.lba_le = m_pLBA_List->申请( 需要的LBA );
-			else
-				dirEnt.lba_le = m_pLBA_List->申请( dirEnt.lba_le , 需要的LBA );
+			if( !m_pLBA_List->申请( nOldLba , 需要的LBA ) )
+			{
+				dirEnt_File.lba_le = -1;
 
-			if( dirEnt.lba_le < 0 )
+				if( 需要的LBA > 拥有LBA )
+					dirEnt_File.lba_le = m_pLBA_List->申请( 需要的LBA );
+			}
+
+			if( dirEnt_File.lba_le < 0 )
 			{
 				DEF_ERRMSG( L"申请LBA失败" );
 				return FALSE;
 			}
 
-			memcpyR( &dirEnt.lba_be , &dirEnt.lba_le , sizeof(dirEnt.lba_le) );
+			memcpyR( &dirEnt_File.lba_be , &dirEnt_File.lba_le , sizeof(dirEnt_File.lba_le) );
+
+			//LBA move
+			if( nOldLba != dirEnt_File.lba_le )
+			{
+				__asm int 3;
+			}
 		}
 	}
-
-	else if( a_isNew )
+	else if( a_bNew )
 	{
 		if( a_insertOffset != 0 )
 		{
@@ -594,32 +593,35 @@ BOOL CWQSG_ISO_Base::WriteFile( const _tISO_DirEnt& a_tDirEnt_in , const char*co
 			return FALSE;
 		}
 
-		const s32 需要的LBA = ((DEF_FN_toLBA( a_buflen , m_nLbaSize ))==0)?1:(DEF_FN_toLBA( a_buflen , m_nLbaSize ));
+		const s32 需要的LBA = ((DEF_FN_toLBA( a_buflen , 2048 ))==0)?1:(DEF_FN_toLBA( a_buflen , 2048 ));
 
 		b新 = TRUE;
 
-		nDirOffset = 0x60;
+		nDirOffset = 0x30;
 		s32 界限长度;
-__gtReTest:
-		if( ( nDirOffset = zzz_FindFile( a_tDirEnt_in , nDirOffset , NULL , dirEnt , true ) ) < 0 )
+
+		nDirOffset = zzz_FindFile( dirEnt_File , a_tDirEnt_Path , nDirOffset , NULL );
+		if( nDirOffset < 0 )
 			return FALSE;
 
-		界限长度 = nDirOffset - ( nDirOffset % m_nLbaSize ) + m_nLbaSize;
-
-		if(	( 界限长度 <= nDirOffset ) || ( 界限长度 > a_tDirEnt_in.size_le ) )
+		界限长度 = nDirOffset - ( nDirOffset % 2048 ) + 2048;
+__gtReTest:
+		if(	界限长度 <= nDirOffset || 界限长度 > a_tDirEnt_Path.size_le )
 		{
 			DEF_ERRMSG( L"目录空间不足" );
 			return FALSE;
 		}
+
 		if( (界限长度 - nDirOffset) < n预定长度 )
 		{
-			nDirOffset = (界限长度 += m_nLbaSize);
+			nDirOffset = 界限长度;
+			界限长度 += 2048;
 			goto __gtReTest;
 		}
 
-		memset( &dirEnt , 0 , sizeof(dirEnt) );
+		memset( &dirEnt_File , 0 , sizeof(dirEnt_File) );
 
-		dirEnt.len = (u8)n预定长度;
+		dirEnt_File.len = (u8)n预定长度;
 		//	dirEnt.len_ex;
 		{
 			const s32 LBA_Pos = m_pLBA_List->申请( 需要的LBA );
@@ -629,16 +631,16 @@ __gtReTest:
 				return FALSE;
 			}
 
-			dirEnt.lba_le = LBA_Pos;
-			memcpyR( &dirEnt.lba_be , &dirEnt.lba_le , sizeof(dirEnt.lba_le) );
+			dirEnt_File.lba_le = LBA_Pos;
+			memcpyR( &dirEnt_File.lba_be , &dirEnt_File.lba_le , sizeof(dirEnt_File.lba_le) );
 		}
 
 		//	dirEnt.attr;	dirEnt.sp1;	dirEnt.sp2;
 
-		dirEnt.sp3_le = 1;
-		memcpyR( &dirEnt.sp3_be , &dirEnt.sp3_le , sizeof(dirEnt.sp3_be) );
+		dirEnt_File.sp3_le = 1;
+		memcpyR( &dirEnt_File.sp3_be , &dirEnt_File.sp3_le , sizeof(dirEnt_File.sp3_be) );
 
-		dirEnt.nameLen = strlen(a_fileName);
+		dirEnt_File.nameLen = (u8)strlen(a_fileName);
 		//----------------------------------------------------------
 	}
 	else
@@ -648,9 +650,9 @@ __gtReTest:
 	}
 
 	//--------------------------------------------------------------------------------
-	dirEnt.size_le = a_isDir?(m_nLbaSize):(最终fileSize);
+	dirEnt_File.size_le = a_bDir?(2048):(最终fileSize);
 
-	memcpyR( &dirEnt.size_be , &dirEnt.size_le , sizeof(dirEnt.size_le) );
+	memcpyR( &dirEnt_File.size_be , &dirEnt_File.size_le , sizeof(dirEnt_File.size_le) );
 	//------------------------------------------------------------------------------------------------------------
 
 	CWQSG_memFile memfp;
@@ -658,27 +660,21 @@ __gtReTest:
 	s32 bufLen_tmp = a_buflen;
 	s32 offset_tmp = a_insertOffset;
 
-	if( a_isDir )
+	if( a_bDir )
 	{
-		dirEnt.attr = 2;
+		dirEnt_File.attr = 2;
 
-		u8 data[] = {
-			0x30, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 
-			0x08, 0x00, 0x6C, 0x01, 0x0B, 0x0C, 0x00, 0x00, 0x24, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 
-			0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-			0x30, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 
-			0x08, 0x00, 0x6C, 0x01, 0x0B, 0x0C, 0x00, 0x00, 0x24, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 
-			0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-		};
+		u8 data[sizeof(g_DirData0)];
+		memcpy( data , g_DirData0 , sizeof(g_DirData0) );
 
-		_tISO_DirEnt* pEnt;
+		SISO_DirEnt* pEnt;
 
-		pEnt = (_tISO_DirEnt*)(data);
-		memcpy( pEnt , &dirEnt , sizeof(_tISO_DirEnt) - 1 );
+		pEnt = (SISO_DirEnt*)(data);
+		memcpy( pEnt , &dirEnt_File , sizeof(SISO_DirEnt) - 1 );
 		pEnt->len = 0x30;
 
-		pEnt = (_tISO_DirEnt*)(data+0x30);
-		memcpy( pEnt , &a_tDirEnt_in , sizeof(_tISO_DirEnt) - 1 );
+		pEnt = (SISO_DirEnt*)(data+0x30);
+		memcpy( pEnt , &a_tDirEnt_Path , sizeof(SISO_DirEnt) - 1 );
 		pEnt->len = 0x30;
 
 		if( sizeof(data) != memfp.Write( data , sizeof(data) ) )
@@ -695,28 +691,39 @@ __gtReTest:
 		SYSTEMTIME time;
 		GetLocalTime( &time );
 
-		dirEnt.time.uYear = (u8)(time.wYear - 1900);
-		dirEnt.time.uMonth = (u8)time.wMonth ;
-		dirEnt.time.uDay = (u8)time.wDay;
-		dirEnt.time.uHours = (u8)time.wHour;
-		dirEnt.time.uMinutes = (u8)time.wMinute;
-		dirEnt.time.uSeconds = (u8)time.wSecond;
-		dirEnt.time.uUnknown = 0;
+		dirEnt_File.time.uYear = (u8)(time.wYear - 1900);
+		dirEnt_File.time.uMonth = (u8)time.wMonth ;
+		dirEnt_File.time.uDay = (u8)time.wDay;
+		dirEnt_File.time.uHours = (u8)time.wHour;
+		dirEnt_File.time.uMinutes = (u8)time.wMinute;
+		dirEnt_File.time.uSeconds = (u8)time.wSecond;
+		dirEnt_File.time.uUnknown = 0;
 	}
 
 	while( bufLen_tmp > 0 )
 	{
-		u32 需要读取 = SectorSeek( dirEnt.lba_le , offset_tmp );
+		const s32 nLbaIndex = a_insertOffset / 2048 + dirEnt_File.lba_le;
+		const s32 nLbaOffset = a_insertOffset % 2048;
 
-		u8 buffer[2352];
+		u8 szLba[2048];
+		if( nLbaOffset != 0 || bufLen_tmp < 2048 )
+		{
+			if( !ReadUserData( szLba , nLbaIndex ) )
+				return FALSE;
+		}
+
+		u32 需要读取 = 2048 - nLbaOffset;
 
 		if( 需要读取 > bufLen_tmp )
 			需要读取 = bufLen_tmp;
 
+		u8 buffer[2048];
 		if( 需要读取 != buffp_tmp->Read( buffer , 需要读取 ) )
 			return FALSE;
 
-		if( 需要读取 != m_ISOfp.Write( buffer , 需要读取 ) )
+		memcpy( (szLba + nLbaOffset) , buffer , 需要读取 );
+
+		if( !WriteUserData( szLba , nLbaIndex ) )
 			return FALSE;
 
 		bufLen_tmp -= 需要读取;
@@ -737,50 +744,46 @@ __gtReTest:
 	}*/
 	//------------------------------------------------------------------------------------------------------------
 	{
-		SectorSeek( a_tDirEnt_in.lba_le , nDirOffset );
+		const s32 nLbaIndex = nDirOffset / 2048 + dirEnt_File.lba_le;
+		const s32 nLbaOffset = nDirOffset % 2048;
 
-		if( sizeof(dirEnt) != m_ISOfp.Write( &dirEnt , sizeof(dirEnt) ) )
-		{
-			DEF_ERRMSG( L"写目录表失败" );
+		u8 szLba[2048];
+		if( !ReadUserData( szLba , nLbaIndex ) )
 			return FALSE;
-		}
-	}
 
-	if( b新 )
-	{
-		//		fileName.MakeUpper();
-		const u32 写长度 = (dirEnt.nameLen&1)?dirEnt.nameLen:(dirEnt.nameLen+1);
-		if( ( 写长度 != m_ISOfp.Write( a_fileName , 写长度 ) ) ||
-			( sizeof((a_isDir?dirLastData:fileLastData)) !=
-			m_ISOfp.Write( (a_isDir?dirLastData:fileLastData) , sizeof((a_isDir?dirLastData:fileLastData)) ) ) )
+		memcpy( (szLba + nLbaOffset) , &dirEnt_File , sizeof(dirEnt_File) );
+
+		if( b新 )
 		{
-			DEF_ERRMSG( L"写目录表失败" );
-			return FALSE;
+			//		fileName.MakeUpper();
+			const u32 nNameLen = (dirEnt_File.nameLen&1)?dirEnt_File.nameLen:(dirEnt_File.nameLen+1);
+
+			n32 nOff = nLbaOffset + sizeof(dirEnt_File);
+			memcpy( (szLba + nOff) , a_fileName , nNameLen );
+			nOff += nNameLen;
+			memcpy( (szLba + nOff) , (a_bDir?g_dirLastData:g_fileLastData) ,
+				sizeof((a_bDir?g_dirLastData:g_fileLastData)) );
 		}
+
+		if( !WriteUserData( szLba , nLbaIndex ) )
+			return FALSE;
 	}
+#if 0
+	
+#endif
 	return TRUE;
 }
-
 //----------------------------------------------------------------------------------------------------
-BOOL CWQSG_ISO_Base::CreateDir( const _tISO_DirEnt& a_tDirEnt_in , const char*const a_dirName )
+BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , char const*const a_fileName ,
+								const void* a_buffer , const s32 a_buflen , const s32 a_insertOffset ,
+								const BOOL a_bNew )
 {
-	const u8 data[] = {
-		0x30, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 
-		0x08, 0x00, 0x6C, 0x01, 0x0B, 0x0C, 0x00, 0x00, 0x24, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 
-		0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-		0x30, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 
-		0x08, 0x00, 0x6C, 0x01, 0x0B, 0x0C, 0x00, 0x00, 0x24, 0x02, 0x00, 0x00, 0x01, 0x00, 0x00, 0x01, 
-		0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	};
-	return WriteFile( a_tDirEnt_in , a_dirName , CWQSG_bufFile( (void*)data , sizeof(data) , FALSE ) , sizeof(data) , 0 , TRUE , TRUE );
+	return WriteFile( a_tDirEnt_Path , a_fileName , CWQSG_bufFile( (void*)a_buffer , a_buflen , FALSE ) , a_buflen , a_insertOffset , a_bNew , FALSE );
 }
-
-inline s32 CWQSG_ISO_Base::SectorSeek( s32 a_nLbaID , s32 a_nLbaOffset )
+//----------------------------------------------------------------------------------------------------
+BOOL CWQSG_ISO_Base::CreateDir( const SISO_DirEnt& a_tDirEnt_Path , char const*const a_dirName )
 {
-	const s32 nLbaIndex = a_nLbaOffset / m_nLbaSize;
-	const s32 nLbaOffset = a_nLbaOffset % m_nLbaSize;
+	static u8 data[sizeof(g_DirData0)];
 
-	m_ISOfp.Seek( ( a_nLbaID + nLbaIndex ) * m_nSectorSize + nLbaOffset + m_nHeadOffset );
-
-	return m_nLbaSize - nLbaOffset;
+	return WriteFile( a_tDirEnt_Path , a_dirName , CWQSG_bufFile( (void*)data , sizeof(data) , FALSE ) , sizeof(data) , 0 , TRUE , TRUE );
 }

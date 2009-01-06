@@ -22,7 +22,7 @@ BOOL CWQSG_PsxISO::OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanW
 {
 	if( CWQSG_ISO_Base::Open( a_isoPathName , a_bCanWrite  ) )
 	{
-		if( m_pHead0->FileStructureVersion == 1 )
+		if( m_tHead.FileStructureVersion == 1 )
 			return TRUE;
 		DEF_ERRMSG( L"文件结构版本不为 1" );
 	}

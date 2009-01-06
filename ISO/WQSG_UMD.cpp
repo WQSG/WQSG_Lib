@@ -15,7 +15,6 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-
 #include "WQSG_UMD.h"
 //--------------------------------------------------------------------------------------------------
 CWQSG_UMD::CWQSG_UMD(void)
@@ -31,7 +30,7 @@ BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWri
 {
 	if( CWQSG_ISO_Base::Open( a_isoPathName , a_bCanWrite  ) )
 	{
-		if( m_pHead0->FileStructureVersion == 2 )
+		if( m_tHead.FileStructureVersion == 2 )
 			return TRUE;
 		DEF_ERRMSG( L"文件结构版本不为 2" );
 	}

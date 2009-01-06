@@ -36,5 +36,10 @@ public:
 	//------------------------------------------
 	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
 	virtual	void	CloseISO();
+
+	virtual BOOL IsOpen()
+	{
+		return CWQSG_ISO_Base::IsOpen();
+	}
 	//------------------------------------------
 };
