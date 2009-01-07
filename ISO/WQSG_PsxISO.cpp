@@ -20,11 +20,11 @@
 //--------------------------------------------------------------------------------------------------
 BOOL CWQSG_PsxISO::OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite )
 {
-	if( CWQSG_ISO_Base::Open( a_isoPathName , a_bCanWrite  ) )
+	if( CWQSG_ISO_Interface::Open( a_isoPathName , a_bCanWrite  ) )
 	{
 		if( m_tHead.FileStructureVersion == 1 )
 			return TRUE;
-		DEF_ERRMSG( L"文件结构版本不为 1" );
+		DEF_ISO_ERRMSG( L"文件结构版本不为 1" );
 	}
 
 	CloseISO();
@@ -33,5 +33,5 @@ BOOL CWQSG_PsxISO::OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanW
 
 void CWQSG_PsxISO::CloseISO()
 {
-	CWQSG_ISO_Base::Close();
+	CWQSG_ISO_Interface::Close();
 }

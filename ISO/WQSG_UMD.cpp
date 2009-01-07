@@ -18,6 +18,7 @@
 #include "WQSG_UMD.h"
 //--------------------------------------------------------------------------------------------------
 CWQSG_UMD::CWQSG_UMD(void)
+: CWQSG_ISO_Interface(E_WIT_UMD)
 {
 }
 
@@ -28,11 +29,11 @@ CWQSG_UMD::~CWQSG_UMD(void)
 
 BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWrite )
 {
-	if( CWQSG_ISO_Base::Open( a_isoPathName , a_bCanWrite  ) )
+	if( CWQSG_ISO_Interface::Open( a_isoPathName , a_bCanWrite  ) )
 	{
 		if( m_tHead.FileStructureVersion == 2 )
 			return TRUE;
-		DEF_ERRMSG( L"文件结构版本不为 2" );
+		DEF_ISO_ERRMSG( L"文件结构版本不为 2" );
 	}
 
 	CloseISO();
@@ -41,5 +42,5 @@ BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWri
 
 void CWQSG_UMD::CloseISO()
 {
-	CWQSG_ISO_Base::Close();
+	CWQSG_ISO_Interface::Close();
 }

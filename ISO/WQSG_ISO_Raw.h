@@ -16,14 +16,35 @@
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #ifndef _WQSG_ISO_RAW_
-#define _WQSG_ISO_BASE_
+#define _WQSG_ISO_RAW_
 #include <WQSG.h>
 #include <atlstr.h>
-#define DEF_ERRMSG( __def_msg ) {\
+#define DEF_ISO_ERRMSG( __def_msg ) {\
 	CString str;str = __FILE__;CString str2;str2.Format( L"file: %s\r\nline: %d\r\n%s" , str.GetBuffer() , __LINE__ , (__def_msg) );\
 	SetErrMsg( str2.GetBuffer() ); }
-#pragma pack(1)
 
+inline static bool xx_cmpeq( void const*const bufferLE , void const*const bufferBE , const size_t len )
+{
+	u8 const* buf1 = (u8 const*const)bufferLE;
+	u8 const* buf2 = (u8 const*const)bufferBE;
+
+	if( ( buf1 + len ) < buf1 )
+		return false;
+	if( ( buf2 + (len-1) ) < buf2 )
+		return false;
+
+	buf2 += (len-1);
+	for( size_t i = 0 , last_i = 0 ; (i >= last_i) && (i < len) ; last_i = i++ )
+	{
+		if( *buf1 !=  *buf2 )
+			return false;
+
+		++buf1,--buf2;
+	}
+	return true;
+}
+
+#pragma pack(1)
 struct SISO_DirEnt
 {
 	u8	len;

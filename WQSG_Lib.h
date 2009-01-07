@@ -25,15 +25,15 @@
 //---------------------------------------------------------
 #if defined(_DEBUG)
 #if defined(_DLL)///------------------------------------
-#pragma comment(lib, "WQSG_lib_Debug_MD.lib")
+#pragma comment(lib, "WQSG_lib_MDD.lib")
 #else
-#pragma comment(lib, "WQSG_lib_Debug_MT.lib")
+#pragma comment(lib, "WQSG_lib_MTD.lib")
 #endif
 #else///------------------------------------
 #if defined(_DLL)
-#pragma comment(lib, "WQSG_lib_Release_MD.lib")
+#pragma comment(lib, "WQSG_lib_MDR.lib")
 #else
-#pragma comment(lib, "WQSG_lib_Release_MT.lib")
+#pragma comment(lib, "WQSG_lib_MTR.lib")
 #endif
 #endif///------------------------------------
 //---------------------------------------------------------

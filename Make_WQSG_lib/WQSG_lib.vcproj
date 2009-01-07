@@ -17,7 +17,7 @@
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Debug_MD|Win32"
+			Name="MDD|Win32"
 			OutputDirectory="$(SolutionDir)"
 			IntermediateDirectory="$(SolutionDir)$(TargetName)"
 			ConfigurationType="4"
@@ -83,7 +83,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release_MD|Win32"
+			Name="MDR|Win32"
 			OutputDirectory="$(SolutionDir)"
 			IntermediateDirectory="$(SolutionDir)$(TargetName)"
 			ConfigurationType="4"
@@ -223,7 +223,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug_MT|Win32"
+			Name="MTD|Win32"
 			OutputDirectory="$(SolutionDir)"
 			IntermediateDirectory="$(SolutionDir)$(TargetName)"
 			ConfigurationType="4"
@@ -289,7 +289,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release_MT|Win32"
+			Name="MTR|Win32"
 			OutputDirectory="$(SolutionDir)"
 			IntermediateDirectory="$(SolutionDir)$(TargetName)"
 			ConfigurationType="4"
@@ -393,26 +393,6 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="ISO"
-				>
-				<File
-					RelativePath="..\ISO\WQSG_ISO_BASE.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\ISO\WQSG_ISO_Raw.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\ISO\WQSG_PsxISO.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\ISO\WQSG_UMD.cpp"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="头文件"
@@ -471,40 +451,12 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="ISO"
-				>
-				<File
-					RelativePath="..\ISO\WQSG_ISO_BASE.h"
-					>
-				</File>
-				<File
-					RelativePath="..\ISO\WQSG_ISO_Raw.h"
-					>
-				</File>
-				<File
-					RelativePath="..\ISO\WQSG_PsxISO.h"
-					>
-				</File>
-				<File
-					RelativePath="..\ISO\WQSG_UMD.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="资源文件"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
-			<File
-				RelativePath=".\ISO_App.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\ISO_App.h"
-				>
-			</File>
 			<File
 				RelativePath=".\main.cpp"
 				>

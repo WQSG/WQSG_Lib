@@ -75,4 +75,38 @@ public:
 	s32 FindFile( SISO_DirEnt& a_DirEnt , const SISO_DirEnt& a_ParentDirEnt , const char*const a_strFileName );
 };
 
+enum EWqsgIsoType
+{
+	E_WIT_PsxISO,
+	E_WIT_UMD,
+};
+
+class CWQSG_ISO_Interface : public CWQSG_ISO_Base
+{
+	EWqsgIsoType m_eIsoType;
+protected:
+	CWQSG_ISO_Interface( EWqsgIsoType a_eIsoType )
+		: m_eIsoType(a_eIsoType)
+	{}
+	//----------------------------------------------
+public:
+	const WCHAR* GetErrStr();
+
+	inline EWqsgIsoType GetIsoType()
+	{
+		return m_eIsoType;
+	}
+	//------------------------------------------
+	virtual ~CWQSG_ISO_Interface(void){}
+	//------------------------------------------
+	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite ) = 0;
+	virtual	void CloseISO() = 0;
+
+	virtual BOOL IsOpen()
+	{
+		return CWQSG_ISO_Base::IsOpen();
+	}
+	//------------------------------------------
+};
+
 #endif

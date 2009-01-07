@@ -18,7 +18,7 @@
 #pragma once
 #include "WQSG_ISO_BASE.h"
 
-class CWQSG_UMD : public CWQSG_ISO_Base
+class CWQSG_UMD : public CWQSG_ISO_Interface
 {
 public:
 	//------------------------------------------
@@ -26,15 +26,16 @@ private:
 protected:
 	//----------------------------------------------
 public:
-	inline	CStringW	GetErrStr()
-	{
-		return m_strErrorStr;
-	}
 	//------------------------------------------
 	CWQSG_UMD(void);
 	virtual ~CWQSG_UMD(void);
 	//------------------------------------------
-	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
-	virtual	void	CloseISO();
+	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
+	virtual	void CloseISO();
+
+	virtual BOOL IsOpen()
+	{
+		return CWQSG_ISO_Interface::IsOpen();
+	}
 	//------------------------------------------
 };

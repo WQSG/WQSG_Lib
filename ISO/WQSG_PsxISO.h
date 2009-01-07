@@ -18,7 +18,7 @@
 #pragma once
 #include "WQSG_ISO_BASE.h"
 
-class CWQSG_PsxISO : public CWQSG_ISO_Base
+class CWQSG_PsxISO : public CWQSG_ISO_Interface
 {
 public:
 	//------------------------------------------
@@ -26,20 +26,18 @@ private:
 protected:
 	//----------------------------------------------
 public:
-	inline	CStringW	GetErrStr()
-	{
-		return m_strErrorStr;
-	}
 	//------------------------------------------
-	CWQSG_PsxISO(void){}
+	CWQSG_PsxISO(void)
+		: CWQSG_ISO_Interface(E_WIT_PsxISO)
+	{}
 	virtual ~CWQSG_PsxISO(void){}
 	//------------------------------------------
-	virtual	BOOL	OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
-	virtual	void	CloseISO();
+	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
+	virtual	void CloseISO();
 
 	virtual BOOL IsOpen()
 	{
-		return CWQSG_ISO_Base::IsOpen();
+		return CWQSG_ISO_Interface::IsOpen();
 	}
 	//------------------------------------------
 };

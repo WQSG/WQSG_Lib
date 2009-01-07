@@ -32,7 +32,7 @@ int _tmain(int argc, _TCHAR* argv[])
 #if 1
 	CISO_App iso;
 	//BOOL D = iso.OpenISO( L"c:\\SLPS01210.img" , FALSE );
-	BOOL D = iso.OpenISO( L"c:\\D2.img" , FALSE );
+	BOOL D = iso.OpenISO( L"c:\\D2.img" , FALSE , E_WIT_PsxISO );
 
 	SIsoFileData data;
 #if 0
