@@ -135,6 +135,7 @@ public:
 #undef WQSG_BUFlen// 512
 };
 #endif
+#if 0
 //------------------------------------------------------------------
 class 节点_TXT_W
 {
@@ -154,6 +155,7 @@ public:
 			delete m_next[I];
 	}
 };
+#endif
 //------------------------------------------------------------------
 template <typename TYPE_1>
 class CWD_tree_del
@@ -206,13 +208,13 @@ public:
 
 		return TRUE;
 	}
-	inline	TYPE_1*		匹配( u8* 索引 , INT 索引长度 , INT& 实际匹配长度 )
+	inline	TYPE_1*		匹配( u8* 索引 , UINT 索引长度 , UINT& 实际匹配长度 )
 	{
 		if( ( 索引长度 <= 0 ) || ( 索引 == NULL ) )
 			return NULL;
 
 		实际匹配长度 = 索引长度;
-		__Node** 节点树 = m_ROOB,
+		__Node** 节点树 = m_ROOB;
 		__Node* tmp;
 
 		u32 xlen = 0;
