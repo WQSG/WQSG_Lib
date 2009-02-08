@@ -109,7 +109,7 @@ public:
 			::CloseHandle(W_hFile_M);
 	}
 ////////////////////////////////////////////////////////////////////
-	BOOL OpenFile(WCHAR* lpFileName,UINT ShareMode = 0)
+	BOOL OpenFile( const WCHAR* lpFileName,UINT ShareMode = 0)
 	{
 		≥ı ºªØ();
 
