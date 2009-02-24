@@ -172,6 +172,8 @@ __gtOpenErr:
 //----------------------------------------------------------------------------------------------------
 void CWQSG_ISO_Base::Close()
 {
+	delete m_pLBA_List;
+	m_pLBA_List = NULL;
 	CWQSG_ISO_Raw::CloseFile();
 }
 //----------------------------------------------------------------------------------------------------
@@ -724,7 +726,7 @@ __gtReTest:
 	}*/
 	//------------------------------------------------------------------------------------------------------------
 	{
-		const s32 nLbaIndex = nDirOffset / 2048 + dirEnt_File.lba_le;
+		const s32 nLbaIndex = nDirOffset / 2048 + a_tDirEnt_Path.lba_le;
 		const s32 nLbaOffset = nDirOffset % 2048;
 
 		u8 szLba[2048];
