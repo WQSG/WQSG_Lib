@@ -232,7 +232,10 @@ public:
 				节点树 = tmp->m_next;
 			}
 			else if( xtmp )//不存在下一层
+			{
 				索引长度 = --xlen;
+				break;
+			}
 			else
 				break;
 		}
