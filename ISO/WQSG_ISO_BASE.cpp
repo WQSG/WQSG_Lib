@@ -684,8 +684,8 @@ __gtReTest:
 
 	while( bufLen_tmp > 0 )
 	{
-		const s32 nLbaIndex = a_insertOffset / 2048 + dirEnt_File.lba_le;
-		const s32 nLbaOffset = a_insertOffset % 2048;
+		const s32 nLbaIndex = offset_tmp / 2048 + dirEnt_File.lba_le;
+		const s32 nLbaOffset = offset_tmp % 2048;
 
 		u8 szLba[2048];
 		if( nLbaOffset != 0 || bufLen_tmp < 2048 )
