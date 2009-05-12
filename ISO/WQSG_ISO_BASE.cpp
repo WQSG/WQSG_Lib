@@ -189,13 +189,19 @@ s32 CWQSG_ISO_Base::ReadDirEnt( SISO_DirEnt& a_tDirEnt , char*const a_strFileNam
 
 	const s32 nLbaCount = a_ParentDirEnt.size_le/2048;
 __gtReRead:
-	const s32 nLbaIndex = a_nOffset / 2048;
-	const s32 nLbaOffset = a_nOffset % 2048;
+	/*const*/ s32 nLbaIndex = a_nOffset / 2048;
+	/*const*/ s32 nLbaOffset = a_nOffset % 2048;
 
-	if( nLbaIndex >= nLbaCount || nLbaOffset > (2048-DEF_FN_make_DirLen(0)) )
+	if( nLbaOffset > (2048-DEF_FN_make_DirLen(0)) )
 	{
-		DEF_ISO_ERRMSG( L"参数错误" );
-		return -1;
+		if( ++nLbaIndex >= nLbaCount )
+		{
+			DEF_ISO_ERRMSG( L"参数错误" );
+			return -1;
+		}
+
+		a_nOffset = nLbaIndex * 2048;
+		nLbaOffset = 0;
 	}
 
 	u8 szBuffer[2048];
@@ -216,7 +222,7 @@ __gtReRead:
 
 	if( pDirEnt->cheak() )
 	{
-		if( a_nOffset > (2048 - DEF_FN_make_DirLen(pDirEnt->nameLen)) )
+		if( nLbaOffset > (2048 - DEF_FN_make_DirLen(pDirEnt->nameLen)) )
 		{
 			DEF_ISO_ERRMSG( L"错误的目录项,文件名长度错误" );
 			return -1;
@@ -291,8 +297,14 @@ inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const SISO_DirEnt& a_ParentDirEnt 
 
 	do
 	{
+#if _DEBUG
+		char buf[256];
+		{
+			const s32 nOffsetNew = ReadDirEnt( sDirEnt , buf , a_ParentDirEnt , nOffset , TRUE );
+#else
 		{
 			const s32 nOffsetNew = ReadDirEnt( sDirEnt , NULL , a_ParentDirEnt , nOffset , TRUE );
+#endif
 			if( nOffsetNew < 0 )
 				return FALSE;
 
@@ -305,11 +317,12 @@ inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const SISO_DirEnt& a_ParentDirEnt 
 		{
 			const n32 nLbaCount = ((sDirEnt.size_le%2048)==0)?(sDirEnt.size_le/2048):(sDirEnt.size_le/2048) + 1;
 
-			if( !m_pLBA_List->申请( sDirEnt.lba_le , nLbaCount ) )
-			{
-				DEF_ISO_ERRMSG( L"申请LBA失败" );
-				return FALSE;
-			}
+			//if( nLbaCount > 0 )
+				if( !m_pLBA_List->申请( sDirEnt.lba_le , ((nLbaCount == 0)?1:nLbaCount) ) )
+				{
+					DEF_ISO_ERRMSG( L"申请LBA失败" );
+					return FALSE;
+				}
 		}
 
 		if( sDirEnt.attr & 2 )
