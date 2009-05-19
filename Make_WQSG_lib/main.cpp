@@ -19,56 +19,13 @@
 #include<WQSG.h>
 #include "WQSG_CxFile.h"
 
-#include "ISO_App.h"
 
-void XX()
-{
-}
 #include<malloc.h>
-#include <ISO/WQSG_UMD.h>
-#include <ISO/WQSG_PsxIso.h>
 int _tmain(int argc, _TCHAR* argv[])
 {
-#if 1
-	CISO_App iso;
-	//BOOL D = iso.OpenISO( L"c:\\SLPS01210.img" , FALSE );
-	BOOL D = iso.OpenISO( L"c:\\D2.img" , FALSE , E_WIT_PsxISO );
-
-	SIsoFileData data;
-#if 0
-	iso.GetFileData( data , "/MIDI_A" , "" );
+#ifdef _AMD64_
+	int h = 0;
 #endif
-	{
-		//MIDI_A
-		SIsoFileFind* find = iso.FindIsoFile( "/" );
-
-		while( iso.FindNextIsoFile( find , data ) )
-		{
-			printf( "%s , %d \n" , data.name , data.size );
-		}
-		iso.CloseFindIsoFile( find );
-	}
-
-	iso.导出文件( L"c:\\aaaa.txt" , "/" , "123.txt" );
-
-	iso.CloseISO();
-
-// 	CWQSG_PsxISO m_Iso;
-// 	BOOL D = m_Iso.OpenISO( L"c:\\SLPS01210.img" , FALSE );
-
-// 	SISO_DirEnt a_tDirEnt;
-// 	m_Iso.GetRootDirEnt( a_tDirEnt );
-// 	CWQSG_memFile mfp;
-// 	m_Iso.ReadFile( a_tDirEnt , "SLPS_025.28;1" , mfp , 10 , 0 );
-#else
-	CWQSG_UMD m_Iso;
-	BOOL D = m_Iso.OpenISO( L"S:\\Luxor.iso" , FALSE );
-	SISO_DirEnt a_tDirEnt;
-	m_Iso.GetRootDirEnt( a_tDirEnt );
-	CWQSG_memFile mfp;
-	m_Iso.ReadFile( a_tDirEnt , "UMD_DATA.BIN" , mfp , 10 , 0 );
-#endif
-
 	CWQSG_CmemFILE fp;
 
 	char ddd[100];

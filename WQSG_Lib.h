@@ -22,21 +22,39 @@
 #include "WQSG.h"
 #include "ISO/WQSG_UMD.h"
 #include "ISO/WQSG_PsxISO.h"
-//---------------------------------------------------------
-#if defined(_DEBUG)
-#if defined(_DLL)///------------------------------------
-#pragma comment(lib, "WQSG_lib_MDD.lib")
-#else
-#pragma comment(lib, "WQSG_lib_MTD.lib")
+
+#if defined(_DEBUG) && defined(_DLL) && defined(_X86_)
+#pragma comment(lib, "WQSG_lib_MDD_x86.lib")
 #endif
-#else///------------------------------------
-#if defined(_DLL)
-#pragma comment(lib, "WQSG_lib_MDR.lib")
-#else
-#pragma comment(lib, "WQSG_lib_MTR.lib")
+
+#if defined(_DEBUG) && !defined(_DLL) && defined(_X86_)
+#pragma comment(lib, "WQSG_lib_MTD_x86.lib")
 #endif
-#endif///------------------------------------
-//---------------------------------------------------------
+
+#if !defined(_DEBUG) && defined(_DLL) && defined(_X86_)
+#pragma comment(lib, "WQSG_lib_MDR_x86.lib")
+#endif
+
+#if !defined(_DEBUG) && !defined(_DLL) && defined(_X86_)
+#pragma comment(lib, "WQSG_lib_MTR_x86.lib")
+#endif
+//-----------------------------------------------------------------
+#if defined(_DEBUG) && defined(_DLL) && defined(_AMD64_)
+#pragma comment(lib, "WQSG_lib_MDD_x64.lib")
+#endif
+
+#if defined(_DEBUG) && !defined(_DLL) && defined(_AMD64_)
+#pragma comment(lib, "WQSG_lib_MTD_x64.lib")
+#endif
+
+#if !defined(_DEBUG) && defined(_DLL) && defined(_AMD64_)
+#pragma comment(lib, "WQSG_lib_MDR_x64.lib")
+#endif
+
+#if !defined(_DEBUG) && !defined(_DLL) && defined(_AMD64_)
+#pragma comment(lib, "WQSG_lib_MTR_x64.lib")
+#endif
+
 #endif
 
 #endif
