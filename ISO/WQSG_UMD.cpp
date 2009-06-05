@@ -31,9 +31,9 @@ BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWri
 {
 	if( CWQSG_ISO_Interface::Open( a_isoPathName , a_bCanWrite  ) )
 	{
-		if( m_tHead.FileStructureVersion == 2 )
+		if( m_tHead.FileStructureVersion == 2 || m_tHead.FileStructureVersion == 1 )
 			return TRUE;
-		DEF_ISO_ERRMSG( L"文件结构版本不为 2" );
+		DEF_ISO_ERRMSG( L"文件结构版本不为 2 or 1" );
 	}
 
 	CloseISO();
