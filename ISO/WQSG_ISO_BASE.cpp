@@ -188,9 +188,12 @@ s32 CWQSG_ISO_Base::ReadDirEnt( SISO_DirEnt& a_tDirEnt , char*const a_strFileNam
 	}
 
 	const s32 nLbaCount = a_ParentDirEnt.size_le/2048;
+	s32 nLbaIndex;
+	s32 nLbaOffset;
+	u8 szBuffer[2048];
 __gtReRead:
-	/*const*/ s32 nLbaIndex = a_nOffset / 2048;
-	/*const*/ s32 nLbaOffset = a_nOffset % 2048;
+	nLbaIndex = a_nOffset / 2048;
+	nLbaOffset = a_nOffset % 2048;
 
 	if( nLbaOffset > (2048-DEF_FN_make_DirLen(0)) )
 	{
@@ -203,9 +206,7 @@ __gtReRead:
 		a_nOffset = nLbaIndex * 2048;
 		nLbaOffset = 0;
 	}
-
-	u8 szBuffer[2048];
-
+__gtReRead2:
 	if( !ReadUserData( szBuffer , a_ParentDirEnt.lba_le + nLbaIndex ) )
 	{
 		DEF_ISO_ERRMSG( L"¶ÁÊı¾İ³ö´í" );
@@ -216,8 +217,15 @@ __gtReRead:
 
 	if( 0 == pDirEnt->len )
 	{
-		a_tDirEnt = *pDirEnt;
-		return a_nOffset;
+		if( ++nLbaIndex >= nLbaCount )
+		{
+			a_tDirEnt = *pDirEnt;
+			return a_nOffset;
+		}
+
+		a_nOffset = nLbaIndex * 2048;
+		nLbaOffset = 0;
+		goto __gtReRead2;
 	}
 
 	if( pDirEnt->cheak() )
