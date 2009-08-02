@@ -67,12 +67,12 @@ public:
 		}
 	}
 
-	inline BOOL IsOpen()
+	inline BOOL IsOpen()const
 	{
 		return m_pIso?m_pIso->IsOpen():FALSE;
 	}
 
-	inline CString GetErrStr()
+	inline CString GetErrStr()const
 	{
 		return m_strLastErr;
  	}
@@ -80,11 +80,37 @@ public:
  	BOOL 导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_offset );
  	BOOL 写文件偏移( CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName );
  	BOOL 替换文件( CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName );
-	BOOL 导出文件( CStringW a_strPathName , CStringA a_path , CStringA a_nameA );
+	BOOL 导出文件( CStringW a_strPathName , CStringA a_pathA , CStringA a_nameA );
+	BOOL 导出文件夹( CStringW a_strPath , CStringA a_pathA );
 
 	BOOL GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a_nameA );
 
 	SIsoFileFind* FindIsoFile( CStringA a_pathA );
 	BOOL FindNextIsoFile( SIsoFileFind* a_handle , SIsoFileData& a_data );
 	void CloseFindIsoFile( SIsoFileFind* a_handle );
+
+	inline n32 GetMaxLbaCount()const
+	{
+		return m_pIso?m_pIso->GetMaxLbaCount():0;
+	}
+
+	inline BOOL AddLbaCount( n32 a_nLbaCount )
+	{
+		return m_pIso?m_pIso->AddLbaCount( a_nLbaCount ):FALSE;
+	}
+
+	inline n32 GetPerLbaSize()const
+	{
+		return m_pIso?m_pIso->GetPerLbaSize():0;
+	}
+
+	inline void GetFreeInfo( u32* a_puMaxFreeBlock , u32* a_puFreeLbaCount , u32* a_puFreeBlockCount )const
+	{
+		m_pIso->GetFreeInfo( a_puMaxFreeBlock , a_puFreeLbaCount , a_puFreeBlockCount );
+	}
+
+	inline BOOL GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const
+	{
+		return m_pIso?m_pIso->GetBlockInfo( a_nSt , a_puLen , a_pbUse )!=false:FALSE;
+	}
 };

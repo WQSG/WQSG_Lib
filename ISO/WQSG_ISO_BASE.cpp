@@ -30,6 +30,38 @@ static const u8 g_fileLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x0D, 0x55, 0x58,
 static const u8 g_dirLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 #define DEF_FN_make_DirLen( __def_nameLen ) (0x21 + ((((__def_nameLen)&1)==1)?(__def_nameLen):((__def_nameLen)+1)) + sizeof(g_fileLastData))
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+BOOL CWQSG_ISO_Base::InitLbaList( u32 a_uLbaCount )
+{
+	if( m_pLBA_List )
+		delete m_pLBA_List;
+
+	m_pLBA_List = new CWQSG_PartitionList( a_uLbaCount );
+	if( NULL == m_pLBA_List )
+	{
+		DEF_ISO_ERRMSG( L"创建LBA分配表失败" );
+		return FALSE;
+	}
+
+	if( 0 != m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le ) )
+	{
+		DEF_ISO_ERRMSG( L"设置LBA保留区失败" );
+		return FALSE;
+	}
+
+	if( (m_tHead.rootDirEnt.size_le < 2048) ||
+		((m_tHead.rootDirEnt.size_le % 2048)!=0) ||
+		(!m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le , m_tHead.rootDirEnt.size_le/2048 )) )
+	{
+		DEF_ISO_ERRMSG( L"分配 根目录LBA失败" );
+		return FALSE;
+	}
+
+	if( !XXX_遍历目录申请( m_tHead.rootDirEnt ) )
+		return FALSE;
+
+	return TRUE;
+}
+
 CWQSG_ISO_Base::CWQSG_ISO_Base()
 : m_pLBA_List(NULL)
 {
@@ -139,28 +171,7 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 		goto __gtOpenErr;
 	}
 
-	m_pLBA_List = new CWQSG_PartitionList( m_tHead.VolumeLBA_Total_LE );
-	if( NULL == m_pLBA_List )
-	{
-		DEF_ISO_ERRMSG( L"创建LBA分配表失败" );
-		goto __gtOpenErr;
-	}
-
-	if( 0 != m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le ) )
-	{
-		DEF_ISO_ERRMSG( L"设置LBA保留区失败" );
-		goto __gtOpenErr;
-	}
-
-	if( (m_tHead.rootDirEnt.size_le < 2048) ||
-		((m_tHead.rootDirEnt.size_le % 2048)!=0) ||
-		(!m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le , m_tHead.rootDirEnt.size_le/2048 )) )
-	{
-		DEF_ISO_ERRMSG( L"分配 根目录LBA失败" );
-		goto __gtOpenErr;
-	}
-
-	if( !XXX_遍历目录申请( m_tHead.rootDirEnt ) )
+	if( !InitLbaList( m_tHead.VolumeLBA_Total_LE ) )
 		goto __gtOpenErr;
 
 	return TRUE;
@@ -230,7 +241,7 @@ __gtReRead2:
 
 	if( pDirEnt->cheak() )
 	{
-		if( nLbaOffset > (2048 - DEF_FN_make_DirLen(pDirEnt->nameLen)) )
+		if( nLbaOffset > (n32)(2048 - DEF_FN_make_DirLen(pDirEnt->nameLen)) )
 		{
 			DEF_ISO_ERRMSG( L"错误的目录项,文件名长度错误" );
 			return -1;
@@ -790,7 +801,39 @@ BOOL CWQSG_ISO_Base::CreateDir( const SISO_DirEnt& a_tDirEnt_Path , char const*c
 
 	return WriteFile( a_tDirEnt_Path , a_dirName , CWQSG_bufFile( (void*)data , sizeof(data) , FALSE ) , sizeof(data) , 0 , TRUE , TRUE );
 }
+//----------------------------------------------------------------------------------------------------
+BOOL CWQSG_ISO_Base::AddLbaCount( n32 a_nLbaCount )
+{
+	if( a_nLbaCount == 0 )
+		return TRUE;
 
+	n32 nMaxLbaCount = GetMaxLbaCount();
+
+	const n32 nMaxLbaCountX = nMaxLbaCount + a_nLbaCount;
+
+	if( a_nLbaCount < 0 && a_nLbaCount < 0 )
+		return FALSE;
+
+	u8 buf[2048] = {};
+
+	for ( ; nMaxLbaCount < nMaxLbaCountX ; ++nMaxLbaCount )
+	{
+		if( !WriteUserData( buf , nMaxLbaCount ) )
+			return FALSE;
+	}
+
+	SISO_Head2048 tHead = m_tHead;
+	tHead.VolumeLBA_Total_LE = nMaxLbaCountX;
+	memcpyR( &tHead.VolumeLBA_Total_BE , &nMaxLbaCountX , 4 );
+
+	if( !WriteUserData( &tHead , 16 ) )
+		return FALSE;
+
+	m_tHead = tHead;
+
+	return InitLbaList( nMaxLbaCount );
+}
+//----------------------------------------------------------------------------------------------------
 const WCHAR* CWQSG_ISO_Interface::GetErrStr()
 {
 	return m_strErrorStr.GetBuffer();

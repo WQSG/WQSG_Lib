@@ -209,9 +209,14 @@ protected:
 		m_strErrorStr = a_msg;
 	}
 
-	virtual BOOL IsOpen()
+	virtual BOOL IsOpen()const
 	{
 		return m_ISOfp.IsOpen();
+	}
+
+	n32 GetPerLbaSize()const
+	{
+		return m_nSectorSize;
 	}
 };
 
@@ -272,7 +277,7 @@ public:
 	//------------------------------------------
 	__i__	BOOL	CreateDir( const SISO_DirEnt& a_tDirEnt_in , char const*const a_dirName );
 
-	virtual	BOOL	IsOpen()
+	virtual	BOOL	IsOpen()const
 	{
 		return m_ISOfp.IsOpen();
 	}

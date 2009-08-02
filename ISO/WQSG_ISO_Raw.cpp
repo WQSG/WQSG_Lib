@@ -119,7 +119,7 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 		goto __gtOpenFileErr;
 	}
 
-	if( m_nSectorSize == 2352 )
+	if( m_nSectorSize != 2048 )
 	{
 		switch( tHead.m_uMode )
 		{

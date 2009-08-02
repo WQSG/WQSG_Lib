@@ -25,6 +25,7 @@
 class CWQSG_ISO_Base : public CWQSG_ISO_Raw
 {
  	CWQSG_PartitionList* m_pLBA_List; //扇区分配表
+	BOOL InitLbaList( u32 a_uLbaCount );
 protected:
 	SISO_Head2048 m_tHead;
 protected:
@@ -34,7 +35,7 @@ protected:
 	BOOL Open( const WCHAR*const a_strISOPathName , const BOOL a_bCanWrite );
 	void Close();
 
-	virtual BOOL IsOpen()
+	virtual BOOL IsOpen()const
 	{
 		return CWQSG_ISO_Raw::IsOpen();
 	}
@@ -73,6 +74,28 @@ public:
 
 	//成功返回 dirOffset , 失败 -1
 	s32 FindFile( SISO_DirEnt& a_DirEnt , const SISO_DirEnt& a_ParentDirEnt , const char*const a_strFileName );
+
+	inline n32 GetMaxLbaCount()const
+	{
+		return m_pLBA_List?m_pLBA_List->GetMaxLbaCount():0;
+	}
+
+	BOOL AddLbaCount( n32 a_nLbaCount );
+
+	inline n32 GetPerLbaSize()const
+	{
+		return CWQSG_ISO_Raw::GetPerLbaSize();
+	}
+
+	inline void GetFreeInfo( u32* a_puMaxFreeBlock , u32* a_puFreeLbaCount , u32* a_puFreeBlockCount )const
+	{
+		m_pLBA_List->GetFreeInfo( a_puMaxFreeBlock , a_puFreeLbaCount , a_puFreeBlockCount );
+	}
+
+	inline BOOL GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const
+	{
+		return m_pLBA_List?m_pLBA_List->GetBlockInfo( a_nSt , a_puLen , a_pbUse )!=false:FALSE;
+	}
 };
 
 enum EWqsgIsoType
@@ -102,7 +125,7 @@ public:
 	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite ) = 0;
 	virtual	void CloseISO() = 0;
 
-	virtual BOOL IsOpen()
+	virtual BOOL IsOpen()const
 	{
 		return CWQSG_ISO_Base::IsOpen();
 	}

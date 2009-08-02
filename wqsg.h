@@ -607,7 +607,7 @@ public:
 	CWQSG_PartitionList( const u32 maxLBA ): m_maxLBA( maxLBA ){	全释放();	}
 	~CWQSG_PartitionList(){	全释放();	}
 	//------------------------------------------------
-	void 全释放()
+	inline void 全释放()
 	{
 		CLinkList* tmp1 = m_head.next;
 		CLinkList* tmp2 = NULL;
@@ -622,7 +622,7 @@ public:
 		m_head.m_use = false;
 		m_head.next = NULL;
 	}
-	bool 申请( const s32 st , const u32 len )
+	inline bool 申请( const s32 st , const u32 len )
 	{
 		if( ( st < 0 ) || ( len <= 0 ) )
 			return false;
@@ -676,7 +676,7 @@ public:
 
 		return true;
 	}
-	s32 申请( const u32 len )
+	inline s32 申请( const u32 len )
 	{
 		if( len <= 0 )
 			return -1;
@@ -709,7 +709,7 @@ public:
 
 		return tmp->m_start;
 	}
-	bool 释放( const s32 st )
+	inline bool 释放( const s32 st )
 	{
 		if( st < 0 )
 			return false;
@@ -755,6 +755,84 @@ public:
 			}
 		}
 		return true;
+	}
+
+	inline u32 GetMaxLbaCount()const
+	{
+		return m_maxLBA;
+	}
+
+	inline void GetFreeInfo( u32* a_puMaxFreeBlock , u32* a_puFreeLbaCount , u32* a_puFreeBlockCount )const
+	{
+		if( !a_puMaxFreeBlock || !a_puFreeLbaCount )
+			return;
+
+		u32 uMax = 0;
+		u32 uFreeLbaCount = 0;
+		u32 uFreeBlockCount = 0;
+
+		const CLinkList* pNode = &m_head;
+		while( pNode )
+		{
+			if( pNode->m_use )
+			{
+
+			}
+			else
+			{
+				if( pNode->m_len > uMax )
+				{
+					uMax = pNode->m_len;
+				}
+
+				uFreeLbaCount += pNode->m_len;
+				uFreeBlockCount++;
+			}
+			pNode = pNode->next;
+		}
+
+		if( a_puMaxFreeBlock )
+			*a_puMaxFreeBlock = uMax;
+
+		if( a_puFreeLbaCount )
+			*a_puFreeLbaCount = uFreeLbaCount;
+
+		if( a_puFreeBlockCount )
+			*a_puFreeBlockCount = uFreeBlockCount;
+	}
+
+	inline bool GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const
+	{
+		if( a_nSt < 0 )
+			return false;
+
+		if( !a_puLen || !a_pbUse )
+			return true;
+
+		const u32 uSt = a_nSt;
+
+		u32 uMax = 0;
+		u32 uFreeLbaCount = 0;
+
+		const CLinkList* pNode = &m_head;
+		while( pNode )
+		{
+			if( pNode->m_start > uSt )
+				return false;
+			else if( pNode->m_start == uSt )
+			{
+				if( a_puLen )
+					*a_puLen = pNode->m_len;
+
+				if( a_pbUse )
+					*a_pbUse = pNode->m_use;
+
+				return true;
+			}
+
+			pNode = pNode->next;
+		}
+		return false;
 	}
 #ifdef DEBUG
 	void 写出调试信息( CStringW& log )

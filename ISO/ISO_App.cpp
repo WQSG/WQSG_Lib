@@ -364,6 +364,68 @@ BOOL CISO_App::导出文件( CStringW a_strPathName , CStringA a_pathA , CStringA a_
 	return TRUE;
 }
 
+BOOL CISO_App::导出文件夹( CStringW a_strPath , CStringA a_pathA )
+{
+	if( NULL == m_pIso )
+		return FALSE;
+
+	SIsoFileFind* pFind = FindIsoFile( a_pathA );
+	if( !pFind )
+	{
+		m_strLastErr = a_pathA;
+		m_strLastErr + L"\r\n找不到文件夹" ;
+		return FALSE;
+	}
+
+	if( a_strPath.Right(1) != L'\\' )
+		a_strPath += L'\\';
+
+	if( a_pathA.Right(1) != L'/' )
+		a_pathA += L'/';
+
+	if ( !WQSG_CreateDir( a_strPath.GetString() ) )
+	{
+		m_strLastErr = a_strPath + L"\r\n创建文件夹失败" ;
+		return FALSE;
+	}
+
+	BOOL bRt = TRUE;
+	CStringW strPathName;
+	SIsoFileData data;
+
+	while( FindNextIsoFile( pFind , data ) )
+	{
+		strPathName = data.name;
+		strPathName.Insert( 0 , a_strPath );
+
+		if( data.isDir )
+		{
+			if( !导出文件夹( a_strPath , a_pathA + data.name ) )
+			{
+				bRt = FALSE;
+				goto __gtSaveDirExit;
+			}
+		}
+		else
+		{
+			if( !导出文件( a_strPath , a_pathA , data.name ) )
+			{
+				bRt = FALSE;
+				goto __gtSaveDirExit;
+			}
+		}
+	}
+
+__gtSaveDirExit:
+	if( pFind )
+	{
+		CloseFindIsoFile( pFind );
+		pFind = NULL;
+	}
+
+	return bRt;
+}
+
 BOOL CISO_App::写文件偏移( CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName )
 {
 	SISO_DirEnt sDirEnt_File;
