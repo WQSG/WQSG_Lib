@@ -283,11 +283,11 @@ public:
 		,m_MSG(hwnd,标题)
 	{}
 	virtual	~CWQSG_IPS_OUT(){};
-	BOOL 制作补丁30( TCHAR*const 原文件 , TCHAR*const 新文件 , TCHAR*const 补丁文件 , const s64 开始地址 ,//其中一个文件失效
+	BOOL 制作补丁30( const TCHAR*const 原文件 , const TCHAR*const 新文件 , const TCHAR*const 补丁文件 , const s64 开始地址 ,//其中一个文件失效
 		const s64 结束地址 ,//大于新文件,按照到结尾
 		const s64 基础偏移 ,
 		INT 是否使用CRC32 = 0 ,//非零验证
-		WCHAR* 说明文本 = NULL ,
+		const WCHAR* 说明文本 = NULL ,
 		DWORD 文本字数 = 0 ,
 		CWD_BIN* EXE = NULL )
 	{
@@ -488,7 +488,7 @@ public:
 		,m_标题(标题)
 		,m_MSG( hwnd , 标题 ){}
 	virtual	~CWQSG_IPS_IN(){}
-	BOOL 打补丁(TCHAR *const 补丁文件,TCHAR *const 目标文件)
+	BOOL 打补丁(const TCHAR *const 补丁文件,const TCHAR *const 目标文件)
 	{
 		::CWQSG_File IPS_File,ROM_File;
 		if( !IPS_File.OpenFile(补丁文件,1,3))
@@ -597,7 +597,7 @@ public:
 			return FALSE;
 		}
 	}
-	BOOL 取文件补丁信息(TCHAR *const 补丁文件,CWD_WIPS信息* WIPS信息结构)
+	BOOL 取文件补丁信息(const TCHAR *const 补丁文件,CWD_WIPS信息* WIPS信息结构)
 	{
 		WIPS信息结构->清空();
 		::CWQSG_File IPS_File;

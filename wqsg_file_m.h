@@ -276,7 +276,7 @@ public:
 
 		::CloseHandle(m_hFile_M);
 	}
-	BOOL OpenFile( WCHAR* lpFileName , UINT ShareMode = 0 )
+	BOOL OpenFile( const WCHAR* lpFileName , UINT ShareMode = 0 )
 	{
 		Close();
 		if(!m_fp.OpenFile( lpFileName , 1 ,ShareMode ) )
