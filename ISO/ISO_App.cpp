@@ -20,6 +20,102 @@
 #include "../ISO/WQSG_UMD.h"
 #include <algorithm>
 #include <map>
+class CWQSG_TempMapFile : public CWQSG_xFile
+{
+	CWQSG_xFile* m_pFile;
+	s64 m_nStartOffset;
+	s64 m_nFileSzie;
+	s64 m_nFileOffset;
+public:
+	CWQSG_TempMapFile()
+		: m_pFile(NULL)
+		, m_nStartOffset(0)
+		, m_nFileSzie(0)
+		, m_nFileOffset(0)
+	{
+
+	}
+
+	virtual	u32			Read		( void*const lpBuffre , const u32 len )
+	{
+		if( IsOpen() )
+		{
+			if( m_nFileOffset >= 0 && m_nFileOffset < m_nFileSzie )
+			{
+				const s64 xLen = m_nFileSzie - m_nFileOffset;
+				u32 uLen = (xLen < len)?u32(xLen):len;
+
+				return m_pFile->Read( lpBuffre , uLen );
+			}
+		}
+
+		return 0;
+	}
+
+	virtual	u32			Write		( void const*const lpBuffre , const u32 len ){return FALSE;}
+	virtual	void		Close		( void )
+	{
+		m_pFile = NULL;
+		m_nStartOffset = m_nFileSzie = m_nFileOffset = 0;
+	}
+
+	virtual	s64			GetFileSize	( void )const
+	{
+		return m_nFileSzie;
+	}
+
+	virtual	BOOL		SetFileLength( const s64 Length )
+	{
+		return FALSE;
+	}
+
+	virtual	s64			Tell		( void )const
+	{
+		return m_nFileOffset;
+	}
+
+	virtual	BOOL		Seek		( const s64 offset )
+	{
+		m_nFileOffset = offset;
+		return TRUE;
+	}
+
+	virtual	u32			GetCRC32	( void )
+	{
+		return 0;
+	}
+
+	virtual	BOOL		IsOpen		( void )const
+	{
+		return (m_pFile && m_pFile->IsOpen());
+	}
+	//=================================================
+	BOOL Init( CWQSG_xFile* a_pFile , s64 a_nStartOffset , s64 a_nFileSize )
+	{
+		Close();
+
+		if( NULL == a_pFile || !a_pFile->IsOpen() )
+			return FALSE;
+
+		const s64 size = a_pFile->GetFileSize();
+
+		if( size < 0 || a_nStartOffset < size )
+			return FALSE;
+
+		const s64 xSize = size - a_nStartOffset;
+		if( a_nFileSize < 0 || a_nFileSize > xSize )
+			return FALSE;
+
+		m_pFile = a_pFile;
+		m_nStartOffset = a_nStartOffset;
+		m_nFileSzie = a_nFileSize;
+		m_nFileOffset = 0;
+
+		return TRUE;
+	}
+
+};
+//||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 class CSIsoFileFindMgr
 {
 	typedef std::map<SIsoFileFind*,SIsoFileFind*> TSIsoFileFindMgrMap;
@@ -127,7 +223,7 @@ inline BOOL CISO_App::GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_p
 		while( path[0] == '/' )
 			path.Delete( 0 , 1 );
 
-		if( m_pIso->FindFile( tmp , a_tDirEnt , name.GetBuffer() ) < 0 )
+		if( m_pIso->FindFile( tmp , a_tDirEnt , name.GetString() ) < 0 )
 		{
 			CStringW str;str = a_path;
 			m_strLastErr =  str + L"\r\n路经错误";
@@ -269,12 +365,19 @@ BOOL CISO_App::导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_
 		strNameA = strNameW;
 	}
 
-	if( ::WQSG_IsFile( a_strPathName.GetBuffer() ) )
+	if( ::WQSG_IsFile( a_strPathName.GetString() ) )
 	{
-		if( !zzz_WriteFile( a_strPathName , strNameA , a_path , a_offset , TRUE ) )
+		CWQSG_File fp;
+		if( !fp.OpenFile( a_strPathName.GetString() , 1 , 3 ) )
+		{
+			m_strLastErr = a_strPathName + L"\r\n打开文件失败";
+			return FALSE;
+		}
+
+		if( !zzz_WriteFile( a_strPathName , fp , strNameA , a_path , a_offset , TRUE ) )
 			return FALSE;
 	}
-	else if( ::WQSG_IsDir( a_strPathName.GetBuffer() ) )
+	else if( ::WQSG_IsDir( a_strPathName.GetString() ) )
 	{
 		if( !zzz_导入文件夹( a_strPathName , a_path ) )
 			return FALSE;
@@ -287,7 +390,7 @@ BOOL CISO_App::导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_
 	return TRUE;
 }
 
-inline BOOL CISO_App::zzz_WriteFile( CStringW strPathName , CStringA strName ,
+inline BOOL CISO_App::zzz_WriteFile( CStringW strPathName , CWQSG_xFile& a_InFp , CStringA strName ,
 							 CStringA strPath , const s32 offset , const BOOL isNew  )
 {
 	if( NULL == m_pIso )
@@ -308,21 +411,21 @@ inline BOOL CISO_App::zzz_WriteFile( CStringW strPathName , CStringA strName ,
 		return FALSE;
 	}
 
-	CWQSG_File fp;
-	if( !fp.OpenFile( strPathName.GetBuffer() , 1 , 3 ) )
-	{
-		m_strLastErr = strPathName + L"\r\n打开文件失败";
-		return FALSE;
-	}
+// 	CWQSG_File fp;
+// 	if( !fp.OpenFile( strPathName.GetString() , 1 , 3 ) )
+// 	{
+// 		m_strLastErr = strPathName + L"\r\n打开文件失败";
+// 		return FALSE;
+// 	}
 
-	const s64 srcFileSize = fp.GetFileSize();
+	const s64 srcFileSize = a_InFp.GetFileSize();
 	if( ( srcFileSize < 0 ) || ( srcFileSize > (((u32)-1))>>1) )
 	{
 		m_strLastErr = strPathName + L"\r\n文件大小错误" ;
 		return FALSE;
 	}
 
-	if( !m_pIso->WriteFile( sDirEnt_Path , strName , fp , (s32)srcFileSize , offset , isNew , FALSE ) )
+	if( !m_pIso->WriteFile( sDirEnt_Path , strName , a_InFp , (s32)srcFileSize , offset , isNew , FALSE ) )
 	{
 		m_strLastErr = strPathName + L"\r\n写文件到ISO出错" ;
 		return FALSE;
@@ -343,11 +446,11 @@ BOOL CISO_App::导出文件( CStringW a_strPathName , CStringA a_pathA , CStringA a_
 		return FALSE;
 
 	SISO_DirEnt sDirEnt_File;
-	if( m_pIso->FindFile( sDirEnt_File , sDirEnt_Path , a_nameA.GetBuffer() ) < 0 )
+	if( m_pIso->FindFile( sDirEnt_File , sDirEnt_Path , a_nameA.GetString() ) < 0 )
 		return FALSE;
 
 	CWQSG_File fp;
-	if( !fp.OpenFile( a_strPathName.GetBuffer() , 4 , 3 ) )
+	if( !fp.OpenFile( a_strPathName.GetString() , 4 , 3 ) )
 	{
 		m_strLastErr = a_strPathName + L"\r\n打开文件失败" ;
 		return FALSE;
@@ -439,12 +542,26 @@ BOOL CISO_App::写文件偏移( CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset
 		return FALSE;
 	}
 
-	return zzz_WriteFile( a_inFileName , a_nameA , a_pathA , a_oldOffset , FALSE );
+	CWQSG_File fp;
+	if( !fp.OpenFile( a_inFileName.GetString() , 1 , 3 ) )
+	{
+		m_strLastErr = a_inFileName + L"\r\n打开文件失败";
+		return FALSE;
+	}
+
+	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , a_oldOffset , FALSE );
 }
 
 BOOL CISO_App::替换文件( CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName )
 {
-	return zzz_WriteFile( a_inFileName , a_nameA , a_pathA , 0 , TRUE );
+	CWQSG_File fp;
+	if( !fp.OpenFile( a_inFileName.GetString() , 1 , 3 ) )
+	{
+		m_strLastErr = a_inFileName + L"\r\n打开文件失败";
+		return FALSE;
+	}
+
+	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , 0 , TRUE );
 }
 
 inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA )
@@ -458,7 +575,7 @@ inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA
 
 	if( a_nameA[0] != 0 )
 	{
-		if( m_pIso->FindFile( a_tDirEnt , sDirEnt_Path , a_nameA.GetBuffer() ) < 0 )
+		if( m_pIso->FindFile( a_tDirEnt , sDirEnt_Path , a_nameA.GetString() ) < 0 )
 		{
 			CStringW str;str = a_pathA + a_nameA;
 			m_strLastErr = str + L"\r\nISO没有此文件";
@@ -480,7 +597,7 @@ BOOL CISO_App::GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a
 		a_data.size = tmp.size_le;
 		a_data.lba = tmp.lba_le;
 
-		WQSG_strcpy( a_nameA.GetBuffer() , a_data.name );
+		WQSG_strcpy( a_nameA.GetString() , a_data.name );
 
 		return TRUE;
 	}
@@ -541,4 +658,82 @@ void CISO_App::CloseFindIsoFile( SIsoFileFind* a_handle )
 		m_Objs.erase(it);
 		m_IsoFileFindMgr.Free( a_handle );
 	}
+}
+
+BOOL CISO_App::导入文件包( CWQSG_xFile& a_InFp )
+{
+	SWQSG_IsoPatch_Head head;
+	if( sizeof(head) != a_InFp.Read( &head , sizeof(head) ) )
+	{
+		return FALSE;
+	}
+
+	if( 0 != memcmp( head.m_Magic , DEF_WQSG_IsoPatch_Head_Magic , sizeof(head.m_Magic) ) )
+	{
+		return FALSE;
+	}
+
+	if( memcmp( head.m_Ver , "1.0" , 4 ) != 0 )
+		return FALSE;
+
+	if( head.m_nSize < sizeof(head) )
+		return FALSE;
+
+	const n64 nFileSize = a_InFp.GetFileSize();
+	if( nFileSize < head.m_nSize )
+		return FALSE;
+
+	n32 nFileCount = 0;
+	s64 offset = sizeof(head);
+	while ( offset < head.m_nSize )
+	{
+		SWQSG_IsoPatch_Block blockInfo;
+
+		a_InFp.Seek( offset );
+
+		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
+			return FALSE;
+
+		if( blockInfo.m_uSize != sizeof(blockInfo) )
+			return FALSE;
+
+		const u32 uCrc32Src = blockInfo.m_uCrc32;
+		blockInfo.m_uCrc32 = 0;
+
+		_m_CRC32 crc32;
+		const u32 uCrc32New = crc32.GetCRC32( (u8*)&blockInfo , blockInfo.m_uSize );
+
+		if( uCrc32New != uCrc32Src )
+			return FALSE;
+
+		offset += blockInfo.m_uFileSize;
+		nFileCount++;
+	}
+
+	if( nFileCount != head.m_nFileCount )
+	{
+		return FALSE;
+	}
+
+	offset = sizeof(head);
+	while ( offset < head.m_nSize )
+	{
+		SWQSG_IsoPatch_Block blockInfo;
+
+		a_InFp.Seek( offset );
+
+		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
+			return FALSE;
+
+		CWQSG_TempMapFile fp;
+		if( !fp.Init( &a_InFp , offset + sizeof(blockInfo) , blockInfo.m_uFileSize ) )
+			return FALSE;
+
+		if( !zzz_WriteFile( L"" , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , true ) )
+			return TRUE;
+
+		offset += blockInfo.m_uFileSize;
+	}
+
+	return FALSE;
 }

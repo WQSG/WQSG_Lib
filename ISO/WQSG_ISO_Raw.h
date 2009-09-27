@@ -45,6 +45,18 @@ inline static bool xx_cmpeq( void const*const bufferLE , void const*const buffer
 }
 
 #pragma pack(1)
+
+struct SIsoTime
+{
+	u8	uYear;
+	u8	uMonth;
+	u8	uDay;
+	u8	uHours;
+	u8	uMinutes;
+	u8	uSeconds;
+	u8	uUnknown;	//24
+};
+
 struct SISO_DirEnt
 {
 	u8	len;
@@ -53,16 +65,7 @@ struct SISO_DirEnt
 	s32 lba_be;
 	s32	size_le;
 	s32	size_be;
-	struct
-	{
-		u8	uYear;
-		u8	uMonth;
-		u8	uDay;
-		u8	uHours;
-		u8	uMinutes;
-		u8	uSeconds;
-		u8	uUnknown;	//24
-	}time;
+	SIsoTime time;
 	u8	attr;
 	u8	sp1;
 	u8	sp2;
