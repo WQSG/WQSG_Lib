@@ -40,8 +40,8 @@ class CWQSG_DirDlg : public CDialog
     void 列出目录( );
     CString m_EditPath;
 public:
-	CWQSG_DirDlg(WCHAR* title = NULL,
-        WCHAR* path = NULL,
+	CWQSG_DirDlg(const WCHAR* title = NULL,
+        const WCHAR* path = NULL,
         CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CWQSG_DirDlg();
 
@@ -74,8 +74,8 @@ class CWQSG_DirDlg
 public:
 	CWQSG_DirDlg(
 		HWND hWnd ,
-		WCHAR* title = NULL ,
-		WCHAR* path = NULL
+		const WCHAR* title = NULL ,
+		const WCHAR* path = NULL
 		);
 	virtual ~CWQSG_DirDlg(){}
 	BOOL GetPath( WCHAR* path );

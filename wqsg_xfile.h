@@ -79,6 +79,8 @@ public:
 	__i__	virtual	BOOL		Seek		( const s64 offset )			= 0;
 	__i__	virtual	u32			GetCRC32	( void )						= 0;
 	__i__	virtual	BOOL		IsOpen		( void )const					= 0;
+	__i__	virtual	BOOL		IsCanRead	( void )const					= 0;
+	__i__	virtual	BOOL		IsCanWrite	( void )const					= 0;
 };
 //------------------------------------------
 class CWQSG_bufFile:public CWQSG_xFile
@@ -92,16 +94,18 @@ public:
 	CWQSG_bufFile();
 	CWQSG_bufFile( void*const buffer , const size_t size , const BOOL bCanWrite );
 	virtual	~CWQSG_bufFile();
-	__i__	u32			Read		( void*const lpBuffre , const u32 len );
-	__i__	u32			Write		( void const*const lpBuffre , const u32 len );
-	__i__	void		Close		( void );
-//	__i__	BOOL		WriteStrW	( WCHAR const*const str );		//
-	__i__	s64			GetFileSize	( void )const;
-	__i__	BOOL		SetFileLength( const s64 Length );
-	__i__	s64			Tell		( void )const;
-	__i__	BOOL		Seek		( const s64 offset );
-	__i__	u32			GetCRC32	( void );
-	__i__	BOOL		IsOpen		( void )const;
+	__i__	virtual u32			Read		( void*const lpBuffre , const u32 len );
+	__i__	virtual u32			Write		( void const*const lpBuffre , const u32 len );
+	__i__	virtual void		Close		( void );
+//	__i__	virtual BOOL		WriteStrW	( WCHAR const*const str );		//
+	__i__	virtual s64			GetFileSize	( void )const;
+	__i__	virtual BOOL		SetFileLength( const s64 Length );
+	__i__	virtual s64			Tell		( void )const;
+	__i__	virtual BOOL		Seek		( const s64 offset );
+	__i__	virtual u32			GetCRC32	( void );
+	__i__	virtual BOOL		IsOpen		( void )const;
+	__i__	virtual	BOOL		IsCanRead	( void )const;
+	__i__	virtual	BOOL		IsCanWrite	( void )const;
 	//---------------------------------------------------
 	__i__	BOOL		OpenFile( void*const buffer , const size_t size , const BOOL bCanWrite );
 };
@@ -109,19 +113,31 @@ public:
 class CWQSG_File:public CWQSG_xFile
 {
 	HANDLE		m_hFile;
+	DWORD		m_dwDesiredAccess;
 public:
-	CWQSG_File( void ): m_hFile(NULL){	_ASSERT( sizeof( LARGE_INTEGER ) == sizeof(s64) );	}
-	virtual	~CWQSG_File( void ){	Close();	}
+	inline CWQSG_File( void )
+		: m_hFile(NULL)
+		, m_dwDesiredAccess(0)
+	{
+		_ASSERT( sizeof( LARGE_INTEGER ) == sizeof(s64) );
+	}
+
+	virtual	~CWQSG_File( void )
+	{
+		Close();
+	}
 	//----------------------------------------------------
-	__i__		u32			Read		( void*const lpBuffre , const u32 len );
-	__i__		u32			Write		( void const*const lpBuffre , const u32 len );
-	__i__		void		Close		( void );
-	__i__		s64			GetFileSize	( void )const;
-	__i__		BOOL		SetFileLength( const s64 Length );
-	__i__		s64			Tell		( void )const;
-	__i__		BOOL		Seek		( const s64 offset );
-	__i__		u32			GetCRC32	( void );
-	__i__		BOOL		IsOpen		( void )const;
+	__i__	virtual	u32			Read		( void*const lpBuffre , const u32 len );
+	__i__	virtual	u32			Write		( void const*const lpBuffre , const u32 len );
+	__i__	virtual	void		Close		( void );
+	__i__	virtual	s64			GetFileSize	( void )const;
+	__i__	virtual	BOOL		SetFileLength( const s64 Length );
+	__i__	virtual	s64			Tell		( void )const;
+	__i__	virtual	BOOL		Seek		( const s64 offset );
+	__i__	virtual	u32			GetCRC32	( void );
+	__i__	virtual	BOOL		IsOpen		( void )const;
+	__i__	virtual	BOOL		IsCanRead	( void )const;
+	__i__	virtual	BOOL		IsCanWrite	( void )const;
 	//---------------------------------------------------
 	__i__		BOOL		OpenFile( WCHAR const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
 	__i__		BOOL		OpenFile( char const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
@@ -136,18 +152,31 @@ class CWQSG_memFile:public CWQSG_xFile
 	size_t	m_memSize;
 	size_t	m_inc;
 public:
-	CWQSG_memFile():m_mem(NULL),m_pointer(0) , m_FileSize(0) , m_memSize(0) , m_inc(2048){	_ASSERT( sizeof(s64) > sizeof(size_t) );}
-	virtual	~CWQSG_memFile(){	Close();	}
+	CWQSG_memFile()
+		: m_mem(NULL)
+		, m_pointer(0)
+		, m_FileSize(0)
+		, m_memSize(0)
+		, m_inc(2048)
+	{
+		_ASSERT( sizeof(s64) > sizeof(size_t) );
+	}
+	virtual	~CWQSG_memFile()
+	{
+		Close();
+	}
 	//--------------------------
-	__i__		u32			Read		( void*const lpBuffre , const u32 len );
-	__i__		u32			Write		( void const*const lpBuffre , const u32 len );
-	__i__		void		Close		( void );
-	__i__		s64			GetFileSize	( void )const;
-	__i__		BOOL		SetFileLength( const s64 Length );
-	__i__		s64			Tell		( void )const;
-	__i__		BOOL		Seek		( const s64 offset );
-	__i__		u32			GetCRC32	( void );
-	__i__		BOOL		IsOpen		( void )const;
+	__i__	virtual	u32			Read		( void*const lpBuffre , const u32 len );
+	__i__	virtual	u32			Write		( void const*const lpBuffre , const u32 len );
+	__i__	virtual	void		Close		( void );
+	__i__	virtual	s64			GetFileSize	( void )const;
+	__i__	virtual	BOOL		SetFileLength( const s64 Length );
+	__i__	virtual	s64			Tell		( void )const;
+	__i__	virtual	BOOL		Seek		( const s64 offset );
+	__i__	virtual	u32			GetCRC32	( void );
+	__i__	virtual	BOOL		IsOpen		( void )const;
+	__i__	virtual	BOOL		IsCanRead	( void )const;
+	__i__	virtual	BOOL		IsCanWrite	( void )const;
 	//----------------------------------------------------------------------
 	__i__		void*	GetBuf	( void )const	{	return m_mem;	}
 	__i__		BOOL	SetInc	( int inc );

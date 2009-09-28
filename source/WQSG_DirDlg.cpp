@@ -21,8 +21,8 @@
 #include "WQSG_String.h"
 #if !__WQSG_DIRBOX_SYSTEM_
 IMPLEMENT_DYNAMIC(CWQSG_DirDlg, CDialog)
-CWQSG_DirDlg::CWQSG_DirDlg(WCHAR* title /*= NULL*/,
-        WCHAR* path /*= NULL*/,
+CWQSG_DirDlg::CWQSG_DirDlg(const WCHAR* title /*= NULL*/,
+        const WCHAR* path /*= NULL*/,
         CWnd* pParent /*=NULL*/)
 	: CDialog(CWQSG_DirDlg::IDD, pParent)
     , m_List(NULL)
@@ -244,8 +244,8 @@ CString CWQSG_DirDlg::GetPath(void)
 #else
 CWQSG_DirDlg::CWQSG_DirDlg(
 						   HWND hWnd
-						   , WCHAR* title //= L"请选择一个文件夹",
-						   , WCHAR* path //=NULL
+						   , const WCHAR* title //= L"请选择一个文件夹",
+						   , const WCHAR* path //=NULL
 						   )
 						   : m_hWnd( hWnd )
 						   //, m_title( title )

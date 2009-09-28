@@ -95,7 +95,7 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 		CString msg;
 		msg.Format( L"不支持的 卷描述 %d.%d" , m_tHead.Volume_Descriptor_Type ,
 			m_tHead.Volume_Descriptor_Version );
-		DEF_ISO_ERRMSG( msg.GetBuffer() );
+		DEF_ISO_ERRMSG( msg.GetString() );
 		goto __gtOpenErr;
 	}
 
@@ -110,7 +110,7 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 	{
 		CString msg;
 		msg.Format( L"逻辑块Size不为 2048 , (%d)" , m_tHead.LB_Size_LE );
-		DEF_ISO_ERRMSG( msg.GetBuffer() );
+		DEF_ISO_ERRMSG( msg.GetString() );
 		goto __gtOpenErr;
 	}
 

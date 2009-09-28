@@ -94,6 +94,15 @@ public:
 	{
 		return (m_pFile && m_pFile->IsOpen());
 	}
+
+	virtual	BOOL		IsCanRead	( void )const
+	{
+		return TRUE;
+	}
+	virtual	BOOL		IsCanWrite	( void )const
+	{
+		return FALSE;
+	}
 	//=================================================
 	BOOL Init( CWQSG_xFile* a_pFile , s64 a_nStartOffset , s64 a_nFileSize )
 	{
@@ -194,7 +203,7 @@ BOOL CISO_App::OpenISO( CStringW a_ISO_PathName , const BOOL a_bCanWrite , EWqsg
 
 	if( !m_pIso->OpenISO( a_ISO_PathName , a_bCanWrite ) )
 	{
-		m_strLastErr = a_ISO_PathName + L"\r\n" + m_pIso->GetErrStr();
+		m_strLastErr = a_ISO_PathName + L"\r\n\r\n" + m_pIso->GetErrStr();
 		return FALSE;
 	}
 	return TRUE;

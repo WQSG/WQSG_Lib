@@ -104,6 +104,11 @@ public:
 		return m_pIso?m_pIso->IsOpen():FALSE;
 	}
 
+	inline BOOL IsCanWrite()const
+	{
+		return IsOpen()?m_pIso->IsCanWrite():FALSE;
+	}
+
 	inline CString GetErrStr()const
 	{
 		return m_strLastErr;

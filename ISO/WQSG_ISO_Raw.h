@@ -20,8 +20,8 @@
 #include <WQSG.h>
 #include <atlstr.h>
 #define DEF_ISO_ERRMSG( __def_msg ) {\
-	CString str;str = __FILE__;CString str2;str2.Format( L"file: %s\r\nline: %d\r\n%s" , str.GetBuffer() , __LINE__ , (__def_msg) );\
-	SetErrMsg( str2.GetBuffer() ); }
+	CString _def_str;_def_str = __FILE__;CString str2;str2.Format( L"file: %s\r\nline: %d\r\n%s" , _def_str.GetString() , __LINE__ , (__def_msg) );\
+	SetErrMsg( str2.GetString() ); }
 
 inline static bool xx_cmpeq( void const*const bufferLE , void const*const bufferBE , const size_t len )
 {
@@ -187,6 +187,7 @@ class CWQSG_ISO_Raw
 
 	BOOL ReadSectors(void* a_pSector, s32 a_nLBA);
 	BOOL WriteSectors(void* a_pSector, s32 a_nLBA);
+
 protected:
 	CWQSG_ISO_Raw(){}
 	virtual ~CWQSG_ISO_Raw()
@@ -220,6 +221,11 @@ protected:
 	n32 GetPerLbaSize()const
 	{
 		return m_nSectorSize;
+	}
+public:
+	inline BOOL IsCanWrite()const
+	{
+		return m_ISOfp.IsCanWrite();
 	}
 };
 

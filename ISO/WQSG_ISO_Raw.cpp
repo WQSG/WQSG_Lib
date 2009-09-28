@@ -15,6 +15,25 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+
+static inline void GetLastErrorText( CString& a_str , DWORD a_dwErrId )
+{
+	LPVOID lpMsgBuf;
+
+	FormatMessage(
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		a_dwErrId ,
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		(LPTSTR) &lpMsgBuf,
+		0, NULL );
+
+	a_str = (LPTSTR)lpMsgBuf;
+	LocalFree(lpMsgBuf);
+}
+
 #include "WQSG_ISO_Raw.h"
 bool SISO_DirEnt::cheak()const
 {
@@ -99,7 +118,25 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 	CloseFile();
 
 	if( !m_ISOfp.OpenFile( a_strISOPathName , (a_bCanWrite?3:1) , 3 ) )
-		return FALSE;
+	{
+		if( a_bCanWrite )
+		{
+			if( !m_ISOfp.OpenFile( a_strISOPathName , 1 , 3 ) )
+			{
+				CString str;
+				GetLastErrorText( str , GetLastError() );
+				DEF_ISO_ERRMSG( str.GetString() );
+				return FALSE;
+			}
+		}
+		else
+		{
+			CString str;
+			GetLastErrorText( str , GetLastError() );
+			DEF_ISO_ERRMSG( str.GetString() );
+			return FALSE;
+		}
+	}
 
 	UISO_Head2352 tHead;
 	m_nSectorSize = sizeof(tHead);
@@ -367,7 +404,7 @@ BOOL CWQSG_ISO_BaseX::Open( const WCHAR*const a_strISOPathName , const BOOL a_bC
 		CString msg;
 		msg.Format( L"不支持的 卷描述 %d.%d" , m_pHead0->Volume_Descriptor_Type ,
 			m_pHead0->Volume_Descriptor_Version );
-		DEF_ISO_ERRMSG( msg.GetBuffer() );
+		DEF_ISO_ERRMSG( msg.GetString() );
 		goto __gtErr;
 	}
 
@@ -382,7 +419,7 @@ BOOL CWQSG_ISO_BaseX::Open( const WCHAR*const a_strISOPathName , const BOOL a_bC
 	{
 		CString msg;
 		msg.Format( L"逻辑块Size不为 2048 , (%d)" , m_pHead0->LB_Size_LE );
-		DEF_ISO_ERRMSG( msg.GetBuffer() );
+		DEF_ISO_ERRMSG( msg.GetString() );
 		goto __gtErr;
 	}
 
