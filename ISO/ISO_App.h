@@ -28,6 +28,7 @@ struct SIsoFileData
 	s32 size;
 	s32 lba;
 	BOOL isDir;
+	SIsoTime time;
 };
 
 struct SIsoFileFind
@@ -35,6 +36,37 @@ struct SIsoFileFind
 	s32 m_nOffset;
 	SISO_DirEnt m_DirEnt;
 };
+
+#define DEF_WQSG_IsoPatch_Head_Magic "WQSG-IsoFilePack"
+enum E_WQSG_IsoPatch_Mask
+{
+	E_WIPM_CRC32 = WQSG_BIT(0),
+
+	E_WIPM_MAX,
+};
+#pragma pack(push,1)
+struct SWQSG_IsoPatch_Head
+{
+	u8 m_Magic[16];//DEF_WQSG_IsoPatch_Head_Magic "WQSG-IsoFilePack"
+	u8 m_Ver[4];
+	n32 m_nFileCount;
+	n64 m_nSize;
+	u32 m_uMask;
+};
+
+struct SWQSG_IsoPatch_Block
+{
+	u16 m_uSize;
+	u32 m_uCrc32;
+	char m_PathName[256];
+	char m_FileName[256];
+	u32 m_uFileSize;
+	u32 m_uOldFileCrc32;
+	SIsoTime m_time;
+};
+
+#pragma pack(pop)
+
 
 class CISO_App
 {
@@ -47,7 +79,7 @@ class CISO_App
 	inline BOOL GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_path );
  	inline BOOL zzz_CreateDir( CStringW a_strPathName , CStringA a_strName , CStringA a_strPath );
  	inline BOOL zzz_导入文件夹( CStringW a_strPathName , CStringA a_path );
- 	inline BOOL zzz_WriteFile( CStringW strPathName , CWQSG_xFile& a_InFp , CStringA a_strName ,
+ 	inline BOOL zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA a_strName ,
 		CStringA a_strPath , const s32 a_offset , const BOOL a_isNew  );
 
 	inline BOOL zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA );
@@ -83,8 +115,11 @@ public:
 	BOOL 导出文件( CStringW a_strPathName , CStringA a_pathA , CStringA a_nameA );
 	BOOL 导出文件夹( CStringW a_strPath , CStringA a_pathA );
 
-	BOOL 导入文件包( CWQSG_xFile& a_InFp );
-
+	n32 导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 );
+	BOOL 生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 );
+protected:
+	BOOL zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head );
+public:
 	BOOL GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a_nameA );
 
 	SIsoFileFind* FindIsoFile( CStringA a_pathA );

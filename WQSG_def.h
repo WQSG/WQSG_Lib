@@ -20,6 +20,7 @@
 
 #define ___SW_ÆÁ±Î¾¯¸æ___ 1
 
+#define WQSG_BIT(x) (1<<(x))
 #if WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN

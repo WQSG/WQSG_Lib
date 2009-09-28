@@ -47,6 +47,9 @@ public:
 	BOOL ReadFile( const SISO_DirEnt& a_tDirEnt_Path , const char*const a_fileName ,
 		CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_startOffset );
 
+	BOOL ReadFile( const SISO_DirEnt& a_tDirEnt_File ,
+		CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_startOffset );
+
 	BOOL WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*const a_fileName ,
 		CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_bNew , const BOOL a_bDir );
 
@@ -113,7 +116,7 @@ protected:
 	{}
 	//----------------------------------------------
 public:
-	const WCHAR* GetErrStr();
+	const WCHAR* GetErrStr()const;
 
 	inline EWqsgIsoType GetIsoType()
 	{

@@ -445,13 +445,12 @@ BOOL CWQSG_ISO_Base::ReadFile( const SISO_DirEnt& a_tDirEnt_Path , const char*co
 	}
 
 	//-----------------------------------------------------------------
-	SISO_DirEnt sDirEnt;
-	s32 nDirOffset;
-
-	if( ( nDirOffset = FindFile( sDirEnt , a_tDirEnt_Path , a_fileName ) ) < 0 )
+	SISO_DirEnt sDirEnt_File;
+	const s32 nDirOffset = FindFile( sDirEnt_File , a_tDirEnt_Path , a_fileName );
+	if( nDirOffset < 0 )
 		return FALSE;
 
-	if( sDirEnt.len != (u8)预定长度 )
+	if( sDirEnt_File.len != (u8)预定长度 )
 	{
 // 		if( 2352 != m_nSectorSize )
 // 		{
@@ -465,7 +464,21 @@ BOOL CWQSG_ISO_Base::ReadFile( const SISO_DirEnt& a_tDirEnt_Path , const char*co
 		}
 	}
 
-	if( ( sDirEnt.size_le - a_startOffset ) < a_buflen )
+	return ReadFile( sDirEnt_File , a_buffp , a_buflen , a_startOffset );
+}
+
+BOOL CWQSG_ISO_Base::ReadFile( const SISO_DirEnt& a_tDirEnt_File ,
+			  CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_startOffset )
+{
+	if( !a_tDirEnt_File.cheak() ||
+		a_buflen < 0 || a_startOffset < 0 || (a_startOffset+a_buflen) < 0
+		)
+	{
+		DEF_ISO_ERRMSG( L"参数错误" );
+		return FALSE;
+	}
+	//-----------------------------------------------------------------
+	if( ( a_tDirEnt_File.size_le - a_startOffset ) < a_buflen )
 	{
 		DEF_ISO_ERRMSG( L"文件长度不足" );
 		return FALSE;
@@ -473,7 +486,7 @@ BOOL CWQSG_ISO_Base::ReadFile( const SISO_DirEnt& a_tDirEnt_Path , const char*co
 
 	u8 buffer[2352];
 #if 1
-	n32 nLbaIndex = a_startOffset / 2048 + sDirEnt.lba_le;
+	n32 nLbaIndex = a_startOffset / 2048 + a_tDirEnt_File.lba_le;
 	n32 nLbaOffset = a_startOffset % 2048;
 
 	s32 nBuflen = a_buflen;
@@ -834,7 +847,7 @@ BOOL CWQSG_ISO_Base::AddLbaCount( n32 a_nLbaCount )
 	return InitLbaList( nMaxLbaCount );
 }
 //----------------------------------------------------------------------------------------------------
-const WCHAR* CWQSG_ISO_Interface::GetErrStr()
+const WCHAR* CWQSG_ISO_Interface::GetErrStr()const
 {
-	return m_strErrorStr.GetBuffer();
+	return m_strErrorStr.GetString();
 }
