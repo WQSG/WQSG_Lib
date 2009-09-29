@@ -51,10 +51,10 @@ public:
 		CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_startOffset );
 
 	BOOL WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*const a_fileName ,
-		CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_bNew , const BOOL a_bDir );
+		CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_bNew , const BOOL a_bDir , const SIsoTime* a_pTime );
 
 	BOOL WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*const a_fileName ,
-		const void* a_buffer , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_bNew );
+		const void* a_buffer , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_bNew , const SIsoTime* a_pTime );
 
 	BOOL CreateDir( const SISO_DirEnt& a_tDirEnt_Path , char const*const a_dirName );
 	//-----------------------------------------------------------------------------
@@ -99,12 +99,25 @@ public:
 	{
 		return m_pLBA_List?m_pLBA_List->GetBlockInfo( a_nSt , a_puLen , a_pbUse )!=false:FALSE;
 	}
+
+	inline BOOL GetHead( SISO_Head2048& a_Head )const
+	{
+		if( IsOpen() )
+		{
+			memcpy( &a_Head , &m_tHead , sizeof(m_tHead) );
+			return TRUE;
+		}
+		return FALSE;
+	}
 };
 
 enum EWqsgIsoType
 {
+	E_WIT_UNKNOWN,
 	E_WIT_PsxISO,
 	E_WIT_UMD,
+
+	E_WIT_MAX,
 };
 
 class CWQSG_ISO_Interface : public CWQSG_ISO_Base
@@ -118,7 +131,7 @@ protected:
 public:
 	const WCHAR* GetErrStr()const;
 
-	inline EWqsgIsoType GetIsoType()
+	inline EWqsgIsoType GetIsoType()const
 	{
 		return m_eIsoType;
 	}

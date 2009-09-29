@@ -113,7 +113,7 @@ public:
 
 		const s64 size = a_pFile->GetFileSize();
 
-		if( size < 0 || a_nStartOffset < size )
+		if( size < 0 || a_nStartOffset < 0 || a_nStartOffset >= size )
 			return FALSE;
 
 		const s64 xSize = size - a_nStartOffset;
@@ -390,7 +390,7 @@ BOOL CISO_App::导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_
 			return FALSE;
 		}
 
-		if( !zzz_WriteFile( a_strPathName , fp , strNameA , a_path , a_offset , TRUE ) )
+		if( !zzz_WriteFile( a_strPathName , fp , strNameA , a_path , a_offset , TRUE , NULL ) )
 			return FALSE;
 	}
 	else if( ::WQSG_IsDir( a_strPathName.GetString() ) )
@@ -407,7 +407,7 @@ BOOL CISO_App::导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_
 }
 
 inline BOOL CISO_App::zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA strName ,
-							 CStringA strPath , const s32 offset , const BOOL isNew  )
+							 CStringA strPath , const s32 offset , const BOOL isNew , const SIsoTime* a_pTime )
 {
 	if( NULL == m_pIso )
 		return FALSE;
@@ -441,7 +441,7 @@ inline BOOL CISO_App::zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InF
 		return FALSE;
 	}
 
-	if( !m_pIso->WriteFile( sDirEnt_Path , strName , a_InFp , (s32)srcFileSize , offset , isNew , FALSE ) )
+	if( !m_pIso->WriteFile( sDirEnt_Path , strName , a_InFp , (s32)srcFileSize , offset , isNew , FALSE , a_pTime ) )
 	{
 		m_strLastErr = a_strPathName + L"\r\n写文件到ISO出错" ;
 		return FALSE;
@@ -565,7 +565,7 @@ BOOL CISO_App::写文件偏移( CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset
 		return FALSE;
 	}
 
-	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , a_oldOffset , FALSE );
+	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , a_oldOffset , FALSE , NULL );
 }
 
 BOOL CISO_App::替换文件( CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName )
@@ -577,7 +577,7 @@ BOOL CISO_App::替换文件( CStringA a_pathA , CStringA a_nameA , CStringW a_inFile
 		return FALSE;
 	}
 
-	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , 0 , TRUE );
+	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , 0 , TRUE , NULL );
 }
 
 inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA )
@@ -698,6 +698,19 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 		return 1;
 	}
 
+	{
+		const u32 uCrc32_old = head.m_uCrc32;
+		head.m_uCrc32 = 0;
+
+		_m_CRC32 crc32;
+		const u32 uCrc32_new = crc32.GetCRC32( (u8*)&head , sizeof(head) );
+		if( uCrc32_new != uCrc32_old )
+		{
+			m_strLastErr = L"文件头校验错误（m_uCrc32）";
+			return 1;
+		}
+	}
+
 	if( head.m_nSize < sizeof(head) )
 	{
 		m_strLastErr = L"文件头校验错误（m_nSize）";
@@ -711,15 +724,31 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 		return 1;
 	}
 
+	{
+		SISO_Head2048 head_self;
+		if( !GetHead( head_self ) )
+		{
+			m_strLastErr = L"GetHead Error";
+			return 1;
+		}
+
+		if( memcmp( head_self.SystemID , head.m_Head.SystemID , sizeof(head_self.SystemID) ) != 0 ||
+			memcmp( head_self.AppUse , head.m_Head.AppUse , sizeof(head_self.AppUse) ) != 0 )
+		{
+			m_strLastErr = L"此补丁不适用于本ISO";
+			return 1;
+		}
+	}
+
 	a_bCheckCrc32 = a_bCheckCrc32 && (head.m_uMask&E_WIPM_CRC32);
 
 	n32 nFileCount = 0;
-	s64 offset = sizeof(head);
-	while ( offset < head.m_nSize )
+	s64 offset64 = sizeof(head);
+	while ( offset64 < head.m_nSize )
 	{
 		SWQSG_IsoPatch_Block blockInfo;
 
-		a_InFp.Seek( offset );
+		a_InFp.Seek( offset64 );
 
 		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 		{
@@ -745,7 +774,7 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 			return 1;
 		}
 
-		offset += blockInfo.m_uFileSize;
+		offset64 += (blockInfo.m_uFileSize + sizeof(blockInfo));
 		nFileCount++;
 	}
 
@@ -757,13 +786,13 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 
 	if( a_bCheckCrc32 )
 	{
-		offset = sizeof(head);
-#if 0
-		while ( offset < head.m_nSize )
+		offset64 = sizeof(head);
+
+		while ( offset64 < head.m_nSize )
 		{
 			SWQSG_IsoPatch_Block blockInfo;
 
-			a_InFp.Seek( offset );
+			a_InFp.Seek( offset64 );
 
 			if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 			{
@@ -771,25 +800,58 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 				return 1;
 			}
 
-			CWQSG_TempMapFile fp;
-			if( !fp.Init( &a_InFp , offset + sizeof(blockInfo) , blockInfo.m_uFileSize ) )
+			SISO_DirEnt tDirEnt_Dir;
+			if( !GetPathDirEnt( tDirEnt_Dir , blockInfo.m_PathName ) )
 			{
+				m_strLastErr.Format( L"目录(%hs)不存在" , blockInfo.m_PathName );
 				return 1;
 			}
 
-			if( !zzz_WriteFile( L"" , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , true ) )
+			SISO_DirEnt dirEnt_File;
+			_m_CRC32 crc32_v;
+
+			if( m_pIso->FindFile( dirEnt_File , tDirEnt_Dir , blockInfo.m_FileName ) < 0 )
 				return 1;
 
-			offset += blockInfo.m_uFileSize;
+			s32 len = dirEnt_File.size_le;
+			s32 offset32 = 0;
+
+			CWQSG_memFile mfp;
+
+			u32 uCrc32 = 0;
+
+			while( len > 0 )
+			{
+				const s32 rLen = (len > 1024*512)?1024*512:len;
+				len -= rLen;
+
+				if( !m_pIso->ReadFile( dirEnt_File , mfp , rLen , offset32 ) )
+				{
+					return 1;
+				}
+
+				uCrc32 = crc32_v.GetCRC32( (u8*)mfp.GetBuf() , rLen );
+
+				mfp.Seek(0);
+
+				offset32 += rLen;
+			}
+
+			if( uCrc32 != blockInfo.m_uOldFileCrc32 )
+			{
+				m_strLastErr.Format( L"文件(%hs/%hs)的crc32校验失败\r\n当前:%08X\r\n原来:%08X" , blockInfo.m_PathName , blockInfo.m_FileName , uCrc32 , blockInfo.m_uOldFileCrc32 );
+				return 1;
+			}
+
+			offset64 += (blockInfo.m_uFileSize + sizeof(blockInfo));
 		}
-#endif
 	}
-	offset = sizeof(head);
-	while ( offset < head.m_nSize )
+	offset64 = sizeof(head);
+	while ( offset64 < head.m_nSize )
 	{
 		SWQSG_IsoPatch_Block blockInfo;
 
-		a_InFp.Seek( offset );
+		a_InFp.Seek( offset64 );
 
 		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 		{
@@ -798,7 +860,7 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 		}
 
 		CWQSG_TempMapFile fp;
-		if( !fp.Init( &a_InFp , offset + sizeof(blockInfo) , blockInfo.m_uFileSize ) )
+		if( !fp.Init( &a_InFp , offset64 + sizeof(blockInfo) , blockInfo.m_uFileSize ) )
 		{
 			m_strLastErr = L"初始化临时文件错误";
 			return 1;
@@ -807,13 +869,13 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 		CStringW str;
 		str.Format( L"%hs/%hs" , blockInfo.m_PathName , blockInfo.m_FileName );
 
-		if( !zzz_WriteFile( str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , true ) )
+		if( !zzz_WriteFile( str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , TRUE , &blockInfo.m_time ) )
 		{
 			m_strLastErr.Insert( 0 , L"写补丁失败\r\n" );
 			return -1;
 		}
 
-		offset += blockInfo.m_uFileSize;
+		offset64 += (blockInfo.m_uFileSize + sizeof(blockInfo));
 	}
 
 	return 0;
@@ -833,6 +895,25 @@ BOOL CISO_App::生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bChec
 		return FALSE;
 	}
 
+	if( GetIsoType() != a_Iso.GetIsoType() )
+	{
+		m_strLastErr = L"ISO类型不同";
+		return FALSE;
+	}
+
+	{
+		SISO_Head2048 head1;
+		SISO_Head2048 head2;
+
+		if( !a_Iso.GetHead( head1 ) ||
+			!GetHead( head2 ) ||
+			0 != memcmp( head1.AppUse , head2.AppUse , sizeof(head1.AppUse) ) )
+		{
+			m_strLastErr = L"两ISO是不同的游戏";
+			return FALSE;
+		}
+	}
+
 	const n64 nStartOffset = a_OutFp.Tell();
 	SWQSG_IsoPatch_Head head = {};
 	if( sizeof(head) != a_OutFp.Write( &head , sizeof(head) ) )
@@ -846,7 +927,13 @@ BOOL CISO_App::生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bChec
 	if( a_bCheckCrc32 )
 		head.m_uMask |= E_WIPM_CRC32;
 
-	if( !zzz_生成文件包_Path( a_Iso , a_OutFp , "/" , a_bCheckCrc32 , head ) )
+	if( !GetHead( head.m_Head ) )
+	{
+		m_strLastErr = L"GetHead error";
+		return FALSE;
+	}
+
+	if( !zzz_生成文件包_Path( a_Iso , a_OutFp , "" , a_bCheckCrc32 , head ) )
 	{
 		//m_strLastErr = L"写补丁文件失败";
 		return FALSE;
@@ -856,11 +943,17 @@ BOOL CISO_App::生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bChec
 
 	head.m_nSize = (nEndOffset - nStartOffset);
 
+	_m_CRC32 crc32;
+	head.m_uCrc32 = crc32.GetCRC32( (u8*)&head , sizeof(head) );
+
+	a_OutFp.Seek( nStartOffset );
 	if( sizeof(head) != a_OutFp.Write( &head , sizeof(head) ) )
 	{
 		m_strLastErr = L"更新补丁文件头部失败";
 		return FALSE;
 	}
+
+	a_OutFp.Seek( nEndOffset );
 
 	return TRUE;
 }
@@ -940,6 +1033,11 @@ BOOL CISO_App::zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CSt
 		}
 	}
 
+	CloseFindIsoFile( pFind_Self );
+	pFind_Self = NULL;
+	CloseFindIsoFile( pFind_Old );
+	pFind_Old = NULL;
+
 	for( TMap1::iterator it_self = fileList_Self.begin() ;
 		it_self != fileList_Self.end() ; )
 	{
@@ -957,101 +1055,78 @@ BOOL CISO_App::zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CSt
 
 		if( data_self.size != data_old.size )
 		{
-			//第一次识别不同的文件
-			it_self = fileList_Self.erase( it_self );
-			it_old = fileList_Self.erase( it_old );
-			continue;
+			SISO_DirEnt dirEnt_self;
+			SISO_DirEnt dirEnt_old;
+
+			_m_CRC32 crc32_v;
+
+			if( m_pIso->FindFile( dirEnt_self , sDirEnt_Path_self , data_self.name ) < 0 )
+				goto __gtErrExit;
+
+			if( a_Iso.m_pIso->FindFile( dirEnt_old , sDirEnt_Path_old , data_old.name ) < 0 )
+				goto __gtErrExit;
+
+			if( !zzz_生成文件包_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
+				dirEnt_self , dirEnt_old , data_old.size , 0 , crc32_v , data_self ) )
+				goto __gtErrExit;
+
+			a_Head.m_nFileCount++;
 		}
-
-		//否则对比文件
-		CWQSG_memFile fp_self;
-		CWQSG_memFile fp_old;
-
-		SISO_DirEnt dirEnt_self;
-		SISO_DirEnt dirEnt_old;
-
-		s32 len = data_old.size;
-		s32 offset = 0;
-
-		_m_CRC32 crc32_v;
-		u32 uCrc32_old = 0;
-
-
-		if( m_pIso->FindFile( dirEnt_self , sDirEnt_Path_self , data_self.name ) < 0 )
-			goto __gtErrExit;
-
-		if( a_Iso.m_pIso->FindFile( dirEnt_old , sDirEnt_Path_old , data_old.name ) < 0 )
-			goto __gtErrExit;
-
-		while( len > 0 )
+		else
 		{
-			const s32 rLen = (len > 1024*512)?1024*512:len;
-			len -= rLen;
+			//否则对比文件
+			CWQSG_memFile fp_self;
+			CWQSG_memFile fp_old;
 
-			if( !m_pIso->ReadFile( dirEnt_self , fp_self , rLen , offset ) )
+			SISO_DirEnt dirEnt_self;
+			SISO_DirEnt dirEnt_old;
+
+			s32 len = data_old.size;
+			s32 offset = 0;
+
+			_m_CRC32 crc32_v;
+			u32 uCrc32_old = 0;
+
+			if( m_pIso->FindFile( dirEnt_self , sDirEnt_Path_self , data_self.name ) < 0 )
 				goto __gtErrExit;
 
-			if( !a_Iso.m_pIso->ReadFile( dirEnt_old , fp_old , rLen , offset ) )
+			if( a_Iso.m_pIso->FindFile( dirEnt_old , sDirEnt_Path_old , data_old.name ) < 0 )
 				goto __gtErrExit;
 
-			const BOOL bEQ = ( 0 == memcmp( fp_self.GetBuf() , fp_old.GetBuf() , rLen ) );
-
-			if( a_bCheckCrc32 )
-				uCrc32_old = crc32_v.GetCRC32( (u8*)fp_old.GetBuf() , rLen );
-
-			fp_self.Close();
-			fp_old.Close();
-
-			offset += rLen;
-
-			if( bEQ )
-				continue;
-
+			while( len > 0 )
 			{
-				SWQSG_IsoPatch_Block blockHead = {};
+				const s32 rLen = (len > 1024*512)?1024*512:len;
+				len -= rLen;
+
+				if( !m_pIso->ReadFile( dirEnt_self , fp_self , rLen , offset ) )
+					goto __gtErrExit;
+
+				if( !a_Iso.m_pIso->ReadFile( dirEnt_old , fp_old , rLen , offset ) )
+					goto __gtErrExit;
+
+				const BOOL bEQ = ( 0 == memcmp( fp_self.GetBuf() , fp_old.GetBuf() , rLen ) );
 
 				if( a_bCheckCrc32 )
+					uCrc32_old = crc32_v.GetCRC32( (u8*)fp_old.GetBuf() , rLen );
+
+				fp_self.Seek(0);
+				fp_old.Seek(0);
+
+				offset += rLen;
+
+				if( !bEQ )
 				{
-					while( len > 0 )
-					{
-						const s32 rLen = (len > 1024*512)?1024*512:len;
-						len -= rLen;
+					if( !zzz_生成文件包_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
+						dirEnt_self , dirEnt_old , len , offset , crc32_v , data_self ) )
+						goto __gtErrExit;
 
-						if( !a_Iso.m_pIso->ReadFile( dirEnt_old , fp_old , rLen , offset ) )
-							goto __gtErrExit;
-
-						uCrc32_old = crc32_v.GetCRC32( (u8*)fp_old.GetBuf() , rLen );
-
-						offset += rLen;
-					}
+					a_Head.m_nFileCount++;
+					break;
 				}
-
-				blockHead.m_uSize = u16(sizeof(blockHead));
-				WQSG_strcmp( a_strPath.GetString() , blockHead.m_PathName );
-				WQSG_strcmp( data_self.name , blockHead.m_FileName );
-				blockHead.m_uFileSize = data_self.size;
-				blockHead.m_time = data_self.time;
-				blockHead.m_uOldFileCrc32 = uCrc32_old;
-
-				crc32_v.NEW_CRC32();
-				blockHead.m_uCrc32 = crc32_v.GetCRC32( (u8*)&blockHead , sizeof(blockHead) );
-
-				//const n64 nStartOffset = a_OutFp.Tell();
-
-				if( sizeof(blockHead) != a_OutFp.Write( &blockHead , sizeof(blockHead) ) )
-					goto __gtErrExit;
-
-				if( !m_pIso->ReadFile( dirEnt_self , fp_self , data_self.size , 0 ) )
-					goto __gtErrExit;
-
-				a_Head.m_nFileCount++;
-				//const n64 nEndOffset = a_OutFp.Tell();
-				break;
 			}
 		}
-
 		it_self = fileList_Self.erase( it_self );
-		it_old = fileList_Self.erase( it_old );
+		it_old = fileList_Old.erase( it_old );
 	}
 
 	rt = TRUE;
@@ -1061,4 +1136,49 @@ __gtErrExit:
 	if( pFind_Old )
 		CloseFindIsoFile( pFind_Old );
 	return rt;
+}
+
+BOOL CISO_App::zzz_生成文件包_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 ,
+							  const SISO_DirEnt& a_dirEnt_self , const SISO_DirEnt& a_dirEnt_old , s32 a_len , s32 a_offset , _m_CRC32& a_crc32_v , const SIsoFileData& a_data_self )
+{
+	SWQSG_IsoPatch_Block blockHead = {};
+
+	blockHead.m_uSize = u16(sizeof(blockHead));
+	WQSG_strcpy( a_strPath.GetString() , blockHead.m_PathName );
+	WQSG_strcpy( a_data_self.name , blockHead.m_FileName );
+	blockHead.m_uFileSize = a_data_self.size;
+	blockHead.m_time = a_data_self.time;
+
+	if( a_bCheckCrc32 )
+	{
+		CWQSG_memFile mfp;
+
+		while( a_len > 0 )
+		{
+			const s32 rLen = (a_len > 1024*512)?1024*512:a_len;
+			a_len -= rLen;
+
+			if( !a_Iso.m_pIso->ReadFile( a_dirEnt_old , mfp , rLen , a_offset ) )
+				return FALSE;
+
+			blockHead.m_uOldFileCrc32 = a_crc32_v.GetCRC32( (u8*)mfp.GetBuf() , rLen );
+
+			mfp.Seek(0);
+			a_offset += rLen;
+		}
+	}
+
+	a_crc32_v.NEW_CRC32();
+	blockHead.m_uCrc32 = a_crc32_v.GetCRC32( (u8*)&blockHead , sizeof(blockHead) );
+
+	//const n64 nStartOffset = a_OutFp.Tell();
+
+	if( sizeof(blockHead) != a_OutFp.Write( &blockHead , sizeof(blockHead) ) )
+		return FALSE;
+
+	if( !m_pIso->ReadFile( a_dirEnt_self , a_OutFp , a_data_self.size , 0 ) )
+		return FALSE;
+
+	//const n64 nEndOffset = a_OutFp.Tell();
+	return TRUE;
 }

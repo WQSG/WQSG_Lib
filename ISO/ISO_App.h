@@ -52,6 +52,8 @@ struct SWQSG_IsoPatch_Head
 	n32 m_nFileCount;
 	n64 m_nSize;
 	u32 m_uMask;
+	SISO_Head2048 m_Head;
+	u32 m_uCrc32;
 };
 
 struct SWQSG_IsoPatch_Block
@@ -80,7 +82,7 @@ class CISO_App
  	inline BOOL zzz_CreateDir( CStringW a_strPathName , CStringA a_strName , CStringA a_strPath );
  	inline BOOL zzz_导入文件夹( CStringW a_strPathName , CStringA a_path );
  	inline BOOL zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA a_strName ,
-		CStringA a_strPath , const s32 a_offset , const BOOL a_isNew  );
+		CStringA a_strPath , const s32 a_offset , const BOOL a_isNew , const SIsoTime* a_pTime );
 
 	inline BOOL zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA );
 public:
@@ -124,6 +126,8 @@ public:
 	BOOL 生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 );
 protected:
 	BOOL zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head );
+	BOOL zzz_生成文件包_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 ,
+		const SISO_DirEnt& a_dirEnt_self , const SISO_DirEnt& a_dirEnt_old , s32 a_len , s32 a_offset , _m_CRC32& a_crc32_v , const SIsoFileData& a_data_self );
 public:
 	BOOL GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a_nameA );
 
@@ -154,5 +158,15 @@ public:
 	inline BOOL GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const
 	{
 		return m_pIso?m_pIso->GetBlockInfo( a_nSt , a_puLen , a_pbUse )!=false:FALSE;
+	}
+
+	inline BOOL GetHead( SISO_Head2048& a_Head )const
+	{
+		return m_pIso?m_pIso->GetHead(a_Head):FALSE;
+	}
+
+	inline EWqsgIsoType GetIsoType()const
+	{
+		return m_pIso?m_pIso->GetIsoType():E_WIT_UNKNOWN;
 	}
 };

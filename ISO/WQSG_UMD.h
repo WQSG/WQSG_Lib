@@ -33,6 +33,8 @@ public:
 	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
 	virtual	void CloseISO();
 
+	BOOL GetUmdID( u8 a_IdBuffer[32] );
+
 	virtual BOOL IsOpen()
 	{
 		return CWQSG_ISO_Interface::IsOpen();

@@ -32,8 +32,24 @@ BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWri
 	if( CWQSG_ISO_Interface::Open( a_isoPathName , a_bCanWrite  ) )
 	{
 		if( m_tHead.FileStructureVersion == 2 || m_tHead.FileStructureVersion == 1 )
-			return TRUE;
-		DEF_ISO_ERRMSG( L"文件结构版本不为 2 or 1" );
+		{
+			const char*const szPspSystemID = "PSP GAME                        ";
+			ASSERT( WQSG_strlen(szPspSystemID) == sizeof(m_tHead.SystemID) );
+
+			if( memcmp( m_tHead.SystemID , szPspSystemID , sizeof(m_tHead.SystemID) ) == 0 )
+			{
+				ASSERT( m_tHead.AppUse[32] == 32 && m_tHead.AppUse[31] != 32 );
+				return TRUE;
+			}
+			else
+			{
+				DEF_ISO_ERRMSG( L"此ISO不是UMD" );
+			}
+		}
+		else
+		{
+			DEF_ISO_ERRMSG( L"文件结构版本不为 2 or 1" );
+		}
 	}
 
 	CloseISO();
@@ -43,4 +59,15 @@ BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWri
 void CWQSG_UMD::CloseISO()
 {
 	CWQSG_ISO_Interface::Close();
+}
+
+BOOL CWQSG_UMD::GetUmdID( u8 a_IdBuffer[32] )
+{
+	if( IsOpen() )
+	{
+		memcpy( a_IdBuffer , m_tHead.AppUse , 32 );
+		return TRUE;
+	}
+
+	return FALSE;
 }

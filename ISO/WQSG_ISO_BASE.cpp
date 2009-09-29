@@ -527,7 +527,7 @@ const u8 g_DirData0[] = {
 };
 BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*const a_fileName ,
 							   CWQSG_xFile& a_buffp , const s32 a_buflen , const s32 a_insertOffset ,
-							   const BOOL a_bNew , const BOOL a_bDir )
+							   const BOOL a_bNew , const BOOL a_bDir , const SIsoTime* a_pTime )
 {
 	if( !IsDirEnt( a_tDirEnt_Path ) ||
 		!a_fileName || strlen(a_fileName) > 120 ||
@@ -714,6 +714,11 @@ __gtReTest:
 		offset_tmp = 0;
 	}
 
+	if( a_pTime )
+	{
+		dirEnt_File.time = *a_pTime;
+	}
+	else
 	{
 		SYSTEMTIME time;
 		GetLocalTime( &time );
@@ -803,16 +808,16 @@ __gtReTest:
 //----------------------------------------------------------------------------------------------------
 BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , char const*const a_fileName ,
 								const void* a_buffer , const s32 a_buflen , const s32 a_insertOffset ,
-								const BOOL a_bNew )
+								const BOOL a_bNew , const SIsoTime* a_pTime = NULL )
 {
-	return WriteFile( a_tDirEnt_Path , a_fileName , CWQSG_bufFile( (void*)a_buffer , a_buflen , FALSE ) , a_buflen , a_insertOffset , a_bNew , FALSE );
+	return WriteFile( a_tDirEnt_Path , a_fileName , CWQSG_bufFile( (void*)a_buffer , a_buflen , FALSE ) , a_buflen , a_insertOffset , a_bNew , FALSE , a_pTime );
 }
 //----------------------------------------------------------------------------------------------------
 BOOL CWQSG_ISO_Base::CreateDir( const SISO_DirEnt& a_tDirEnt_Path , char const*const a_dirName )
 {
 	static u8 data[sizeof(g_DirData0)];
 
-	return WriteFile( a_tDirEnt_Path , a_dirName , CWQSG_bufFile( (void*)data , sizeof(data) , FALSE ) , sizeof(data) , 0 , TRUE , TRUE );
+	return WriteFile( a_tDirEnt_Path , a_dirName , CWQSG_bufFile( (void*)data , sizeof(data) , FALSE ) , sizeof(data) , 0 , TRUE , TRUE , NULL );
 }
 //----------------------------------------------------------------------------------------------------
 BOOL CWQSG_ISO_Base::AddLbaCount( n32 a_nLbaCount )
