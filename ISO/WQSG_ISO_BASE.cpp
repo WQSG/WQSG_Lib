@@ -599,6 +599,7 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 
 			if( dirEnt_File.lba_le < 0 )
 			{
+				m_pLBA_List->…Í«Î( nOldLba , ”µ”–LBA );
 				DEF_ISO_ERRMSG( L"…Í«ÎLBA ß∞‹" );
 				return FALSE;
 			}
