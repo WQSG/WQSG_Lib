@@ -338,7 +338,7 @@ inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const SISO_DirEnt& a_ParentDirEnt 
 		{
 			const n32 nLbaCount = ((sDirEnt.size_le%2048)==0)?(sDirEnt.size_le/2048):(sDirEnt.size_le/2048) + 1;
 
-			//if( nLbaCount > 0 )
+			if( nLbaCount > 0 )
 				if( !m_pLBA_List->申请( sDirEnt.lba_le , ((nLbaCount == 0)?1:nLbaCount) ) )
 				{
 					DEF_ISO_ERRMSG( L"申请LBA失败" );
@@ -585,19 +585,25 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 		{
 			const s32 nOldLba = dirEnt_File.lba_le;
 
-			if( !m_pLBA_List->释放( nOldLba ) )
+			if( 拥有LBA > 0 )
 			{
-				DEF_ISO_ERRMSG( L"释放LBA失败" );
-				return FALSE;
+				if( !m_pLBA_List->释放( nOldLba ) )
+				{
+					DEF_ISO_ERRMSG( L"释放LBA失败" );
+					return FALSE;
+				}
+
+				if( 需要的LBA > 0 )
+				{
+					if( !m_pLBA_List->申请( nOldLba , 需要的LBA ) )
+					{
+						dirEnt_File.lba_le = -1;
+					}
+				}
 			}
 
-			if( !m_pLBA_List->申请( nOldLba , 需要的LBA ) )
-			{
-				dirEnt_File.lba_le = -1;
-
-				if( 需要的LBA > 拥有LBA )
-					dirEnt_File.lba_le = m_pLBA_List->申请( 需要的LBA );
-			}
+			if( dirEnt_File.lba_le < 0 && 需要的LBA > 拥有LBA )
+				dirEnt_File.lba_le = m_pLBA_List->申请( 需要的LBA );
 
 			if( dirEnt_File.lba_le < 0 )
 			{
