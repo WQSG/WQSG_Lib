@@ -210,7 +210,9 @@ __gtReRead:
 	{
 		if( ++nLbaIndex >= nLbaCount )
 		{
-			DEF_ISO_ERRMSG( L"参数错误" );
+			CString str;
+			str.Format( L"参数错误 a_ParentDirEnt.size_le = %08X" , a_ParentDirEnt.size_le );
+			DEF_ISO_ERRMSG( str.GetString() );
 			return -1;
 		}
 
