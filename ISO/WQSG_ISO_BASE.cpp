@@ -211,7 +211,8 @@ __gtReRead:
 		if( ++nLbaIndex >= nLbaCount )
 		{
 			CString str;
-			str.Format( L"参数错误 a_ParentDirEnt.size_le = %08X" , a_ParentDirEnt.size_le );
+			str.Format( L"参数错误 a_ParentDirEnt.size_le = %08X , nLbaOffset = %d , (2048-DEF_FN_make_DirLen(0)) = %d" ,
+				a_ParentDirEnt.size_le , nLbaOffset , (2048-DEF_FN_make_DirLen(0)) );
 			DEF_ISO_ERRMSG( str.GetString() );
 			return -1;
 		}
