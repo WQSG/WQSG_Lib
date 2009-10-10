@@ -618,7 +618,11 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 			//LBA move
 			if( nOldLba != dirEnt_File.lba_le )
 			{
-				__asm int 3;
+				if( a_insertOffset != 0 )
+				{
+					DEF_ISO_ERRMSG( L"当前LAB块不足以容得下写入的数据，你可以先写偏移0，扩大文件后再写偏移" );
+					return FALSE;
+				}
 			}
 		}
 	}
