@@ -127,7 +127,7 @@ public:
 protected:
 	BOOL zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head );
 	BOOL zzz_生成文件包_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 ,
-		const SISO_DirEnt& a_dirEnt_self , const SISO_DirEnt& a_dirEnt_old , s32 a_len , s32 a_offset , _m_CRC32& a_crc32_v , const SIsoFileData& a_data_self );
+		const SISO_DirEnt& a_dirEnt_self , const SISO_DirEnt* a_pDirEnt_old , s32 a_len , s32 a_offset , _m_CRC32& a_crc32_v , const SIsoFileData& a_data_self );
 public:
 	BOOL GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a_nameA );
 
