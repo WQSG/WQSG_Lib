@@ -277,7 +277,7 @@ inline static BOOL TestName( CStringA& strName )
 	return TRUE;
 }
 
-inline BOOL CISO_App::zzz_CreateDir( CStringW a_strPathName , CStringA a_strName , CStringA a_strPath )
+inline BOOL CISO_App::zzz_CreateDir( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_strName , CStringA a_strPath )
 {
 	if( NULL == m_pIso )
 		return FALSE;
@@ -307,7 +307,7 @@ inline BOOL CISO_App::zzz_CreateDir( CStringW a_strPathName , CStringA a_strName
 	return TRUE;
 }
 
-inline BOOL CISO_App::zzz_导入文件夹( CStringW a_strPathName , CStringA path )
+inline BOOL CISO_App::zzz_导入文件夹( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA path )
 {
 	CStringW strPathName( a_strPathName );
 	{
@@ -325,7 +325,7 @@ inline BOOL CISO_App::zzz_导入文件夹( CStringW a_strPathName , CStringA path )
 
 		CStringA nameA;nameA = nameX;
 
-		if( !zzz_CreateDir( strPathName , nameA , path ) )
+		if( !zzz_CreateDir( a_bFileBreak , strPathName , nameA , path ) )
 			return FALSE;
 
 		path += ('/' + nameA);
@@ -345,7 +345,7 @@ inline BOOL CISO_App::zzz_导入文件夹( CStringW a_strPathName , CStringA path )
 				CStringW nameW( data.cFileName );
 				if( nameW != L"." && nameW != L".." )
 				{
-					if( !导入文件( strPathName + data.cFileName , path , 0 ) )
+					if( !导入文件( a_bFileBreak , strPathName + data.cFileName , path , 0 ) )
 					{
 						rt = FALSE;
 						break;
@@ -354,7 +354,7 @@ inline BOOL CISO_App::zzz_导入文件夹( CStringW a_strPathName , CStringA path )
 			}
 			else
 			{
-				if( !导入文件( strPathName + data.cFileName , path , 0 ) )
+				if( !导入文件( a_bFileBreak , strPathName + data.cFileName , path , 0 ) )
 				{
 					rt = FALSE;
 					break;
@@ -369,7 +369,7 @@ inline BOOL CISO_App::zzz_导入文件夹( CStringW a_strPathName , CStringA path )
 	return rt;
 }
 
-BOOL CISO_App::导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_offset )
+BOOL CISO_App::导入文件( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_path , const s32 a_offset )
 {
 	CStringA strNameA;
 	{
@@ -390,12 +390,14 @@ BOOL CISO_App::导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_
 			return FALSE;
 		}
 
-		if( !zzz_WriteFile( a_strPathName , fp , strNameA , a_path , a_offset , TRUE , NULL ) )
+		if( !zzz_WriteFile( a_bFileBreak , a_strPathName , fp , strNameA , a_path , a_offset , TRUE , NULL ) )
+		{
 			return FALSE;
+		}
 	}
 	else if( ::WQSG_IsDir( a_strPathName.GetString() ) )
 	{
-		if( !zzz_导入文件夹( a_strPathName , a_path ) )
+		if( !zzz_导入文件夹( a_bFileBreak , a_strPathName , a_path ) )
 			return FALSE;
 	}
 	else
@@ -406,7 +408,7 @@ BOOL CISO_App::导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_
 	return TRUE;
 }
 
-inline BOOL CISO_App::zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA strName ,
+inline BOOL CISO_App::zzz_WriteFile( BOOL& a_bFileBreak , CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA strName ,
 							 CStringA strPath , const s32 offset , const BOOL isNew , const SIsoTime* a_pTime )
 {
 	if( NULL == m_pIso )
@@ -423,7 +425,7 @@ inline BOOL CISO_App::zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InF
 	if( !GetPathDirEnt( sDirEnt_Path , strPath ) )
 	{
 		CStringW strNameW ; strNameW = strPath;
-		m_strLastErr = strNameW + L"\r\nISO路径错误?" ;
+		m_strLastErr = strNameW + L"\r\nISO路径错误?\r\n" + m_pIso->GetErrStr();
 		return FALSE;
 	}
 
@@ -443,7 +445,7 @@ inline BOOL CISO_App::zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InF
 
 	if( !m_pIso->WriteFile( sDirEnt_Path , strName , a_InFp , (s32)srcFileSize , offset , isNew , FALSE , a_pTime ) )
 	{
-		m_strLastErr = a_strPathName + L"\r\n写文件到ISO出错" ;
+		m_strLastErr = a_strPathName + L"\r\n写文件到ISO出错\r\n" + m_pIso->GetErrStr();
 		return FALSE;
 	}
 
@@ -545,7 +547,7 @@ __gtSaveDirExit:
 	return bRt;
 }
 
-BOOL CISO_App::写文件偏移( CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName )
+BOOL CISO_App::写文件偏移( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName )
 {
 	SISO_DirEnt sDirEnt_File;
 	if( !zzz_GetFileData( sDirEnt_File , a_pathA , a_nameA ) )
@@ -565,10 +567,10 @@ BOOL CISO_App::写文件偏移( CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset
 		return FALSE;
 	}
 
-	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , a_oldOffset , FALSE , NULL );
+	return zzz_WriteFile( a_bFileBreak , a_inFileName , fp , a_nameA , a_pathA , a_oldOffset , FALSE , NULL );
 }
 
-BOOL CISO_App::替换文件( CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName )
+BOOL CISO_App::替换文件( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName )
 {
 	CWQSG_File fp;
 	if( !fp.OpenFile( a_inFileName.GetString() , 1 , 3 ) )
@@ -577,7 +579,7 @@ BOOL CISO_App::替换文件( CStringA a_pathA , CStringA a_nameA , CStringW a_inFile
 		return FALSE;
 	}
 
-	return zzz_WriteFile( a_inFileName , fp , a_nameA , a_pathA , 0 , TRUE , NULL );
+	return zzz_WriteFile( a_bFileBreak , a_inFileName , fp , a_nameA , a_pathA , 0 , TRUE , NULL );
 }
 
 inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA )
@@ -678,7 +680,7 @@ void CISO_App::CloseFindIsoFile( SIsoFileFind* a_handle )
 	}
 }
 
-n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
+BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 {
 	SWQSG_IsoPatch_Head head;
 	if( sizeof(head) != a_InFp.Read( &head , sizeof(head) ) )
@@ -877,7 +879,7 @@ n32 CISO_App::导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 		CStringW str;
 		str.Format( L"%hs/%hs" , blockInfo.m_PathName , blockInfo.m_FileName );
 
-		if( !zzz_WriteFile( str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , TRUE , &blockInfo.m_time ) )
+		if( !zzz_WriteFile( a_bFileBreak , str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , TRUE , &blockInfo.m_time ) )
 		{
 			m_strLastErr.Insert( 0 , L"写补丁失败\r\n" );
 			return -1;

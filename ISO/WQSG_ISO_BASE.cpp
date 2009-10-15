@@ -206,15 +206,31 @@ __gtReRead:
 	nLbaIndex = a_nOffset / 2048;
 	nLbaOffset = a_nOffset % 2048;
 
+	if( nLbaIndex >= nLbaCount )
+	{
+		CString str;
+		str.Format( L"参数错误 nLbaIndex(%d) >= nLbaCount(%d)" , nLbaIndex , nLbaCount );
+		DEF_ISO_ERRMSG( str.GetString() );
+		return -1;
+	}
+
 	if( nLbaOffset > (2048-DEF_FN_make_DirLen(0)) )
 	{
 		if( ++nLbaIndex >= nLbaCount )
 		{
-			CString str;
-			str.Format( L"参数错误 a_ParentDirEnt.size_le = %08X , nLbaOffset = %d , (2048-DEF_FN_make_DirLen(0)) = %d" ,
-				a_ParentDirEnt.size_le , nLbaOffset , (2048-DEF_FN_make_DirLen(0)) );
-			DEF_ISO_ERRMSG( str.GetString() );
-			return -1;
+			if( a_bNext )
+			{
+				CString str;
+				str.Format( L"参数错误 a_ParentDirEnt.size_le = %08X , nLbaOffset = %d , (2048-DEF_FN_make_DirLen(0)) = %d" ,
+					a_ParentDirEnt.size_le , nLbaOffset , (2048-DEF_FN_make_DirLen(0)) );
+				DEF_ISO_ERRMSG( str.GetString() );
+				return -1;
+			}
+			else
+			{
+				memset( &a_tDirEnt , 0 , sizeof(a_tDirEnt) );
+				return a_nOffset;
+			}
 		}
 
 		a_nOffset = nLbaIndex * 2048;
@@ -320,7 +336,7 @@ inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const SISO_DirEnt& a_ParentDirEnt 
 	do
 	{
 #if _DEBUG
-		char buf[256];
+		char buf[256] = {};
 		{
 			const s32 nOffsetNew = ReadDirEnt( sDirEnt , buf , a_ParentDirEnt , nOffset , TRUE );
 #else

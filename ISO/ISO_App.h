@@ -79,9 +79,9 @@ class CISO_App
 	CString m_strLastErr;
 
 	inline BOOL GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_path );
- 	inline BOOL zzz_CreateDir( CStringW a_strPathName , CStringA a_strName , CStringA a_strPath );
- 	inline BOOL zzz_导入文件夹( CStringW a_strPathName , CStringA a_path );
- 	inline BOOL zzz_WriteFile( CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA a_strName ,
+ 	inline BOOL zzz_CreateDir( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_strName , CStringA a_strPath );
+ 	inline BOOL zzz_导入文件夹( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_path );
+ 	inline BOOL zzz_WriteFile( BOOL& a_bFileBreak , CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA a_strName ,
 		CStringA a_strPath , const s32 a_offset , const BOOL a_isNew , const SIsoTime* a_pTime );
 
 	inline BOOL zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA );
@@ -116,13 +116,13 @@ public:
 		return m_strLastErr;
  	}
 
- 	BOOL 导入文件( CStringW a_strPathName , CStringA a_path , const s32 a_offset );
- 	BOOL 写文件偏移( CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName );
- 	BOOL 替换文件( CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName );
+ 	BOOL 导入文件(  BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_path , const s32 a_offset );
+ 	BOOL 写文件偏移( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName );
+ 	BOOL 替换文件( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName );
 	BOOL 导出文件( CStringW a_strPathName , CStringA a_pathA , CStringA a_nameA );
 	BOOL 导出文件夹( CStringW a_strPath , CStringA a_pathA );
 
-	n32 导入文件包( CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 );
+	BOOL 导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 );
 	BOOL 生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 );
 protected:
 	BOOL zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head );
