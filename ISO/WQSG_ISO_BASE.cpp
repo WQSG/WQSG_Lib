@@ -42,7 +42,7 @@ BOOL CWQSG_ISO_Base::InitLbaList( u32 a_uLbaCount )
 		return FALSE;
 	}
 
-	if( 0 != m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le ) )
+	if( 0 != m_pLBA_List->Alloc( m_tHead.rootDirEnt.lba_le ) )
 	{
 		DEF_ISO_ERRMSG( L"设置LBA保留区失败" );
 		return FALSE;
@@ -50,7 +50,7 @@ BOOL CWQSG_ISO_Base::InitLbaList( u32 a_uLbaCount )
 
 	if( (m_tHead.rootDirEnt.size_le < 2048) ||
 		((m_tHead.rootDirEnt.size_le % 2048)!=0) ||
-		(!m_pLBA_List->申请( m_tHead.rootDirEnt.lba_le , m_tHead.rootDirEnt.size_le/2048 )) )
+		(!m_pLBA_List->AllocPos( m_tHead.rootDirEnt.lba_le , m_tHead.rootDirEnt.size_le/2048 )) )
 	{
 		DEF_ISO_ERRMSG( L"分配 根目录LBA失败" );
 		return FALSE;
@@ -356,7 +356,7 @@ inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const SISO_DirEnt& a_ParentDirEnt 
 			const n32 nLbaCount = ((sDirEnt.size_le%2048)==0)?(sDirEnt.size_le/2048):(sDirEnt.size_le/2048) + 1;
 
 			if( nLbaCount > 0 )
-				if( !m_pLBA_List->申请( sDirEnt.lba_le , ((nLbaCount == 0)?1:nLbaCount) ) )
+				if( !m_pLBA_List->AllocPos( sDirEnt.lba_le , ((nLbaCount == 0)?1:nLbaCount) ) )
 				{
 					DEF_ISO_ERRMSG( L"申请LBA失败" );
 					return FALSE;
@@ -604,7 +604,7 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 
 			if( 拥有LBA > 0 )
 			{
-				if( !m_pLBA_List->释放( nOldLba ) )
+				if( !m_pLBA_List->Free( nOldLba ) )
 				{
 					DEF_ISO_ERRMSG( L"释放LBA失败" );
 					return FALSE;
@@ -612,7 +612,7 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 
 				if( 需要的LBA > 0 )
 				{
-					if( !m_pLBA_List->申请( nOldLba , 需要的LBA ) )
+					if( !m_pLBA_List->AllocPos( nOldLba , 需要的LBA ) )
 					{
 						dirEnt_File.lba_le = -1;
 					}
@@ -620,11 +620,11 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 			}
 
 			if( dirEnt_File.lba_le < 0 && 需要的LBA > 拥有LBA )
-				dirEnt_File.lba_le = m_pLBA_List->申请( 需要的LBA );
+				dirEnt_File.lba_le = m_pLBA_List->Alloc( 需要的LBA );
 
 			if( dirEnt_File.lba_le < 0 )
 			{
-				m_pLBA_List->申请( nOldLba , 拥有LBA );
+				m_pLBA_List->AllocPos( nOldLba , 拥有LBA );
 				DEF_ISO_ERRMSG( L"申请LBA失败" );
 				return FALSE;
 			}
@@ -681,7 +681,7 @@ __gtReTest:
 		dirEnt_File.len = (u8)n预定长度;
 		//	dirEnt.len_ex;
 		{
-			const s32 LBA_Pos = m_pLBA_List->申请( 需要的LBA );
+			const s32 LBA_Pos = m_pLBA_List->Alloc( 需要的LBA );
 			if( LBA_Pos < 0 )
 			{
 				DEF_ISO_ERRMSG( L"申请LBA失败" );
