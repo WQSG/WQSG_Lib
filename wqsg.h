@@ -604,10 +604,10 @@ class CWQSG_PartitionList
 	const u32		m_maxLBA;
 	//------------------------------------------------
 public:
-	CWQSG_PartitionList( const u32 maxLBA ): m_maxLBA( maxLBA ){	全释放();	}
-	~CWQSG_PartitionList(){	全释放();	}
+	CWQSG_PartitionList( const u32 maxLBA ): m_maxLBA( maxLBA ){	FreeAll();	}
+	~CWQSG_PartitionList(){	FreeAll();	}
 	//------------------------------------------------
-	inline void 全释放()
+	inline void FreeAll()
 	{
 		CLinkList* tmp1 = m_head.next;
 		CLinkList* tmp2 = NULL;
@@ -622,7 +622,7 @@ public:
 		m_head.m_use = false;
 		m_head.next = NULL;
 	}
-	inline bool 申请( const s32 st , const u32 len )
+	inline bool AllocPos( const s32 st , const u32 len )
 	{
 		if( ( st < 0 ) || ( len <= 0 ) )
 			return false;
@@ -676,26 +676,57 @@ public:
 
 		return true;
 	}
-	inline s32 申请( const u32 len )
+	inline s32 Alloc( const u32 len , const u32 align = 1 )
 	{
-		if( len <= 0 )
+		if( len <= 0 || align == 0 )
 			return -1;
 
 		CLinkList* tmp = &m_head;
 
+		CLinkList* pPrev = NULL;
+
 		do
 		{
 			if( ( ! tmp->m_use ) && ( tmp->m_len >= len ) )
+			{
+				u32 x = tmp->m_start % align;
+
+				if( x == 0 )
+					break;
+
+				if( (tmp->m_len - len) < x )
+					continue;
+
+
+				//分掉前面的
+				CLinkList* newtmp = new CLinkList;
+// 				if( NULL == newtmp )
+// 					return -1;
+
+				newtmp->m_start = tmp->m_start;
+				newtmp->m_len = align - x;
+				newtmp->m_use = false;
+				newtmp->next = tmp;
+
+				pPrev->next = newtmp;
+
+				tmp->m_start += newtmp->m_len;
+				tmp->m_len -= newtmp->m_len;
+
 				break;
-		}while( tmp = tmp->next );
+			}
+
+			pPrev = tmp;
+		}while( tmp = pPrev->next );
+
 		if( NULL == tmp )
 			return -1;
 
 		if( tmp->m_len > len )
 		{//分掉后面的
 			CLinkList* newtmp = new CLinkList;
-			if( NULL == newtmp )
-				return -1;
+// 			if( NULL == newtmp )
+// 				return -1;
 
 			newtmp->m_start = tmp->m_start + len;
 			newtmp->m_len = tmp->m_len - len;
@@ -709,7 +740,7 @@ public:
 
 		return tmp->m_start;
 	}
-	inline bool 释放( const s32 st )
+	inline bool Free( const s32 st )
 	{
 		if( st < 0 )
 			return false;
