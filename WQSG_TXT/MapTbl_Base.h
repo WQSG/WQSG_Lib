@@ -23,50 +23,35 @@
 
 class CWQSG_MapTbl_Base
 {
-protected:
 public:
-	inline CWQSG_MapTbl_Base();
-	virtual	inline ~CWQSG_MapTbl_Base();
-	inline static void zzz_Log( const WCHAR*const a_szText , const WCHAR*const a_szTitle = NULL );
+	inline static void zzz_Log( const WCHAR*const a_szText , const WCHAR*const a_szTitle = NULL )
+	{
+		if( NULL == a_szText )
+			return;
+
+		CWQSG_File	fp;
+		if( fp.OpenFile( WQSG_TXT_LOGFILE , 9 ) )
+		{
+			if( fp.GetFileSize() == 0 )
+				fp.Write( "\xFF\xFE" , 2 );
+
+			SYSTEMTIME time;
+			GetLocalTime( &time );
+			WCHAR szTime[128];
+			::swprintf( szTime , L"\r\n%04d-%02d-%02d %02d:%02d:%02d" , time.wYear , time.wMonth , time.wDay , time.wHour , time.wMinute , time.wMinute );
+
+			fp.WriteStrW( szTime );
+
+			if( a_szTitle )
+				fp.WriteStrW( a_szTitle );
+
+			fp.WriteStrW( L"\r\n" );
+
+			fp.WriteStrW( a_szText );
+		}
+	}
 };
 //----------------------------------------------------------------------------------------------------
-inline CWQSG_MapTbl_Base::CWQSG_MapTbl_Base( )
-{
-
-}
-
-inline CWQSG_MapTbl_Base::~CWQSG_MapTbl_Base()
-{
-
-}
-
-inline void CWQSG_MapTbl_Base::zzz_Log( const WCHAR*const a_szText , const WCHAR*const a_szTitle )
-{
-	if( NULL == a_szText )
-		return;
-
-	CWQSG_File	fp;
-	if( fp.OpenFile( WQSG_TXT_LOGFILE , 9 ) )
-	{
-		if( fp.GetFileSize() == 0 )
-			fp.Write( "\xFF\xFE" , 2 );
-
-		SYSTEMTIME time;
-		GetLocalTime( &time );
-		WCHAR szTime[128];
-		::swprintf( szTime , L"\r\n%04d-%02d-%02d %02d:%02d:%02d" , time.wYear , time.wMonth , time.wDay , time.wHour , time.wMinute , time.wMinute );
-
-		fp.WriteStrW( szTime );
-
-		if( a_szTitle )
-			fp.WriteStrW( a_szTitle );
-
-		fp.WriteStrW( L"\r\n" );
-
-		fp.WriteStrW( a_szText );
-	}
-}
-
 #undef WQSG_TXT_LOGFILE
 
 #endif
