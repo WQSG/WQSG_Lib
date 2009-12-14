@@ -208,14 +208,14 @@ public:
 
 		return TRUE;
 	}
-	inline	TYPE_1*		匹配( u8* 索引 , UINT 索引长度 , UINT& 实际匹配长度 )
+	inline	TYPE_1*		匹配( u8* 索引 , UINT 索引长度 , UINT& 实际匹配长度 )const
 	{
 		if( ( 索引长度 <= 0 ) || ( 索引 == NULL ) )
 			return NULL;
 
 		实际匹配长度 = 索引长度;
-		__Node** 节点树 = m_ROOB;
-		__Node* tmp;
+		__Node*const* 节点树 = m_ROOB;
+		const __Node* tmp;
 
 		u32 xlen = 0;
 		TYPE_1*	xtmp = NULL;
@@ -242,13 +242,13 @@ public:
 		实际匹配长度 -= (索引长度 + 1);
 		return xtmp;
 	}
-	inline	TYPE_1*		索引( u8* 索引 , INT 索引长度 )
+	inline	TYPE_1*		索引( u8* 索引 , INT 索引长度 )const
 	{
 		if( ( 索引长度 <= 0 ) || ( 索引 == NULL ) )
 			return NULL;
 
-		__Node** 节点树 = m_ROOB;
-		__Node* tmp;
+		__Node*const* 节点树 = m_ROOB;
+		const __Node* tmp;
 
 		while(索引长度--)
 		{

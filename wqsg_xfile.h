@@ -189,143 +189,61 @@ __i__
 WCHAR*		WQSG_GetTXT_Line	( WCHAR** WTXT_ALL );
 WQSG_enCP	WQSG_A_U_X	( HANDLE hfile );
 ///--------------------------------------------------------------------------------
-class C内存文本_W
+class CMemTextW
 {
-	WCHAR*		m_errTXT;
-	WCHAR*		m_文本;
+	WCHAR* m_errTXT;
+	WCHAR* m_Text;
 protected:
-	WQSG_enCP	m_CP;
-	WCHAR*		m_TXT;
+	WQSG_enCP m_CP;
+	WCHAR* m_TXT;
 public:
-	C内存文本_W(void): m_TXT( NULL )	, m_文本( NULL ) , m_errTXT( NULL )	, m_CP( en_CP_NULL ){	}
-	virtual	~C内存文本_W(void)	{		释放清除();	}
-	__i__	WCHAR* GeterrTXT(void){	return m_errTXT;	}
-	__i__	void	释放清除(void);
-	__i__	BOOL	Load( WCHAR const*const 文件路径 , DWORD 允许文件最长长度 , const UINT codePage = CP_ACP );
-	__i__	WCHAR*	取一行文本(void);
-	__i__	WCHAR*	取全文本(void){	m_errTXT = NULL;return m_文本;	}
-	__i__	BOOL	重头开始( void )
+	inline CMemTextW(void): m_TXT( NULL ) , m_Text( NULL ) , m_errTXT( NULL ) , m_CP( en_CP_NULL ){ }
+	virtual	inline ~CMemTextW(void){	CMemTextW::Clear();	}
+	inline 	const WCHAR* GetErrTXT(void){	return m_errTXT;	}
+	inline 	void	Clear(void);
+	inline 	BOOL	Load( const WCHAR*const 文件路径 , DWORD 允许文件最长长度 , const UINT codePage = CP_ACP );
+	inline 	WCHAR*	GetLine(void);
+	inline 	WCHAR*	GetText(void){	m_errTXT = NULL;return m_Text;	}
+	inline  	BOOL	ReStart( void )
 	{
 		m_errTXT = NULL;
-		if( m_文本 )
+		if( m_Text )
 		{
-			m_TXT = m_文本;
+			m_TXT = m_Text;
 			return TRUE;
 		}
 		return FALSE;
 	}
-	__i__	WQSG_enCP GetCP(void){	m_errTXT = NULL;return m_CP;	}
-	__i__	BOOL	关联( WCHAR const*const p文本 );
-	__i__	WCHAR*	切断( void );
+	inline 	WQSG_enCP GetCP(void){	m_errTXT = NULL;return m_CP;	}
+	inline 	BOOL	关联( WCHAR const*const pText );
+	inline 	WCHAR*	切断( void );
 };
 ///--------------------------------------------------------------------------------
-inline	BOOL WQSG_取短路径( WCHAR const*const longPath , WCHAR* shortPath );
-inline	BOOL WQSG_取短路径文件名( WCHAR const*const longPath , WCHAR* shortPath );
+inline BOOL WQSG_取短路径( WCHAR const*const longPath , WCHAR* shortPath );
+inline BOOL WQSG_取短路径文件名( WCHAR const*const longPath , WCHAR* shortPath );
 //---------------------------------------------------------------------------------
 ///		取自身exe的路径
 ///--------------------------------------------------------------------------------
-inline	BOOL WQSG_GetExePath( WCHAR*const outBuf , DWORD maxWordNum )
-{
-	WCHAR exePathName[MAX_PATH*2];
-	DWORD revCount;
-
-	if( NULL == outBuf )
-		return FALSE;
-
-	revCount = ::GetModuleFileNameW( NULL , exePathName , MAX_PATH*2 );
-	if( revCount <= 3 )
-		return FALSE;
-
-	{
-		WCHAR* tmp = exePathName + revCount;
-		while( (exePathName != tmp) && (*tmp != L'\\' ) )
-		{
-			--revCount;
-			--tmp;
-		}
-		*tmp = L'\0';
-	}
-	return( ( revCount >= 2 ) && (revCount <= maxWordNum) && ( revCount == WQSG_strcpy_Ex( exePathName , outBuf , maxWordNum ) ) );
-}
+inline BOOL WQSG_GetExePath( WCHAR*const outBuf , DWORD maxWordNum );
 //---------------------------------------------------------------------------------
 ///		移动文件,如果文件已经存在,自动改名
 ///--------------------------------------------------------------------------------
-inline	BOOL WQSG_MoveFileEx( WCHAR const*const srcFileName , WCHAR const*const newFileName )
-{
-	WCHAR tmpNew[ MAX_PATH ];
-	WCHAR* newname = (WCHAR*)newFileName;
-
-	WCHAR path[ MAX_PATH ] , extName[ MAX_PATH ];
-	int i = 0;
-	///-------------------------------------------
-	if( ( NULL == srcFileName ) || ( srcFileName[1] != L':' ) ||
-		( NULL == newFileName ) || ( newFileName[1] != L':' )
-		)
-		return FALSE;
-_gt_start:
-	if( MoveFileW( srcFileName , newname ) )
-	{
-		return TRUE;
-	}
-	else if(  ERROR_FILE_EXISTS == ::GetLastError() )
-	{
-		if( newname != tmpNew )
-		{
-			WCHAR B[MAX_PATH],C[MAX_PATH];
-			newname = tmpNew;
-			if( WQSG_strlen ( newFileName ) > ( MAX_PATH - 10 ) )
-				return FALSE;
-#if ___SW_屏蔽警告___
-#pragma warning(disable: 4996)
-#endif
-			_wsplitpath( newFileName , path , B , C , extName );
-			_wmakepath( path , tmpNew , B , C , L"" );
-#if ___SW_屏蔽警告___
-#pragma warning(default: 4996)
-#endif
-		}
-		if( 3 == wsprintfW( tmpNew , L"%s (%u)%s" , path , ++i , extName ) )
-			goto _gt_start;
-	}
-	return FALSE;
-}
+inline BOOL WQSG_MoveFileEx( WCHAR const*const srcFileName , WCHAR const*const newFileName );
 //---------------------------------------------------------------------------------
 ///		检测是否是目录
 ///		path		要检测是路径
 ///--------------------------------------------------------------------------------
-inline	BOOL WQSG_IsDir( WCHAR const*const path )
-{
-	DWORD attr;
-	if( NULL == path )
-		return FALSE;
-
-	attr = GetFileAttributesW( path );
-	return ( (INVALID_FILE_ATTRIBUTES != attr) && ( attr & FILE_ATTRIBUTE_DIRECTORY ) );
-}
+inline BOOL WQSG_IsDir( WCHAR const*const path );
 //---------------------------------------------------------------------------------
 ///		检测是否是文件
 ///		pathName	要检测的文件路径名
 ///--------------------------------------------------------------------------------
-inline	BOOL WQSG_IsFile( WCHAR const*const pathName )
-{
-	DWORD attr;
-	if( NULL == pathName )
-		return FALSE;
-
-	attr = GetFileAttributesW( pathName );
-	return ( (INVALID_FILE_ATTRIBUTES != attr) && ( !( attr & FILE_ATTRIBUTE_DIRECTORY ) ) );
-}
+inline BOOL WQSG_IsFile( WCHAR const*const pathName );
 //---------------------------------------------------------------------------------
 ///		创建目录,成功或已经存在返回 TRUE
 ///		path		要创建的路径
 ///--------------------------------------------------------------------------------
-inline	BOOL WQSG_CreateDir( WCHAR const*const path )
-{
-     if( NULL == path )
-		 return FALSE;
+inline BOOL WQSG_CreateDir( WCHAR const*const path );
+#include "source/WQSG_xFile_inline.h"
 
-	if( WQSG_IsDir( path ) )
-		return TRUE;
-	return ::CreateDirectoryW( path , NULL );
-}
 #endif
