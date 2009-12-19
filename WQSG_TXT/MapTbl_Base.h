@@ -54,4 +54,134 @@ public:
 //----------------------------------------------------------------------------------------------------
 #undef WQSG_TXT_LOGFILE
 
+template<typename T1>
+class CByteTree
+{
+	struct SBtNode
+	{
+		T1* m_pData;
+		size_t m_NextLayerIndex;
+	};
+
+	struct SBtLayer
+	{
+		SBtNode node[256];
+	};
+
+	std::vector<SBtLayer> m_Layers;
+
+	size_t m_depth;
+public:
+	inline CByteTree()
+		: m_depth(0)
+	{
+		SBtLayer layer;
+		memset( &layer , 0 , sizeof(layer) );
+		m_Layers.push_back(layer);
+	}
+
+	inline void add( const u8* a_pKey , size_t a_KeyLen , T1* a_pData );
+	inline T1* get( const u8* a_pKey , size_t a_KeyLen )const;
+	inline T1* find( size_t& a_return , const u8* a_pKey , size_t a_KeyLen )const;
+
+	inline void clear();
+
+	inline size_t GetDepth()const
+	{
+		return m_depth;
+	}
+};
+//----------------------------------------------------------------------------------------------------
+template<typename T1>
+inline void CByteTree<T1>::add( const u8* a_pKey , size_t a_KeyLen , T1* a_pData )
+{
+	if ( !a_KeyLen )
+		return;
+
+	a_KeyLen--;
+
+	size_t layerIndex = 0;
+	size_t keyOffset;
+	for( keyOffset = 0 ; keyOffset < a_KeyLen ; ++keyOffset )
+	{
+		const u8 key = a_pKey[keyOffset];
+
+		SBtLayer& layer = m_Layers[layerIndex];
+
+		size_t nextIndex = layer.node[key].m_NextLayerIndex;
+		if( nextIndex )
+		{
+			layerIndex = nextIndex;
+		}
+		else
+		{
+			layerIndex = m_Layers.size();
+			layer.node[key].m_NextLayerIndex = layerIndex;
+
+			SBtLayer layer;
+			memset( &layer , 0 , sizeof(layer) );
+
+			m_Layers.push_back( layer );
+		}
+	}
+
+	const u8 key = a_pKey[keyOffset];
+	m_Layers[layerIndex].node[key].m_pData = a_pData;
+
+	keyOffset++;
+	if( keyOffset > m_depth )
+		m_depth = keyOffset;
+}
+//----------------------------------------------------------------------------------------------------
+template<typename T1>
+inline T1* CByteTree<T1>::get( const u8* a_pKey , size_t a_KeyLen )const
+{
+	size_t retuenLen;
+	T1* pData = find( retuenLen , a_pKey , a_KeyLen );
+	return (pData && retuenLen == a_KeyLen)?pData:NULL;
+}
+//----------------------------------------------------------------------------------------------------
+template<typename T1>
+inline T1* CByteTree<T1>::find( size_t& a_return , const u8* a_pKey , size_t a_KeyLen )const
+{
+	T1* pData = NULL;
+	if( a_KeyLen )
+	{
+		size_t layerIndex = 0;
+		size_t keyOffset;
+		for( keyOffset = 0 ; keyOffset < a_KeyLen ; ++keyOffset )
+		{
+			const u8 key = a_pKey[keyOffset];
+
+			const SBtLayer& layer = m_Layers[layerIndex];
+
+			const SBtNode& node = layer.node[key];
+			size_t nextIndex = node.m_NextLayerIndex;
+
+			if( node.m_pData )
+			{
+				pData = node.m_pData;
+				a_return = keyOffset + 1;
+			}
+
+			layerIndex = node.m_NextLayerIndex;
+			if( !layerIndex )
+				break;
+		}
+	}
+
+	return pData;
+}
+//----------------------------------------------------------------------------------------------------
+template<typename T1>
+inline void CByteTree<T1>::clear()
+{
+	m_Layers.clear();
+	m_depth = 0;
+
+	SBtLayer layer;
+	memset( &layer , 0 , sizeof(layer) );
+	m_Layers.push_back(layer);
+}
+
 #endif
