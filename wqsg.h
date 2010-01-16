@@ -676,9 +676,9 @@ public:
 
 		return true;
 	}
-	inline s32 Alloc( const u32 len , const u32 align = 1 )
+	inline s32 Alloc( const u32 len , const u32 align = 1 , const s32 startPos = 0 )
 	{
-		if( len <= 0 || align == 0 )
+		if( len <= 0 || align == 0 || startPos < 0 )
 			return -1;
 
 		CLinkList* tmp = &m_head;
@@ -687,7 +687,7 @@ public:
 
 		do
 		{
-			if( ( ! tmp->m_use ) && ( tmp->m_len >= len ) )
+			if( (tmp->m_start >= startPos) && ( ! tmp->m_use ) && ( tmp->m_len >= len ) )
 			{
 				u32 x = tmp->m_start % align;
 
