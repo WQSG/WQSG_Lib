@@ -624,9 +624,27 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 
 			if( dirEnt_File.lba_le < 0 )
 			{
-				m_pLBA_List->AllocPos( nOldLba , 拥有LBA );
-				DEF_ISO_ERRMSG( L"申请LBA失败" );
-				return FALSE;
+				if( !AddLbaCount( 需要的LBA ) )
+				{
+					m_pLBA_List->AllocPos( nOldLba , 拥有LBA );
+					DEF_ISO_ERRMSG( L"ISO空间不足,尝试扩容ISO失败" );
+					return FALSE;
+				}
+
+				if( !m_pLBA_List->Free( nOldLba ) )
+				{
+					DEF_ISO_ERRMSG( L"释放LBA失败,这不可能" );
+					return FALSE;
+				}
+
+				dirEnt_File.lba_le = m_pLBA_List->Alloc( 需要的LBA );
+
+				if( dirEnt_File.lba_le < 0 )
+				{
+					m_pLBA_List->AllocPos( nOldLba , 拥有LBA );
+					DEF_ISO_ERRMSG( L"申请LBA失败,这不可能,怎么会这样" );
+					return FALSE;
+				}
 			}
 
 			memcpyR( &dirEnt_File.lba_be , &dirEnt_File.lba_le , sizeof(dirEnt_File.lba_le) );
@@ -681,11 +699,22 @@ __gtReTest:
 		dirEnt_File.len = (u8)n预定长度;
 		//	dirEnt.len_ex;
 		{
-			const s32 LBA_Pos = m_pLBA_List->Alloc( 需要的LBA );
+			s32 LBA_Pos = m_pLBA_List->Alloc( 需要的LBA );
 			if( LBA_Pos < 0 )
 			{
-				DEF_ISO_ERRMSG( L"申请LBA失败" );
-				return FALSE;
+				if( !AddLbaCount( 需要的LBA ) )
+				{
+					DEF_ISO_ERRMSG( L"ISO空间不足,尝试扩容ISO失败" );
+					return FALSE;
+				}
+
+				LBA_Pos = m_pLBA_List->Alloc( 需要的LBA );
+
+				if( LBA_Pos < 0 )
+				{
+					DEF_ISO_ERRMSG( L"申请LBA失败,这不可能,怎么会这样" );
+					return FALSE;
+				}
 			}
 
 			dirEnt_File.lba_le = LBA_Pos;
