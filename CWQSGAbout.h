@@ -17,8 +17,18 @@
 */
 #pragma once
 
-/*<A HREF=""http://www.help.com"">Website</A>,*/
+/*<A HREF=\"http://www.help.com\">Website</A>,*/
 
 INT_PTR WQSG_About( HICON a_hIcon , HWND a_hWndParent ,
 				   const WCHAR* a_pTitle , const WCHAR* a_pAppName ,
 				   const WCHAR* a_pUrl , const WCHAR* a_pProgrammed );
+
+#pragma pack(push,1)
+struct SWQSG_AboutDlgID
+{
+	int m_nIcon;
+	int m_nAppName;
+	int m_nLink;
+	int m_nEdit;
+};
+#pragma pack(pop)
