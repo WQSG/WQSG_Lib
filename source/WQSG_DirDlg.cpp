@@ -242,48 +242,5 @@ CString CWQSG_DirDlg::GetPath(void)
 }
 
 #else
-CWQSG_DirDlg::CWQSG_DirDlg(
-						   HWND hWnd
-						   , const WCHAR* title //= L"请选择一个文件夹",
-						   , const WCHAR* path //=NULL
-						   )
-						   : m_hWnd( hWnd )
-						   //, m_title( title )
-						   //, m_path( path )
-{
-	if( title )
-		WQSG_strcpy( title , m_title );
-	else
-		WQSG_strcpy( L"请选择一个文件夹" , m_title );
 
-	if( path )
-		WQSG_strcpy( path , m_path );
-}
-//-------------------------------------------------------------------------
-BOOL CWQSG_DirDlg::GetPath( WCHAR* path )
-{
-	LPITEMIDLIST idl = NULL;
-	BROWSEINFO bi;	memset( &bi , 0 , sizeof(bi) );
-
-	bi.hwndOwner = m_hWnd;
-	bi.pidlRoot = idl;
-	bi.ulFlags = BIF_EDITBOX | BIF_NEWDIALOGSTYLE;
-
-	LPMALLOC pMalloc = NULL;
-	SHGetMalloc( &pMalloc );
-	SHGetFolderLocation( m_hWnd, 1, 0, 0, &idl );
-
-	bi.lpszTitle = m_title;
-	LPITEMIDLIST ret = SHBrowseForFolder( &bi );
-	ret->mkid;
-	if( idl )
-		pMalloc->Free(idl);
-
-	SHGetPathFromIDList( ret , path );
-	if( ret )
-		pMalloc->Free( ret );
-	pMalloc->Release();
-
-	return ( *path );
-}
 #endif
