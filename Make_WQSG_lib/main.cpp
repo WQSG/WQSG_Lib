@@ -16,21 +16,34 @@
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #ifdef __TEST_DEBUG__
+
+
+
+#ifdef _UNICODE
+#if defined _M_IX86
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#elif defined _M_IA64
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='ia64' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#elif defined _M_X64
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#else
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#endif
+#endif
+
+
 #include<WQSG.h>
 #include "WQSG_CxFile.h"
-
+#include "CWQSGAbout.h"
 
 #include<malloc.h>
 int _tmain(int argc, _TCHAR* argv[])
 {
-#ifdef _AMD64_
-	int h = 0;
-#endif
-	CWQSG_CmemFILE fp;
 
-	char ddd[100];
+	WQSG_About( LoadIcon(NULL,MAKEINTRESOURCE(IDI_WARNING) ) , NULL , L"≤‚ ‘" , L"WQSG\r\nv2010.02.21.0" ,
+		L"œÓƒøsvn : <A HREF=\"http://code.google.com/p/wqsg-umd\">http://code.google.com/p/wqsg-umd</A>\r\n“¿¿µø‚svn : <A HREF=\"http://code.google.com/p/wqsglib\">http://code.google.com/p/wqsglib</A>\r\n                 <A HREF=\"http://wqsg.ys168.com\">http://wqsg.ys168.com</A>\r\n" ,
+		L"WQSG" );
 
-	fp.fopen( ddd , sizeof(ddd) , true );
 	return 0;
 }
 
