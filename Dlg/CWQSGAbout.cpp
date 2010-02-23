@@ -21,7 +21,9 @@
 #include <shellapi.h>
 #include <commctrl.h>
 #include <objbase.h>
-#include "../CWQSGAbout.h"
+#include <WQSG.h>
+#include "CWQSGAbout.h"
+#include "CAbout_data.h"
 
 static HWND g_hWndParent = NULL;
 static HICON g_hIcon = NULL;
@@ -30,37 +32,8 @@ static const WCHAR* g_pAppName = NULL;
 static const WCHAR* g_pUrl = NULL;
 static const WCHAR* g_pProgrammed = NULL;
 
-static unsigned char g_ids[] = {
-	0xe8, 0x03, 0x00, 0x00, 0xeb, 0x03, 0x00, 0x00, 0xe9, 0x03, 0x00, 0x00, 0xea, 0x03, 0x00, 0x00, 
-};
 
-static unsigned char g_dlg[] = {
-	0x01, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc8, 0x00, 0xc8, 0x80, 
-	0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0xdb, 0x00, 0x8f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x73, 0x51, 
-	0x8e, 0x4e, 0x20, 0x00, 0x43, 0x00, 0x41, 0x00, 0x62, 0x00, 0x6f, 0x00, 0x75, 0x00, 0x74, 0x00, 
-	0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x01, 0x4d, 0x00, 0x53, 0x00, 0x20, 0x00, 0x53, 0x00, 
-	0x68, 0x00, 0x65, 0x00, 0x6c, 0x00, 0x6c, 0x00, 0x20, 0x00, 0x44, 0x00, 0x6c, 0x00, 0x67, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x50, 
-	0x39, 0x00, 0x07, 0x00, 0x14, 0x00, 0x14, 0x00, 0xe8, 0x03, 0x00, 0x00, 0xff, 0xff, 0x82, 0x00, 
-	0xff, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-	0x00, 0x00, 0x00, 0x50, 0x07, 0x00, 0x21, 0x00, 0xcd, 0x00, 0x29, 0x00, 0xe9, 0x03, 0x00, 0x00, 
-	0x53, 0x00, 0x79, 0x00, 0x73, 0x00, 0x4c, 0x00, 0x69, 0x00, 0x6e, 0x00, 0x6b, 0x00, 0x00, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x85, 0x08, 0x81, 0x50, 
-	0x07, 0x00, 0x5a, 0x00, 0xcd, 0x00, 0x2e, 0x00, 0xea, 0x03, 0x00, 0x00, 0xff, 0xff, 0x81, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x50, 
-	0x51, 0x00, 0x07, 0x00, 0x65, 0x00, 0x13, 0x00, 0xeb, 0x03, 0x00, 0x00, 0xff, 0xff, 0x82, 0x00, 
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x50, 
-	0x07, 0x00, 0x4f, 0x00, 0xcd, 0x00, 0x08, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x82, 0x00, 
-	0x50, 0x00, 0x72, 0x00, 0x6f, 0x00, 0x67, 0x00, 0x72, 0x00, 0x61, 0x00, 0x6d, 0x00, 0x6d, 0x00, 
-	0x65, 0x00, 0x64, 0x00, 0x20, 0x00, 0x62, 0x00, 0x79, 0x00, 0x00, 0x00, 0x00, 0x00, 
-};
-
-static const SWQSG_AboutDlgID& s_ids = *(const SWQSG_AboutDlgID*)g_ids;
-
-static inline int Max( int a , int b )
-{
-	return a>b?a:b;
-}
+static const SWQSG_AboutDlgID& s_ids = *(const SWQSG_AboutDlgID*)gs_Ids;
 
 class CWndSize
 {
@@ -108,6 +81,69 @@ public:
 	}
 };
 
+class CWQSG_Wnd
+{
+protected:
+	HWND m_hParentWnd;
+	HWND m_hWnd;
+public:
+	CWQSG_Wnd( HWND a_hParentWnd )
+		: m_hParentWnd( a_hParentWnd )
+		, m_hWnd(NULL)
+	{
+	}
+
+	HWND GetHwnd()const
+	{
+		return m_hWnd;
+	}
+
+	operator HWND() const
+	{
+		return m_hWnd;
+	}
+
+	LRESULT SendMessage( UINT a_Msg , WPARAM a_wParam , LPARAM a_lParam )
+	{
+		return ::SendMessage( m_hWnd , a_Msg , a_wParam , a_lParam );
+	}
+
+	LRESULT PostMessage( UINT a_Msg , WPARAM a_wParam , LPARAM a_lParam )
+	{
+		return ::PostMessage( m_hWnd , a_Msg , a_wParam , a_lParam );
+	}
+
+	BOOL SetWindowText( const WCHAR* a_szText )
+	{
+		return ::SetWindowTextW( m_hWnd , a_szText );
+	}
+
+	BOOL GetWindowRect( RECT* a_pRect )
+	{
+		return ::GetWindowRect( m_hWnd , a_pRect );
+	}
+
+	BOOL GetClientRect( RECT* a_pRect )
+	{
+		return ::GetClientRect( m_hWnd , a_pRect );
+	}
+};
+
+class CStaticText : public CWQSG_Wnd
+{
+public:
+	CStaticText( HWND a_hParentWnd )
+		: CWQSG_Wnd( a_hParentWnd )
+	{
+	}
+
+	BOOL Create( int a_nID )
+	{
+		DWORD dwStyle = WS_CHILD | 0;
+		m_hWnd = ::CreateWindowExW( 0 , L"STATIC", L"" , dwStyle , 0 , 0 , 100 , 100 , m_hParentWnd , (HMENU)(UINT_PTR)a_nID , NULL , NULL );
+	}
+};
+
 static inline INT_PTR CALLBACK AboutFunc(HWND a_hDlg, UINT a_message, WPARAM a_wParam, LPARAM a_lParam)
 {
 	switch (a_message)
@@ -143,13 +179,8 @@ static inline INT_PTR CALLBACK AboutFunc(HWND a_hDlg, UINT a_message, WPARAM a_w
 			CWndSize wIcon( GetDlgItem( a_hDlg , s_ids.m_nIcon ) );
 			CWndSize wAppName( GetDlgItem( a_hDlg , s_ids.m_nAppName ) );
 			CWndSize wLink( GetDlgItem( a_hDlg , s_ids.m_nLink ) );
+			CWndSize wP2( GetDlgItem( a_hDlg , s_ids.m_nText0 ) );
 			CWndSize wProgrammed( GetDlgItem( a_hDlg , s_ids.m_nEdit ) );
-
-			HWND hP2 = GetWindow( a_hDlg , GW_CHILD );
-			while ( hP2 && GetDlgCtrlID(hP2) != -1 )
-				hP2 = GetWindow( hP2 , GW_HWNDNEXT );
-
-			CWndSize wP2( hP2 );
 			//--------------------------------------------------
 			int nMaxHeight_Link = 0;
 			int nMaxWidth_Link = 0;
@@ -194,14 +225,14 @@ static inline INT_PTR CALLBACK AboutFunc(HWND a_hDlg, UINT a_message, WPARAM a_w
 			wIcon.SetC_X( szClientSize.cx , posY , wIcon.GetSize().cx , wIcon.GetSize().cy );
 			posY += (2 + wIcon.GetSize().cy);
 
-			SetWindowLong( wAppName.GetHWND() , GWL_STYLE ,  GetWindowLong( wAppName.GetHWND() , GWL_STYLE ) | SS_CENTER );
+			//SetWindowLong( wAppName.GetHWND() , GWL_STYLE ,  GetWindowLong( wAppName.GetHWND() , GWL_STYLE ) | SS_CENTER );
 			wAppName.SetC_X( szClientSize.cx , posY , szClientSize.cx , wAppName.GetSize().cy );
 			posY += (16 + wAppName.GetSize().cy);
 
 			wLink.SetC_X( szClientSize.cx , posY , nMaxWidth_Link , nMaxHeight_Link );
 			posY += (16 + wLink.GetSize().cy);
 
-			SetWindowLong( wP2.GetHWND() , GWL_STYLE ,  GetWindowLong( wP2.GetHWND() , GWL_STYLE ) | SS_CENTER );
+			//SetWindowLong( wP2.GetHWND() , GWL_STYLE ,  GetWindowLong( wP2.GetHWND() , GWL_STYLE ) | SS_CENTER );
 			wP2.SetC_X( szClientSize.cx , posY , szClientSize.cx , wP2.GetSize().cy );
 			posY += (2 + wP2.GetSize().cy);
 
@@ -248,11 +279,11 @@ INT_PTR WQSG_About( HICON a_hIcon , HWND a_hWndParent ,
 	g_pUrl = a_pUrl;
 	g_pProgrammed = a_pProgrammed;
 
-	if( sizeof(SWQSG_AboutDlgID) != sizeof(g_ids) )
+	if( sizeof(SWQSG_AboutDlgID) != sizeof(gs_Ids) )
 	{
 		__asm int 3;
 		return IDCANCEL;
 	}
 
-	return DialogBoxIndirect( NULL , (LPDLGTEMPLATE)g_dlg , g_hWndParent , AboutFunc );
+	return DialogBoxIndirect( NULL , (LPDLGTEMPLATE)gs_Dlg , g_hWndParent , AboutFunc );
 }

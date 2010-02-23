@@ -123,7 +123,7 @@ public:
 };
 #endif//__WQSG_DIRBOX_SYSTEM_
 #ifdef __AFXDLGS_H__
-
+#include <shlwapi.h>
 class CWQSGFileDialog : public CFileDialog
 {
 	CString m_strFolderPath;

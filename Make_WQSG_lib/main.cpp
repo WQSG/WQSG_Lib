@@ -34,7 +34,6 @@
 
 #include<WQSG.h>
 #include "WQSG_CxFile.h"
-#include "CWQSGAbout.h"
 
 #include<malloc.h>
 int _tmain(int argc, _TCHAR* argv[])

@@ -29,6 +29,7 @@ struct SWQSG_AboutDlgID
 	int m_nIcon;
 	int m_nAppName;
 	int m_nLink;
+	int m_nText0;
 	int m_nEdit;
 };
 #pragma pack(pop)

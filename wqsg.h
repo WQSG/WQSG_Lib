@@ -24,10 +24,13 @@
 #include "WQSG_xFile.h"
 #include "WQSG_String.h"
 
-#include "CWQSG_str\CWQSG_str.h"
-#include "CWD\CWD.h"
+#include "CWQSG_str/CWQSG_str.h"
+#include "CWD/CWD.h"
 
 #include "WQSG_File_M.h"
+
+#include "Dlg/CWQSGAbout.h"
+#include "Dlg/WQSG_DirDlg.h"
 //------------------------------------------------------------------
 template <typename TYPE_1>
 class CWQSG_TypeLinkList
@@ -880,4 +883,68 @@ public:
 	}
 #endif
 };
+
+template<typename TType , size_t TAlign>
+inline BOOL WQSG_Bin2c_template( CWQSG_xFile& a_Out ,
+						 const void* a_pBin , size_t a_size ,
+						 const char* a_szTag ,
+						 const char* a_szFmt , const char* a_szTypeName )
+{
+	if( NULL == a_pBin || a_size == 0 || (a_size % sizeof(TType)) != 0 )
+		return FALSE;
+
+	a_size /= sizeof(TType);
+	const TType* pType = (const TType*)a_pBin;
+
+
+	a_Out.Write( "static const " , (u32)strlen("static const ") );
+	a_Out.Write( a_szTypeName , (u32)strlen(a_szTypeName) );
+	a_Out.Write( " " , 1 );
+	a_Out.Write( a_szTag , (u32)strlen(a_szTag) );
+	a_Out.Write( "[] = {\r\n" , (u32)strlen("[] = {\r\n") );
+
+	char szBuf[32];
+
+	size_t count = 0;
+	while( a_size-- )
+	{
+		if( count++ > TAlign )
+		{
+			count = 0;
+
+			a_Out.Write( "\r\n" , 2 );
+		}
+
+		sprintf_s( szBuf , sizeof(szBuf) , a_szFmt , *pType );
+		pType++;
+
+		const size_t len = strlen(szBuf);
+		a_Out.Write( szBuf , (u32)len );
+
+		if( a_size > 0 )
+			a_Out.Write( " , " , 3 );
+	}
+
+	a_Out.Write( "\r\n};\r\n" , (u32)strlen("\r\n};\r\n") );
+
+	return TRUE;
+}
+
+inline BOOL WQSG_Bin2c_8Bit( CWQSG_xFile& a_Out , const void* a_pBin , size_t a_size , const char* a_szTag )
+{
+	return WQSG_Bin2c_template<u8 , 16>( a_Out , a_pBin , a_size , a_szTag , "0x%02X" , "u8" );
+}
+
+inline BOOL WQSG_Bin2c_16Bit( CWQSG_xFile& a_Out , const void* a_pBin , size_t a_size , const char* a_szTag )
+{
+	return WQSG_Bin2c_template<u16 , 16>( a_Out , a_pBin , a_size , a_szTag , "0x%04X" , "u16" );
+}
+
+inline BOOL WQSG_Bin2c_32Bit( CWQSG_xFile& a_Out , const void* a_pBin , size_t a_size , const char* a_szTag )
+{
+	return WQSG_Bin2c_template<u32 , 16>( a_Out , a_pBin , a_size , a_szTag , "0x%08X" , "u32" );
+}
+
+
+
 #endif

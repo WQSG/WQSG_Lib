@@ -714,15 +714,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\source\CWQSGAbout.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\source\WQSG_CxFile.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\source\WQSG_DirDlg.cpp"
 				>
 			</File>
 			<File
@@ -745,6 +737,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="Dlg"
+				>
+				<File
+					RelativePath="..\Dlg\CWQSGAbout.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\Dlg\WQSG_DirDlg.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Í·ÎÄ¼þ"
@@ -752,15 +756,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\CWQSGAbout.h"
-				>
-			</File>
-			<File
 				RelativePath="..\WQSG_CxFile.h"
-				>
-			</File>
-			<File
-				RelativePath="..\WQSG_DirDlg.h"
 				>
 			</File>
 			<File
@@ -804,6 +800,18 @@
 				</File>
 				<File
 					RelativePath="..\WQSG_string.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="Dlg"
+				>
+				<File
+					RelativePath="..\Dlg\CWQSGAbout.h"
+					>
+				</File>
+				<File
+					RelativePath="..\Dlg\WQSG_DirDlg.h"
 					>
 				</File>
 			</Filter>
