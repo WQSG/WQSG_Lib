@@ -277,6 +277,11 @@ public:
 		return m_pDlg?m_pDlg->GetPathName():CString();
 	}
 
+	CString GetFolderPath()const
+	{
+		return m_strFolderPath;
+	}
+
 	void SetWindowTitle( LPCTSTR lpszTitle )
 	{
 		m_strWindowTitle = lpszTitle;
