@@ -24,7 +24,8 @@ BOOL CWQSG_PsxISO::OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanW
 	{
 		if( m_tHead.FileStructureVersion == 1 )
 			return TRUE;
-		DEF_ISO_ERRMSG( L"文件结构版本不为 1" );
+
+		DEF_ISO_SET_ERRMSG( GetLangString(47) );
 	}
 
 	CloseISO();

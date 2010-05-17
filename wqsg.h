@@ -945,6 +945,42 @@ inline BOOL WQSG_Bin2c_32Bit( CWQSG_xFile& a_Out , const void* a_pBin , size_t a
 	return WQSG_Bin2c_template<u32 , 16>( a_Out , a_pBin , a_size , a_szTag , "0x%08X" , "u32" );
 }
 
+class CWQSG_StringMgr
+{
+	const WCHAR*const* m_szDefaultString;
+	const size_t m_uDefaultString;
 
+	const WCHAR*const* m_szUserString;
+	size_t m_uUserString;
+public:
+	inline CWQSG_StringMgr( const WCHAR*const* a_szDefaultString , const size_t a_uDefaultString )
+		: m_szDefaultString(a_szDefaultString)
+		, m_uDefaultString(a_uDefaultString)
+		, m_szUserString(NULL)
+		, m_uUserString(0)
+	{
+	}
+
+	inline const WCHAR* GetString( size_t a_uIndex )const
+	{
+		if( m_szUserString && a_uIndex < m_uUserString && m_szUserString[a_uIndex] )
+			return m_szUserString[a_uIndex];
+		else if( m_szDefaultString && a_uIndex < m_uDefaultString && m_szDefaultString[a_uIndex] )
+			return m_szDefaultString[a_uIndex];
+
+		return L"<NoString>";
+	}
+
+	inline size_t GetStringCount()const
+	{
+		return m_uDefaultString;
+	}
+
+	inline void SetString( const WCHAR*const* a_szUserString , const size_t a_uUserString )
+	{
+		m_szUserString = a_szUserString;
+		m_uUserString = a_uUserString;
+	}
+};
 
 #endif

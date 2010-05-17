@@ -19,9 +19,11 @@
 #define _WQSG_ISO_RAW_
 #include <WQSG.h>
 #include <atlstr.h>
-#define DEF_ISO_ERRMSG( __def_msg ) {\
-	CString _def_str;_def_str = __FILE__;CString str2;str2.Format( L"file: %s\r\nline: %d\r\n%s" , _def_str.GetString() , __LINE__ , (__def_msg) );\
-	SetErrMsg( str2.GetString() ); }
+
+#define DEF_ISO_SET_ERRMSG( __def_fmt , ... ) do{\
+	CString str;str.Format( L"file: %hs\r\nline: %d\r\n" , __FILE__ , __LINE__ );\
+	str.AppendFormat( __def_fmt , __VA_ARGS__  );\
+	SetErrMsg( str.GetString() ); }while(0)
 
 inline static bool xx_cmpeq( void const*const bufferLE , void const*const bufferBE , const size_t len )
 {
@@ -188,8 +190,10 @@ class CWQSG_ISO_Raw
 	BOOL ReadSectors(void* a_pSector, s32 a_nLBA);
 	BOOL WriteSectors(void* a_pSector, s32 a_nLBA);
 
+	CWQSG_StringMgr m_StringMgr;
 protected:
-	CWQSG_ISO_Raw(){}
+	CWQSG_ISO_Raw();
+
 	virtual ~CWQSG_ISO_Raw()
 	{
 		CloseFile();
@@ -226,6 +230,21 @@ public:
 	inline BOOL IsCanWrite()const
 	{
 		return m_ISOfp.IsCanWrite();
+	}
+
+	void SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString )
+	{
+		m_StringMgr.SetString( a_szUserString , a_uUserString );
+	}
+
+	u32 GetLangStringCount()const
+	{
+		return m_StringMgr.GetStringCount();
+	}
+
+	const WCHAR* GetLangString( size_t a_uIndex )
+	{
+		return m_StringMgr.GetString( a_uIndex );
 	}
 };
 

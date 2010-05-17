@@ -15,6 +15,7 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
+#include "WQSG_ISO_Lang.h"
 
 static inline void GetLastErrorText( CString& a_str , DWORD a_dwErrId )
 {
@@ -113,6 +114,11 @@ static CIsoEcc g_IsoEcc;
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 static const u8 g_szIsoSync[] = {0x00,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0x00};
 //--------------------------------------------------------------------------------------------------
+CWQSG_ISO_Raw::CWQSG_ISO_Raw()
+: m_StringMgr( g_WQSG_ISO_String , (sizeof(g_WQSG_ISO_String)/sizeof(*g_WQSG_ISO_String)) )
+{
+}
+
 BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_bCanWrite )
 {
 	CloseFile();
@@ -125,7 +131,8 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 			{
 				CString str;
 				GetLastErrorText( str , GetLastError() );
-				DEF_ISO_ERRMSG( str.GetString() );
+
+				DEF_ISO_SET_ERRMSG( str.GetString() );
 				return FALSE;
 			}
 		}
@@ -133,7 +140,8 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 		{
 			CString str;
 			GetLastErrorText( str , GetLastError() );
-			DEF_ISO_ERRMSG( str.GetString() );
+
+			DEF_ISO_SET_ERRMSG( str.GetString() );
 			return FALSE;
 		}
 	}
@@ -143,7 +151,7 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 
 	if( !ReadSectors( &tHead , 0 ) )
 	{
-		DEF_ISO_ERRMSG( L"读取ISO信息失败" );
+		DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(0) );
 		goto __gtOpenFileErr;
 	}
 
@@ -152,7 +160,7 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 
 	if( !ReadSectors( &tHead , 16 ) )
 	{
-		DEF_ISO_ERRMSG( L"读取ISO信息失败" );
+		DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(0) );
 		goto __gtOpenFileErr;
 	}
 
@@ -169,7 +177,7 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 			m_nUserDataOffset = 0x18;
 			break;
 		default:
-			DEF_ISO_ERRMSG( L"未知的 2352 Mode" );
+			DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(1) );
 			goto __gtOpenFileErr;
 		}
 	}
@@ -352,7 +360,7 @@ BOOL CWQSG_ISO_BaseX::Open( const WCHAR*const a_strISOPathName , const BOOL a_bC
 		m_ISOfp.Seek( 0x0 );
 		if( sizeof(testHead) != m_ISOfp.Read( &testHead , sizeof(testHead) ) )
 		{
-			DEF_ISO_ERRMSG( L"读取ISO信息失败" );
+			DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(0) );
 			goto __gtErr;
 		}
 
@@ -366,7 +374,7 @@ BOOL CWQSG_ISO_BaseX::Open( const WCHAR*const a_strISOPathName , const BOOL a_bC
 	m_ISOfp.Seek( 0x10 * m_nSectorSize );
 	if( m_nSectorSize != m_ISOfp.Read( &m_tHead0 , m_nSectorSize ) )
 	{
-		DEF_ISO_ERRMSG( L"读取ISO信息失败" );
+		DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(0) );
 		goto __gtErr;
 	}
 

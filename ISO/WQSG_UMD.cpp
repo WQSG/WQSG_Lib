@@ -43,12 +43,12 @@ BOOL CWQSG_UMD::OpenISO( const WCHAR*const a_isoPathName  , const BOOL a_bCanWri
 			}
 			else
 			{
-				DEF_ISO_ERRMSG( L"此ISO不是UMD" );
+				DEF_ISO_SET_ERRMSG( GetLangString(48) );
 			}
 		}
 		else
 		{
-			DEF_ISO_ERRMSG( L"文件结构版本不为 2 or 1" );
+			DEF_ISO_SET_ERRMSG( GetLangString(49) );
 		}
 	}
 

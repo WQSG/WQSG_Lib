@@ -19,8 +19,6 @@
 #define _WQSG_ISO_BASE_
 
 #include "WQSG_ISO_Raw.h"
-#pragma pack(1)
-#pragma pack()
 
 class CWQSG_ISO_Base : public CWQSG_ISO_Raw
 {
