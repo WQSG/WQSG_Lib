@@ -682,22 +682,26 @@ void CISO_App::CloseFindIsoFile( SIsoFileFind* a_handle )
 
 BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 {
+	a_bFileBreak = FALSE;
+	m_strLastErr = L"";
+
 	SWQSG_IsoPatch_Head head;
 	if( sizeof(head) != a_InFp.Read( &head , sizeof(head) ) )
 	{
-		return 1;
+		m_strLastErr = L"读补丁信息失败";
+		return FALSE;
 	}
 
 	if( 0 != memcmp( head.m_Magic , DEF_WQSG_IsoPatch_Head_Magic , sizeof(head.m_Magic) ) )
 	{
 		m_strLastErr.Format( L"不是\"%hs\"文件" , DEF_WQSG_IsoPatch_Head_Magic );
-		return 1;
+		return FALSE;
 	}
 
 	if( memcmp( head.m_Ver , "1.0" , 4 ) != 0 )
 	{
 		m_strLastErr = L"版本错误或者是不支持的版本";
-		return 1;
+		return FALSE;
 	}
 
 	{
@@ -709,21 +713,21 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 		if( uCrc32_new != uCrc32_old )
 		{
 			m_strLastErr = L"文件头校验错误（m_uCrc32）";
-			return 1;
+			return FALSE;
 		}
 	}
 
 	if( head.m_nSize < sizeof(head) )
 	{
 		m_strLastErr = L"文件头校验错误（m_nSize）";
-		return 1;
+		return FALSE;
 	}
 
 	const n64 nFileSize = a_InFp.GetFileSize();
 	if( nFileSize < head.m_nSize )
 	{
 		m_strLastErr = L"文件大小错误（nFileSize < head.m_nSize）";
-		return 1;
+		return FALSE;
 	}
 
 	{
@@ -731,14 +735,14 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 		if( !GetHead( head_self ) )
 		{
 			m_strLastErr = L"GetHead Error";
-			return 1;
+			return FALSE;
 		}
 
 		if( memcmp( head_self.SystemID , head.m_Head.SystemID , sizeof(head_self.SystemID) ) != 0 ||
 			memcmp( head_self.AppUse , head.m_Head.AppUse , sizeof(head_self.AppUse) ) != 0 )
 		{
 			m_strLastErr = L"此补丁不适用于本ISO";
-			return 1;
+			return FALSE;
 		}
 	}
 
@@ -755,13 +759,13 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 		{
 			m_strLastErr = L"读取补丁文件错误";
-			return 1;
+			return FALSE;
 		}
 
 		if( blockInfo.m_uSize != sizeof(blockInfo) )
 		{
 			m_strLastErr = L"补丁文件参数错误(m_uSize)";
-			return 1;
+			return FALSE;
 		}
 
 		const u32 uCrc32Src = blockInfo.m_uCrc32;
@@ -773,7 +777,7 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 		if( uCrc32New != uCrc32Src )
 		{
 			m_strLastErr = L"补丁文件校验错误(m_uCrc32)";
-			return 1;
+			return FALSE;
 		}
 
 		offset64 += (blockInfo.m_uFileSize + sizeof(blockInfo));
@@ -783,7 +787,7 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 	if( nFileCount != head.m_nFileCount )
 	{
 		m_strLastErr = L"补丁文件参数错误(m_nFileCount)";
-		return 1;
+		return FALSE;
 	}
 
 	if( a_bCheckCrc32 )
@@ -799,14 +803,14 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 			if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 			{
 				m_strLastErr = L"读取补丁文件错误";
-				return 1;
+				return FALSE;
 			}
 
 			SISO_DirEnt tDirEnt_Dir;
 			if( !GetPathDirEnt( tDirEnt_Dir , blockInfo.m_PathName ) )
 			{
 				m_strLastErr.Format( L"目录(%hs)不存在" , blockInfo.m_PathName );
-				return 1;
+				return FALSE;
 			}
 
 			SISO_DirEnt dirEnt_File;
@@ -815,7 +819,8 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 			{
 				if( blockInfo.m_uOldFileCrc32 != 0 )
 				{
-					return 1;
+					m_strLastErr = L"blockInfo.m_uOldFileCrc32 != 0";
+					return FALSE;
 				}
 			}
 			else
@@ -836,7 +841,7 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 
 					if( !m_pIso->ReadFile( dirEnt_File , mfp , rLen , offset32 ) )
 					{
-						return 1;
+						return FALSE;
 					}
 
 					uCrc32 = crc32_v.GetCRC32( (u8*)mfp.GetBuf() , rLen );
@@ -849,7 +854,7 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 				if( uCrc32 != blockInfo.m_uOldFileCrc32 )
 				{
 					m_strLastErr.Format( L"文件(%hs/%hs)的crc32校验失败\r\n当前:%08X\r\n原来:%08X" , blockInfo.m_PathName , blockInfo.m_FileName , uCrc32 , blockInfo.m_uOldFileCrc32 );
-					return 1;
+					return FALSE;
 				}
 			}
 
@@ -866,14 +871,14 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 		{
 			m_strLastErr = L"读取补丁文件错误";
-			return 1;
+			return FALSE;
 		}
 
 		CWQSG_TempMapFile fp;
 		if( !fp.Init( &a_InFp , offset64 + sizeof(blockInfo) , blockInfo.m_uFileSize ) )
 		{
 			m_strLastErr = L"初始化临时文件错误";
-			return 1;
+			return FALSE;
 		}
 
 		CStringW str;
@@ -882,13 +887,13 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 		if( !zzz_WriteFile( a_bFileBreak , str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , TRUE , &blockInfo.m_time ) )
 		{
 			m_strLastErr.Insert( 0 , L"写补丁失败\r\n" );
-			return -1;
+			return FALSE;
 		}
 
 		offset64 += (blockInfo.m_uFileSize + sizeof(blockInfo));
 	}
 
-	return 0;
+	return TRUE;
 }
 
 BOOL CISO_App::生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 )
