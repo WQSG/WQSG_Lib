@@ -120,24 +120,25 @@ enum EWqsgIsoType
 
 class CWQSG_ISO_Interface : public CWQSG_ISO_Base
 {
-	EWqsgIsoType m_eIsoType;
+	const EWqsgIsoType m_eIsoType;
 protected:
 	CWQSG_ISO_Interface( EWqsgIsoType a_eIsoType )
 		: m_eIsoType(a_eIsoType)
 	{}
-	//----------------------------------------------
+	//------------------------------------------
 public:
-	const WCHAR* GetErrStr()const;
+	virtual ~CWQSG_ISO_Interface(void){}
+	//------------------------------------------
+public:
+	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite ) = 0;
+	virtual	void CloseISO() = 0;
 
 	inline EWqsgIsoType GetIsoType()const
 	{
 		return m_eIsoType;
 	}
-	//------------------------------------------
-	virtual ~CWQSG_ISO_Interface(void){}
-	//------------------------------------------
-	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite ) = 0;
-	virtual	void CloseISO() = 0;
+
+	const WCHAR* GetErrStr()const;
 
 	virtual BOOL IsOpen()const
 	{

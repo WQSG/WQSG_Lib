@@ -182,7 +182,7 @@ CISO_App::~CISO_App(void)
 	CloseISO();
 }
 
-BOOL CISO_App::OpenISO( CStringW a_ISO_PathName , const BOOL a_bCanWrite , EWqsgIsoType a_eType )
+BOOL CISO_App::OpenISO( CStringW a_strPathName , const BOOL a_bCanWrite , EWqsgIsoType a_eType )
 {
 	CloseISO();
 
@@ -201,20 +201,18 @@ BOOL CISO_App::OpenISO( CStringW a_ISO_PathName , const BOOL a_bCanWrite , EWqsg
 	if( NULL == m_pIso )
 		return FALSE;
 
-	if( !m_pIso->OpenISO( a_ISO_PathName , a_bCanWrite ) )
+	if( !m_pIso->OpenISO( a_strPathName , a_bCanWrite ) )
 	{
-		m_strLastErr = a_ISO_PathName + L"\r\n\r\n" + m_pIso->GetErrStr();
+		m_strLastErr = a_strPathName + L"\r\n\r\n" + m_pIso->GetErrStr();
 		return FALSE;
 	}
 	return TRUE;
 }
 
-inline BOOL CISO_App::GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_path )
+inline BOOL CISO_App::GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_strIsoPathA )
 {
 	if( NULL == m_pIso )
 		return FALSE;
-
-	CStringA path( a_path );
 
 	if( !m_pIso->GetRootDirEnt( a_tDirEnt ) )
 	{
@@ -222,34 +220,32 @@ inline BOOL CISO_App::GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_p
 		return FALSE;
 	}
 
-	if( path.Right( 1 ) != L'/' )
-		path += L'/';
+	CStringA strIsoPathA( a_strIsoPathA );
+	if( strIsoPathA.Right( 1 ) != L'/' )
+		strIsoPathA += L'/';
 
-	SISO_DirEnt tmp;
-
-	while( path[0] == '/' )
-		path.Delete( 0 , 1 );
+	while( strIsoPathA[0] == '/' )
+		strIsoPathA.Delete( 0 , 1 );
 
 	int pos;
-	while( (pos = path.Find( '/' )) > 0 )
+	SISO_DirEnt tmp;
+	while( (pos = strIsoPathA.Find( '/' )) > 0 )
 	{
-		CStringA name( path.Left( pos ) );
+		const CStringA strNameA( strIsoPathA.Left( pos ) );
 
-		path.Delete( 0 , pos );
-		while( path[0] == '/' )
-			path.Delete( 0 , 1 );
+		strIsoPathA.Delete( 0 , pos );
+		while( strIsoPathA[0] == '/' )
+			strIsoPathA.Delete( 0 , 1 );
 
-		if( m_pIso->FindFile( tmp , a_tDirEnt , name.GetString() ) < 0 )
+		if( m_pIso->FindFile( tmp , a_tDirEnt , strNameA.GetString() ) < 0 )
 		{
-			CStringW str;str = a_path;
-			m_strLastErr =  str + L"\r\n路经错误";
+			m_strLastErr.Format( L"%hs\r\n\r\n路经错误" , a_strIsoPathA.GetString() );
 			return FALSE;
 		}
 
 		if( 2 != (tmp.attr & 2) )
 		{
-			CStringW str;str = a_path;
-			m_strLastErr =  str + L"\r\n路经错误";
+			m_strLastErr.Format( L"%hs\r\n\r\n路经错误" , a_strIsoPathA.GetString() );
 			return FALSE;
 		}
 
@@ -277,66 +273,45 @@ inline static BOOL TestName( CStringA& strName )
 	return TRUE;
 }
 
-inline BOOL CISO_App::zzz_CreateDir( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_strName , CStringA a_strPath )
+inline BOOL CISO_App::zzz_CreateDir( BOOL& a_bIsoBreak , CStringA a_strIsoName , CStringA a_strIsoPath )
 {
+	a_bIsoBreak = FALSE;
 	if( NULL == m_pIso )
 		return FALSE;
 
-	if( !TestName(a_strName) )
+	if( !TestName(a_strIsoName) )
 	{
-		CStringW strNameW;strNameW = a_strName;
-		m_strLastErr = strNameW + L"\r\n目录名只能用 字母 数字 点 下划线" ;
+		m_strLastErr.Format( L"%hs\r\n目录名只能用 字母 数字 点 下划线" , a_strIsoName.GetString() );
 		return FALSE;
 	}
 
 	SISO_DirEnt sDirEnt_Path;
-	if( !GetPathDirEnt( sDirEnt_Path , a_strPath ) )
+	if( !GetPathDirEnt( sDirEnt_Path , a_strIsoPath ) )
 	{
-		CStringW strNameW;strNameW = a_strPath;
-		m_strLastErr = strNameW + L"\r\nISO路径错误?";
+		m_strLastErr.Format( L"%hs\r\nISO路径错误?" , a_strIsoPath.GetString() );
 		return FALSE;
 	}
 
-	if( !m_pIso->CreateDir( sDirEnt_Path , a_strName ) )
+	if( !m_pIso->CreateDir( sDirEnt_Path , a_strIsoName ) )
 	{
-		CStringW strNameW;strNameW = a_strName;
-		m_strLastErr = strNameW + L"\r\n创建目录失败" ;
+		m_strLastErr.Format( L"%hs\r\n创建目录失败?" , a_strIsoName.GetString() );
 		return FALSE;
 	}
 
 	return TRUE;
 }
 
-inline BOOL CISO_App::zzz_导入文件夹( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA path )
+inline BOOL CISO_App::ImportDir( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringW a_strInPathName )
 {
-	CStringW strPathName( a_strPathName );
-	{
-		while( strPathName.Right(1) == L'\\' )
-			strPathName.Delete( strPathName.GetLength() -1 );
+	a_bIsoBreak = FALSE;
 
-		const int pos = strPathName.ReverseFind( L'\\' );
-		if( pos <= 0 )
-		{
-			m_strLastErr = a_strPathName + L"\r\n目录路径错误" ;
-			return FALSE;
-		}
-
-		CString nameX = strPathName.Mid( pos + 1 );
-
-		CStringA nameA;nameA = nameX;
-
-		if( !zzz_CreateDir( a_bFileBreak , strPathName , nameA , path ) )
-			return FALSE;
-
-		path += ('/' + nameA);
-
-		strPathName += L'\\';
-	}
+	if( a_strInPathName.Right(1) != L'\\' )
+		a_strInPathName += L'\\';
 
 	BOOL rt = TRUE;
 	WIN32_FIND_DATAW data;
 
-	const HANDLE handle = ::FindFirstFileW( strPathName + L"*.*" , &data );
+	const HANDLE handle = ::FindFirstFileW( a_strInPathName + L"*.*" , &data );
 	if( INVALID_HANDLE_VALUE != handle )
 	{
 		do{
@@ -345,7 +320,7 @@ inline BOOL CISO_App::zzz_导入文件夹( BOOL& a_bFileBreak , CStringW a_strPathNam
 				CStringW nameW( data.cFileName );
 				if( nameW != L"." && nameW != L".." )
 				{
-					if( !导入文件( a_bFileBreak , strPathName + data.cFileName , path , 0 ) )
+					if( !EasyImport( a_bIsoBreak , a_strInPathName + data.cFileName , a_strIsoPathA ) )
 					{
 						rt = FALSE;
 						break;
@@ -354,7 +329,7 @@ inline BOOL CISO_App::zzz_导入文件夹( BOOL& a_bFileBreak , CStringW a_strPathNam
 			}
 			else
 			{
-				if( !导入文件( a_bFileBreak , strPathName + data.cFileName , path , 0 ) )
+				if( !EasyImport( a_bIsoBreak , a_strInPathName + data.cFileName , a_strIsoPathA ) )
 				{
 					rt = FALSE;
 					break;
@@ -369,63 +344,63 @@ inline BOOL CISO_App::zzz_导入文件夹( BOOL& a_bFileBreak , CStringW a_strPathNam
 	return rt;
 }
 
-BOOL CISO_App::导入文件( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_path , const s32 a_offset )
+BOOL CISO_App::EasyImport( BOOL& a_bIsoBreak , CStringW a_strInPathName , CStringA a_strIsoPathA )
 {
+	a_bIsoBreak = FALSE;
 	CStringA strNameA;
 	{
-		const int pos = a_strPathName.ReverseFind( '\\' );
+		const int pos = a_strInPathName.ReverseFind( '\\' );
 		if( pos <= 0 )
+		{
+			m_strLastErr = a_strInPathName + L"\r\n目录路径错误" ;
 			return FALSE;
+		}
 
-		CString strNameW( a_strPathName.Mid( pos + 1 ) );
+		CString strNameW( a_strInPathName.Mid( pos + 1 ) );
 		strNameA = strNameW;
 	}
 
-	if( ::WQSG_IsFile( a_strPathName.GetString() ) )
+	if( ::WQSG_IsFile( a_strInPathName.GetString() ) )
 	{
-		CWQSG_File fp;
-		if( !fp.OpenFile( a_strPathName.GetString() , 1 , 3 ) )
-		{
-			m_strLastErr = a_strPathName + L"\r\n打开文件失败";
-			return FALSE;
-		}
-
-		if( !zzz_WriteFile( a_bFileBreak , a_strPathName , fp , strNameA , a_path , a_offset , TRUE , NULL ) )
+		if( !ImportFile( a_bIsoBreak , a_strIsoPathA , strNameA , a_strInPathName ) )
 		{
 			return FALSE;
 		}
 	}
-	else if( ::WQSG_IsDir( a_strPathName.GetString() ) )
+	else if( ::WQSG_IsDir( a_strInPathName.GetString() ) )
 	{
-		if( !zzz_导入文件夹( a_bFileBreak , a_strPathName , a_path ) )
+		if( !zzz_CreateDir( a_bIsoBreak , strNameA , a_strIsoPathA ) )
+			return FALSE;
+
+		if( !ImportDir( a_bIsoBreak , (a_strIsoPathA + '/' + strNameA) , a_strInPathName ) )
 			return FALSE;
 	}
 	else
 	{
-		m_strLastErr = a_strPathName + L"\r\n文件不存在" ;
+		m_strLastErr = a_strInPathName + L"\r\n文件不存在" ;
 		return FALSE;
 	}
 	return TRUE;
 }
 
-inline BOOL CISO_App::zzz_WriteFile( BOOL& a_bFileBreak , CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA strName ,
-							 CStringA strPath , const s32 offset , const BOOL isNew , const SIsoTime* a_pTime )
+inline BOOL CISO_App::zzz_WriteFile( BOOL& a_bIsoBreak , CStringW a_strInPathName , CWQSG_xFile& a_InFp , CStringA a_strIsoName ,
+							 CStringA a_strIsoPath , const s32 a_nOffset , const BOOL a_bNew , const SIsoTime* a_pTime )
 {
+	a_bIsoBreak = FALSE;
+
 	if( NULL == m_pIso )
 		return FALSE;
 
-	if( !TestName(strName) )
+	if( !TestName(a_strIsoName) )
 	{
-		CStringW strNameW ; strNameW = strName;
-		m_strLastErr = strNameW + L"\r\n文件名只能用 字母 数字 点 下划线" ;
+		m_strLastErr.Format( L"%hs\r\n文件名只能用 字母 数字 点 下划线" , a_strIsoName.GetString() );
 		return FALSE;
 	}
 
 	SISO_DirEnt sDirEnt_Path;
-	if( !GetPathDirEnt( sDirEnt_Path , strPath ) )
+	if( !GetPathDirEnt( sDirEnt_Path , a_strIsoPath ) )
 	{
-		CStringW strNameW ; strNameW = strPath;
-		m_strLastErr = strNameW + L"\r\nISO路径错误?\r\n" + m_pIso->GetErrStr();
+		m_strLastErr.Format( L"%hs\r\nISO路径错误?\r\n" , a_strIsoPath.GetString() );
 		return FALSE;
 	}
 
@@ -439,74 +414,73 @@ inline BOOL CISO_App::zzz_WriteFile( BOOL& a_bFileBreak , CStringW a_strPathName
 	const s64 srcFileSize = a_InFp.GetFileSize();
 	if( ( srcFileSize < 0 ) || ( srcFileSize > (((u32)-1))>>1) )
 	{
-		m_strLastErr = a_strPathName + L"\r\n文件大小错误" ;
+		m_strLastErr = a_strInPathName + L"\r\n文件大小错误" ;
 		return FALSE;
 	}
 
-	if( !m_pIso->WriteFile( sDirEnt_Path , strName , a_InFp , (s32)srcFileSize , offset , isNew , FALSE , a_pTime ) )
+	if( !m_pIso->WriteFile( sDirEnt_Path , a_strIsoName , a_InFp , (s32)srcFileSize , a_nOffset , a_bNew , FALSE , a_pTime ) )
 	{
-		m_strLastErr = a_strPathName + L"\r\n写文件到ISO出错\r\n" + m_pIso->GetErrStr();
+		m_strLastErr = a_strInPathName + L"\r\n写文件到ISO出错\r\n" + m_pIso->GetErrStr();
 		return FALSE;
 	}
 
 	return TRUE;
 }
 
-BOOL CISO_App::导出文件( CStringW a_strPathName , CStringA a_pathA , CStringA a_nameA )
+BOOL CISO_App::ExportFile( CStringW a_strOutPathName , CStringA a_strIsoPathA , CStringA a_strIsoNameA )
 {
 	if( NULL == m_pIso )
 		return FALSE;
 
-	::DeleteFile( a_strPathName );
+	::DeleteFile( a_strOutPathName );
 
 	SISO_DirEnt sDirEnt_Path;
-	if( !GetPathDirEnt( sDirEnt_Path , a_pathA ) )
+	if( !GetPathDirEnt( sDirEnt_Path , a_strIsoPathA ) )
 		return FALSE;
 
 	SISO_DirEnt sDirEnt_File;
-	if( m_pIso->FindFile( sDirEnt_File , sDirEnt_Path , a_nameA.GetString() ) < 0 )
+	if( m_pIso->FindFile( sDirEnt_File , sDirEnt_Path , a_strIsoNameA.GetString() ) < 0 )
 		return FALSE;
 
 	CWQSG_File fp;
-	if( !fp.OpenFile( a_strPathName.GetString() , 4 , 3 ) )
+	if( !fp.OpenFile( a_strOutPathName.GetString() , 4 , 3 ) )
 	{
-		m_strLastErr = a_strPathName + L"\r\n打开文件失败" ;
+		m_strLastErr = a_strOutPathName + L"\r\n打开文件失败" ;
 		return FALSE;
 	}
 
-	if( !m_pIso->ReadFile( sDirEnt_Path , a_nameA , fp , sDirEnt_File.size_le , 0 ) )
+	if( !m_pIso->ReadFile( sDirEnt_Path , a_strIsoNameA , fp , sDirEnt_File.size_le , 0 ) )
 	{
 		fp.Close();
-		::DeleteFile( a_strPathName );
-		m_strLastErr = a_strPathName + L"\r\n导出文件失败" ;
+		::DeleteFile( a_strOutPathName );
+		m_strLastErr = a_strOutPathName + L"\r\n导出文件失败" ;
 		return FALSE;
 	}
 
 	return TRUE;
 }
 
-BOOL CISO_App::导出文件夹( CStringW a_strPath , CStringA a_pathA )
+BOOL CISO_App::ExportDir( CStringW a_strOutPath , CStringA a_strIsoPathA )
 {
 	if( NULL == m_pIso )
 		return FALSE;
 
-	SIsoFileFind* pFind = FindIsoFile( a_pathA );
+	SIsoFileFind* pFind = FindIsoFile( a_strIsoPathA );
 	if( !pFind )
 	{
-		m_strLastErr = a_pathA;
-		m_strLastErr + L"\r\n找不到文件夹" ;
+		m_strLastErr.Format( L"%hs\r\n找不到文件夹" , a_strIsoPathA.GetString() );
 		return FALSE;
 	}
 
-	if( a_strPath.Right(1) != L'\\' )
-		a_strPath += L'\\';
+	if( a_strOutPath.Right(1) != L'\\' )
+		a_strOutPath += L'\\';
 
-	if( a_pathA.Right(1) != L'/' )
-		a_pathA += L'/';
+	if( a_strIsoPathA.Right(1) != L'/' )
+		a_strIsoPathA += L'/';
 
-	if ( !WQSG_CreateDir( a_strPath.GetString() ) )
+	if ( !WQSG_CreateDir( a_strOutPath.GetString() ) )
 	{
-		m_strLastErr = a_strPath + L"\r\n创建文件夹失败" ;
+		m_strLastErr = a_strOutPath + L"\r\n创建文件夹失败" ;
 		return FALSE;
 	}
 
@@ -516,12 +490,11 @@ BOOL CISO_App::导出文件夹( CStringW a_strPath , CStringA a_pathA )
 
 	while( FindNextIsoFile( pFind , data ) )
 	{
-		strPathName = data.name;
-		strPathName.Insert( 0 , a_strPath );
+		strPathName.Format( L"%ls%hs" , a_strOutPath.GetString() , data.name );
 
 		if( data.isDir )
 		{
-			if( !导出文件夹( a_strPath , a_pathA + data.name ) )
+			if( !ExportDir( a_strOutPath , a_strIsoPathA + data.name ) )
 			{
 				bRt = FALSE;
 				goto __gtSaveDirExit;
@@ -529,7 +502,7 @@ BOOL CISO_App::导出文件夹( CStringW a_strPath , CStringA a_pathA )
 		}
 		else
 		{
-			if( !导出文件( a_strPath , a_pathA , data.name ) )
+			if( !ExportFile( a_strOutPath , a_strIsoPathA , data.name ) )
 			{
 				bRt = FALSE;
 				goto __gtSaveDirExit;
@@ -547,56 +520,58 @@ __gtSaveDirExit:
 	return bRt;
 }
 
-BOOL CISO_App::写文件偏移( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName )
+BOOL CISO_App::WriteFile( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringA a_strIsoNameA , s32 a_nOffset , CStringW a_strInPathName )
 {
+	a_bIsoBreak = FALSE;
+
 	SISO_DirEnt sDirEnt_File;
-	if( !zzz_GetFileData( sDirEnt_File , a_pathA , a_nameA ) )
+	if( !zzz_GetFileData( sDirEnt_File , a_strIsoPathA , a_strIsoNameA ) )
 		return FALSE;
 
 	if( sDirEnt_File.attr & 2 )
 	{
-		CStringW str;str = a_pathA + a_nameA;
-		m_strLastErr = str + L"\r\n不能写文件夹";
+		m_strLastErr.Format( L"%hs\r\n不能写文件夹" , (a_strIsoPathA + a_strIsoNameA).GetString() );
 		return FALSE;
 	}
 
 	CWQSG_File fp;
-	if( !fp.OpenFile( a_inFileName.GetString() , 1 , 3 ) )
+	if( !fp.OpenFile( a_strInPathName.GetString() , 1 , 3 ) )
 	{
-		m_strLastErr = a_inFileName + L"\r\n打开文件失败";
+		m_strLastErr = a_strInPathName + L"\r\n打开文件失败";
 		return FALSE;
 	}
 
-	return zzz_WriteFile( a_bFileBreak , a_inFileName , fp , a_nameA , a_pathA , a_oldOffset , FALSE , NULL );
+	return zzz_WriteFile( a_bIsoBreak , a_strInPathName , fp , a_strIsoNameA , a_strIsoPathA , a_nOffset , FALSE , NULL );
 }
 
-BOOL CISO_App::替换文件( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName )
+BOOL CISO_App::ImportFile( BOOL& a_bIsoBreak , CStringA a_strPathA , CStringA a_strNameA , CStringW a_strInPathName )
 {
+	a_bIsoBreak = FALSE;
+
 	CWQSG_File fp;
-	if( !fp.OpenFile( a_inFileName.GetString() , 1 , 3 ) )
+	if( !fp.OpenFile( a_strInPathName.GetString() , 1 , 3 ) )
 	{
-		m_strLastErr = a_inFileName + L"\r\n打开文件失败";
+		m_strLastErr = a_strInPathName + L"\r\n打开文件失败";
 		return FALSE;
 	}
 
-	return zzz_WriteFile( a_bFileBreak , a_inFileName , fp , a_nameA , a_pathA , 0 , TRUE , NULL );
+	return zzz_WriteFile( a_bIsoBreak , a_strInPathName , fp , a_strNameA , a_strPathA , 0 , TRUE , NULL );
 }
 
-inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA )
+inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_strPathA , CStringA a_strNameA )
 {
 	if( NULL == m_pIso )
 		return FALSE;
 
 	SISO_DirEnt sDirEnt_Path;
-	if( !GetPathDirEnt( sDirEnt_Path , a_pathA ) )
+	if( !GetPathDirEnt( sDirEnt_Path , a_strPathA ) )
 		return FALSE;
 
-	if( a_nameA[0] != 0 )
+	if( a_strNameA[0] != 0 )
 	{
-		if( m_pIso->FindFile( a_tDirEnt , sDirEnt_Path , a_nameA.GetString() ) < 0 )
+		if( m_pIso->FindFile( a_tDirEnt , sDirEnt_Path , a_strNameA.GetString() ) < 0 )
 		{
-			CStringW str;str = a_pathA + a_nameA;
-			m_strLastErr = str + L"\r\nISO没有此文件";
+			m_strLastErr.Format( L"%hs\r\nISO没有此文件" , (a_strPathA + a_strNameA).GetString() );
 			return FALSE;
 		}
 	}
@@ -606,17 +581,17 @@ inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA
 	return TRUE;
 }
 
-BOOL CISO_App::GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a_nameA  )
+BOOL CISO_App::GetFileData( SIsoFileData& a_data , CStringA a_strPathA , CStringA a_strNameA  )
 {
 	SISO_DirEnt tmp;
-	if( zzz_GetFileData( tmp , a_pathA , a_nameA ) )
+	if( zzz_GetFileData( tmp , a_strPathA , a_strNameA ) )
 	{
 		a_data.isDir = ( (tmp.attr & 2) == 2 );
 		a_data.size = tmp.size_le;
 		a_data.lba = tmp.lba_le;
 		a_data.time = tmp.time;
 
-		WQSG_strcpy( a_nameA.GetString() , a_data.name );
+		WQSG_strcpy( a_strNameA.GetString() , a_data.name );
 
 		return TRUE;
 	}
@@ -624,10 +599,10 @@ BOOL CISO_App::GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a
 	return FALSE;
 }
 
-SIsoFileFind* CISO_App::FindIsoFile( CStringA a_pathA )
+SIsoFileFind* CISO_App::FindIsoFile( CStringA a_strIsoPathA )
 {
 	SISO_DirEnt tP_DirEnt;
-	if( !GetPathDirEnt( tP_DirEnt , a_pathA ) )
+	if( !GetPathDirEnt( tP_DirEnt , a_strIsoPathA ) )
 		return NULL;
 
 	SIsoFileFind* pRt = g_IsoFileFindMgr.Allocate();
@@ -656,7 +631,7 @@ BOOL CISO_App::FindNextIsoFile( SIsoFileFind* a_handle , SIsoFileData& a_data )
 
 	if( sDirEnt.len == 0 )
 	{
-		m_strLastErr = "OK";
+		m_strLastErr = L"OK";
 		return FALSE;
 	}
 
@@ -680,9 +655,9 @@ void CISO_App::CloseFindIsoFile( SIsoFileFind* a_handle )
 	}
 }
 
-BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
+BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 {
-	a_bFileBreak = FALSE;
+	a_bIsoBreak = FALSE;
 	m_strLastErr = L"";
 
 	SWQSG_IsoPatch_Head head;
@@ -884,7 +859,7 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 		CStringW str;
 		str.Format( L"%hs/%hs" , blockInfo.m_PathName , blockInfo.m_FileName );
 
-		if( !zzz_WriteFile( a_bFileBreak , str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , TRUE , &blockInfo.m_time ) )
+		if( !zzz_WriteFile( a_bIsoBreak , str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , TRUE , &blockInfo.m_time ) )
 		{
 			m_strLastErr.Insert( 0 , L"写补丁失败\r\n" );
 			return FALSE;
@@ -896,7 +871,7 @@ BOOL CISO_App::导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCh
 	return TRUE;
 }
 
-BOOL CISO_App::生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 )
+BOOL CISO_App::MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 )
 {
 	if( !a_Iso.IsOpen() )
 	{
@@ -948,7 +923,7 @@ BOOL CISO_App::生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bChec
 		return FALSE;
 	}
 
-	if( !zzz_生成文件包_Path( a_Iso , a_OutFp , "" , a_bCheckCrc32 , head ) )
+	if( !zzz_MakeFilePackage_Path( a_Iso , a_OutFp , "" , a_bCheckCrc32 , head ) )
 	{
 		//m_strLastErr = L"写补丁文件失败";
 		return FALSE;
@@ -973,7 +948,7 @@ BOOL CISO_App::生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bChec
 	return TRUE;
 }
 
-BOOL CISO_App::zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head )
+BOOL CISO_App::zzz_MakeFilePackage_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head )
 {
 	typedef stdext::hash_map<std::string,SIsoFileData> TMap1;
 	TMap1 fileList_Self;
@@ -1017,7 +992,7 @@ BOOL CISO_App::zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CSt
 
 			if( data.isDir )
 			{
-				if( !zzz_生成文件包_Path( a_Iso , a_OutFp , strPathName , a_bCheckCrc32 , a_Head ) )
+				if( !zzz_MakeFilePackage_Path( a_Iso , a_OutFp , strPathName , a_bCheckCrc32 , a_Head ) )
 				{
 					goto __gtErrExit;
 				}
@@ -1070,7 +1045,7 @@ BOOL CISO_App::zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CSt
 				goto __gtErrExit;
 
 
-			if( !zzz_生成文件包_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
+			if( !zzz_MakeFilePackage_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
 				dirEnt_self , NULL , 0 , 0 , crc32_v , data_self ) )
 				goto __gtErrExit;
 
@@ -1096,7 +1071,7 @@ BOOL CISO_App::zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CSt
 				if( a_Iso.m_pIso->FindFile( dirEnt_old , sDirEnt_Path_old , data_old.name ) < 0 )
 					goto __gtErrExit;
 
-				if( !zzz_生成文件包_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
+				if( !zzz_MakeFilePackage_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
 					dirEnt_self , &dirEnt_old , data_old.size , 0 , crc32_v , data_self ) )
 					goto __gtErrExit;
 
@@ -1146,7 +1121,7 @@ BOOL CISO_App::zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CSt
 
 					if( !bEQ )
 					{
-						if( !zzz_生成文件包_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
+						if( !zzz_MakeFilePackage_File( a_Iso , a_OutFp , a_strPath , a_bCheckCrc32 ,
 							dirEnt_self , &dirEnt_old , len , offset , crc32_v , data_self ) )
 							goto __gtErrExit;
 
@@ -1169,7 +1144,7 @@ __gtErrExit:
 	return rt;
 }
 
-BOOL CISO_App::zzz_生成文件包_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 ,
+BOOL CISO_App::zzz_MakeFilePackage_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 ,
 							  const SISO_DirEnt& a_dirEnt_self , const SISO_DirEnt* a_pDirEnt_old , s32 a_len , s32 a_offset , _m_CRC32& a_crc32_v , const SIsoFileData& a_data_self )
 {
 	SWQSG_IsoPatch_Block blockHead = {};

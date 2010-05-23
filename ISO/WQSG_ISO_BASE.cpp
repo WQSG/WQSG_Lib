@@ -561,7 +561,7 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 	//-----------------------------------------------------------------
 	SISO_DirEnt dirEnt_File;
 
-	BOOL b新 = FALSE;
+	BOOL bNew = FALSE;
 	s32 nDirOffset;
 
 	s32 最终fileSize = a_insertOffset + a_buflen;
@@ -665,7 +665,7 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 
 		const s32 需要的LBA = ((DEF_FN_toLBA( a_buflen , 2048 ))==0)?1:(DEF_FN_toLBA( a_buflen , 2048 ));
 
-		b新 = TRUE;
+		bNew = TRUE;
 
 		nDirOffset = 0x30;
 		s32 界限长度;
@@ -845,7 +845,7 @@ __gtReTest:
 
 		memcpy( (szLba + nLbaOffset) , &dirEnt_File , sizeof(dirEnt_File) );
 
-		if( b新 )
+		if( bNew )
 		{
 			//		fileName.MakeUpper();
 			const u32 nNameLen = (dirEnt_File.nameLen&1)?dirEnt_File.nameLen:(dirEnt_File.nameLen+1);

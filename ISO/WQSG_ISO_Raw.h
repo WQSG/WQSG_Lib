@@ -187,8 +187,8 @@ class CWQSG_ISO_Raw
 	s32 m_nSectorSize;
 	s32 m_nUserDataOffset;
 
-	BOOL ReadSectors(void* a_pSector, s32 a_nLBA);
-	BOOL WriteSectors(void* a_pSector, s32 a_nLBA);
+	inline BOOL ReadSectors(void* a_pSector, s32 a_nLBA);
+	inline BOOL WriteSectors(void* a_pSector, s32 a_nLBA);
 
 	CWQSG_StringMgr m_StringMgr;
 protected:
@@ -207,125 +207,56 @@ protected:
 
 	CStringW m_strErrorStr;
 
-	inline void SetErrMsg( WCHAR const*const a_msg )
-	{
-		m_strErrorStr = a_msg;
-	}
-
-	inline void SetErrMsg( char const*const a_msg )
-	{
-		m_strErrorStr = a_msg;
-	}
+	inline void SetErrMsg( WCHAR const*const a_msg );
+	inline void SetErrMsg( char const*const a_msg );
 
 	virtual BOOL IsOpen()const
 	{
 		return m_ISOfp.IsOpen();
 	}
 
-	n32 GetPerLbaSize()const
-	{
-		return m_nSectorSize;
-	}
+	n32 GetPerLbaSize()const;
 public:
-	inline BOOL IsCanWrite()const
-	{
-		return m_ISOfp.IsCanWrite();
-	}
+	inline BOOL IsCanWrite()const;
 
-	void SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString )
-	{
-		m_StringMgr.SetString( a_szUserString , a_uUserString );
-	}
-
-	u32 GetLangStringCount()const
-	{
-		return m_StringMgr.GetStringCount();
-	}
-
-	const WCHAR* GetLangString( size_t a_uIndex )
-	{
-		return m_StringMgr.GetString( a_uIndex );
-	}
+	inline void SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString );
+	inline u32 GetLangStringCount()const;
+	inline const WCHAR* GetLangString( size_t a_uIndex )const;
 };
 
-#if 0
-class CWQSG_ISO_BaseX
+inline void CWQSG_ISO_Raw::SetErrMsg( WCHAR const*const a_msg )
 {
-	inline BOOL XXX_遍历目录申请( const SISO_DirEnt& a_tDirEnt_in );
-public:
-protected:
-	CWQSG_ISO_BaseX();
-	virtual ~CWQSG_ISO_BaseX();
+	m_strErrorStr = a_msg;
+}
 
-	BOOL Open( const WCHAR*const a_strISOPathName , const BOOL a_bCanWrite );
-	void Close();
+inline void CWQSG_ISO_Raw::SetErrMsg( char const*const a_msg )
+{
+	m_strErrorStr = a_msg;
+}
 
-	s32 ReadDirEnt( const SISO_DirEnt& a_tDirEnt_in , const s32 a_dirOffset ,
-		SISO_DirEnt& a_tDirEnt , char*const a_strFileName , const BOOL a_bFindFree );
+inline n32 CWQSG_ISO_Raw::GetPerLbaSize()const
+{
+	return m_nSectorSize;
+}
 
-	inline s32 SectorSeek( s32 a_nLbaID , s32 a_nLbaOffset );
-protected:
-	BOOL m_bCanWrite;
-	s32 m_nSectorSize;
-	s32 m_nLbaSize;
-	s32 m_nHeadOffset;
+inline BOOL CWQSG_ISO_Raw::IsCanWrite()const
+{
+	return m_ISOfp.IsCanWrite();
+}
 
-	CWQSG_File m_ISOfp; //文件流
-	CWQSG_PartitionList* m_pLBA_List; //扇区分配表
+inline void CWQSG_ISO_Raw::SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString )
+{
+	m_StringMgr.SetString( a_szUserString , a_uUserString );
+}
 
-	UISO_Head2352 m_tHead0; //完整的头部
-	SISO_Head2048* m_pHead0;
+inline u32 CWQSG_ISO_Raw::GetLangStringCount()const
+{
+	return m_StringMgr.GetStringCount();
+}
 
-	CStringW m_strErrorStr;
+inline const WCHAR* CWQSG_ISO_Raw::GetLangString( size_t a_uIndex )const
+{
+	return m_StringMgr.GetString( a_uIndex );
+}
 
-	void SetErrMsg( WCHAR const*const a_msg )
-	{
-		m_strErrorStr = a_msg;
-	}
-
-	void SetErrMsg( char const*const a_msg )
-	{
-		m_strErrorStr = a_msg;
-	}
-private:
-	inline	s32		zzz_FindFile( const SISO_DirEnt& a_tDirEnt_in , s32 a_offset ,
-		const char*const a_strFileName , SISO_DirEnt& a_tDirEnt  , const bool a_bFindFree );
-public:
-	//成功返回 dirOffset , 失败 -1
-	__i__	s32		FindFile( const SISO_DirEnt& a_tDirEnt_in , const char*const a_strFileName , SISO_DirEnt& a_tDirEnt );
-
-	__i__	BOOL	ReadFile( const SISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
-		CWQSG_xFile& buffp , const s32 a_buflen , const s32 a_startOffset );
-	//------------------------------------------
-	__i__	BOOL	WriteFile( const SISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
-		const void* buffer , const s32 a_buflen , const s32 insertOffset , const BOOL isNew );
-
-	__i__	BOOL	WriteFile( const SISO_DirEnt& a_tDirEnt_in , const char*const a_fileName ,
-		CWQSG_xFile& buffp , const s32 a_buflen , const s32 a_insertOffset , const BOOL a_isNew , const BOOL a_isDir );
-	//------------------------------------------
-	__i__	BOOL	CreateDir( const SISO_DirEnt& a_tDirEnt_in , char const*const a_dirName );
-
-	virtual	BOOL	IsOpen()const
-	{
-		return m_ISOfp.IsOpen();
-	}
-
-	BOOL GetRootDirEnt( SISO_DirEnt& a_tDirEnt )
-	{
-		if( IsOpen() )
-		{
-			memcpy( &a_tDirEnt , &m_pHead0->rootDirEnt , sizeof(a_tDirEnt) );
-			return TRUE;
-		}
-		return FALSE;
-	}
-
-	s32 ReadDirEnt( const SISO_DirEnt& tDirEnt_in , const s32 dirOffset , SISO_DirEnt& tDirEnt , char*const strFileName )
-	{
-		return ReadDirEnt( tDirEnt_in , dirOffset , tDirEnt , strFileName , false );
-	}
-};
-
-
-#endif
 #endif

@@ -76,97 +76,113 @@ class CISO_App
 	TSIsoFileFindMgrVector m_Objs;
 
 	CWQSG_ISO_Interface* m_pIso;
-	CString m_strLastErr;
+	CStringW m_strLastErr;
 
-	inline BOOL GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_path );
- 	inline BOOL zzz_CreateDir( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_strName , CStringA a_strPath );
- 	inline BOOL zzz_导入文件夹( BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_path );
- 	inline BOOL zzz_WriteFile( BOOL& a_bFileBreak , CStringW a_strPathName , CWQSG_xFile& a_InFp , CStringA a_strName ,
-		CStringA a_strPath , const s32 a_offset , const BOOL a_isNew , const SIsoTime* a_pTime );
+	inline BOOL GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_strIsoPathA );
+ 	inline BOOL zzz_CreateDir( BOOL& a_bIsoBreak , CStringA a_strIsoName , CStringA a_strIsoPath );
+ 	inline BOOL zzz_WriteFile( BOOL& a_bIsoBreak , CStringW a_strInPathName , CWQSG_xFile& a_InFp , CStringA a_strIsoName ,
+		CStringA a_strIsoPath , const s32 a_nOffset , const BOOL a_bNew , const SIsoTime* a_pTime );
 
-	inline BOOL zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_pathA , CStringA a_nameA );
+	inline BOOL zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_strPathA , CStringA a_strNameA );
 public:
 	CISO_App(void);
 	~CISO_App(void);
 
-	BOOL OpenISO( CStringW a_ISO_PathName , const BOOL a_bCanWrite  , EWqsgIsoType a_eType );
+	BOOL OpenISO( CStringW a_strPathName , const BOOL a_bCanWrite  , EWqsgIsoType a_eType );
 
-	inline void CloseISO()
-	{
-		if( m_pIso )
-		{
-			m_pIso->CloseISO( );
-			delete m_pIso;
-			m_pIso = NULL;
-		}
-	}
+	inline void CloseISO();
 
-	inline BOOL IsOpen()const
-	{
-		return m_pIso?m_pIso->IsOpen():FALSE;
-	}
+	inline BOOL IsOpen()const;
+	inline BOOL IsCanWrite()const;
+	inline const CStringW& GetErrStr()const;
+public:
+	BOOL ImportFile( BOOL& a_bIsoBreak , CStringA a_strPathA , CStringA a_strNameA , CStringW a_strInPathName );
+	BOOL ImportDir( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringW a_strInPathName );
+ 	BOOL EasyImport(  BOOL& a_bIsoBreak , CStringW a_strInPathName , CStringA a_strIsoPathA );
+ 	BOOL WriteFile( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringA a_strIsoNameA , s32 a_nOffset , CStringW a_strInPathName );
 
-	inline BOOL IsCanWrite()const
-	{
-		return IsOpen()?m_pIso->IsCanWrite():FALSE;
-	}
+	BOOL ExportFile( CStringW a_strOutPathName , CStringA a_strIsoPathA , CStringA a_strIsoNameA );
+	BOOL ExportDir( CStringW a_strOutPath , CStringA a_strIsoPathA );
 
-	inline CString GetErrStr()const
-	{
-		return m_strLastErr;
- 	}
-
- 	BOOL 导入文件(  BOOL& a_bFileBreak , CStringW a_strPathName , CStringA a_path , const s32 a_offset );
- 	BOOL 写文件偏移( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , s32 a_oldOffset , CStringW a_inFileName );
- 	BOOL 替换文件( BOOL& a_bFileBreak , CStringA a_pathA , CStringA a_nameA , CStringW a_inFileName );
-	BOOL 导出文件( CStringW a_strPathName , CStringA a_pathA , CStringA a_nameA );
-	BOOL 导出文件夹( CStringW a_strPath , CStringA a_pathA );
-
-	BOOL 导入文件包( BOOL& a_bFileBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 );
-	BOOL 生成文件包( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 );
+	BOOL ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 );
+	BOOL MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 );
 protected:
-	BOOL zzz_生成文件包_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head );
-	BOOL zzz_生成文件包_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 ,
+	BOOL zzz_MakeFilePackage_Path( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 , SWQSG_IsoPatch_Head& a_Head );
+	BOOL zzz_MakeFilePackage_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , CStringA a_strPath , BOOL a_bCheckCrc32 ,
 		const SISO_DirEnt& a_dirEnt_self , const SISO_DirEnt* a_pDirEnt_old , s32 a_len , s32 a_offset , _m_CRC32& a_crc32_v , const SIsoFileData& a_data_self );
 public:
-	BOOL GetFileData( SIsoFileData& a_data , CStringA a_pathA , CStringA a_nameA );
+	BOOL GetFileData( SIsoFileData& a_data , CStringA a_strPathA , CStringA a_strNameA );
 
-	SIsoFileFind* FindIsoFile( CStringA a_pathA );
+	SIsoFileFind* FindIsoFile( CStringA a_strIsoPathA );
 	BOOL FindNextIsoFile( SIsoFileFind* a_handle , SIsoFileData& a_data );
 	void CloseFindIsoFile( SIsoFileFind* a_handle );
 
-	inline n32 GetMaxLbaCount()const
-	{
-		return m_pIso?m_pIso->GetMaxLbaCount():0;
-	}
-
-	inline BOOL AddLbaCount( n32 a_nLbaCount )
-	{
-		return m_pIso?m_pIso->AddLbaCount( a_nLbaCount ):FALSE;
-	}
-
-	inline n32 GetPerLbaSize()const
-	{
-		return m_pIso?m_pIso->GetPerLbaSize():0;
-	}
-
-	inline void GetFreeInfo( u32* a_puMaxFreeBlock , u32* a_puFreeLbaCount , u32* a_puFreeBlockCount )const
-	{
-		m_pIso->GetFreeInfo( a_puMaxFreeBlock , a_puFreeLbaCount , a_puFreeBlockCount );
-	}
-
-	inline BOOL GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const
-	{
-		return m_pIso?m_pIso->GetBlockInfo( a_nSt , a_puLen , a_pbUse )!=false:FALSE;
-	}
-
-	inline BOOL GetHead( SISO_Head2048& a_Head )const
-	{
-		return m_pIso?m_pIso->GetHead(a_Head):FALSE;
-	}
-
-	inline EWqsgIsoType GetIsoType()const
-	{
-		return m_pIso?m_pIso->GetIsoType():E_WIT_UNKNOWN;
-	}
+	inline n32 GetMaxLbaCount()const;
+	inline BOOL AddLbaCount( n32 a_nLbaCount );
+	inline n32 GetPerLbaSize()const;
+	inline void GetFreeInfo( u32* a_puMaxFreeBlock , u32* a_puFreeLbaCount , u32* a_puFreeBlockCount )const;
+	inline BOOL GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const;
+	inline BOOL GetHead( SISO_Head2048& a_Head )const;
+	inline EWqsgIsoType GetIsoType()const;
 };
+
+inline void CISO_App::CloseISO()
+{
+	if( m_pIso )
+	{
+		m_pIso->CloseISO( );
+		delete m_pIso;
+		m_pIso = NULL;
+	}
+}
+
+inline BOOL CISO_App::IsOpen()const
+{
+	return m_pIso?m_pIso->IsOpen():FALSE;
+}
+
+inline BOOL CISO_App::IsCanWrite()const
+{
+	return IsOpen()?m_pIso->IsCanWrite():FALSE;
+}
+
+inline const CStringW& CISO_App::GetErrStr()const
+{
+	return m_strLastErr;
+}
+
+
+inline n32 CISO_App::GetMaxLbaCount()const
+{
+	return m_pIso?m_pIso->GetMaxLbaCount():0;
+}
+
+inline BOOL CISO_App::AddLbaCount( n32 a_nLbaCount )
+{
+	return m_pIso?m_pIso->AddLbaCount( a_nLbaCount ):FALSE;
+}
+
+inline n32 CISO_App::GetPerLbaSize()const
+{
+	return m_pIso?m_pIso->GetPerLbaSize():0;
+}
+
+inline void CISO_App::GetFreeInfo( u32* a_puMaxFreeBlock , u32* a_puFreeLbaCount , u32* a_puFreeBlockCount )const
+{
+	m_pIso->GetFreeInfo( a_puMaxFreeBlock , a_puFreeLbaCount , a_puFreeBlockCount );
+}
+
+inline BOOL CISO_App::GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const
+{
+	return m_pIso?m_pIso->GetBlockInfo( a_nSt , a_puLen , a_pbUse )!=false:FALSE;
+}
+
+inline BOOL CISO_App::GetHead( SISO_Head2048& a_Head )const
+{
+	return m_pIso?m_pIso->GetHead(a_Head):FALSE;
+}
+
+inline EWqsgIsoType CISO_App::GetIsoType()const
+{
+	return m_pIso?m_pIso->GetIsoType():E_WIT_UNKNOWN;
+}
