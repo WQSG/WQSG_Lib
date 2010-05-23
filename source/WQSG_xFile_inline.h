@@ -186,9 +186,9 @@ inline BOOL	CMemTextW::Load( WCHAR const*const 文件路径 , DWORD 允许文件最长长度
 		break;*/
 
 	case en_CP_UTF8:
-		TXT_File.Seek(0);
-		tmp = new u8 [(DWORD)size + 1];tmp[(DWORD)size] = 0;
-		TXT_File.Read( tmp ,(u32)size );
+		TXT_File.Seek(3);
+		tmp = new u8 [(DWORD)size-2];tmp[(DWORD)size-3] = 0;
+		TXT_File.Read( tmp ,(u32)size-3 );
 		m_Text = WQSG_UTF8_W( (char*)tmp );
 		delete[]tmp;
 
