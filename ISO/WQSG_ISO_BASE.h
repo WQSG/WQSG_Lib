@@ -139,6 +139,7 @@ public:
 	}
 
 	const WCHAR* GetErrStr()const;
+	void CleanErrStr();
 
 	virtual BOOL IsOpen()const
 	{

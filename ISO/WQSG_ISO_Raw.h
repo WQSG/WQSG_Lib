@@ -220,8 +220,9 @@ public:
 	inline BOOL IsCanWrite()const;
 
 	inline void SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString );
-	inline u32 GetLangStringCount()const;
 	inline const WCHAR* GetLangString( size_t a_uIndex )const;
+
+	static u32 GetDefaultLangStringCount();
 };
 
 inline void CWQSG_ISO_Raw::SetErrMsg( WCHAR const*const a_msg )
@@ -247,11 +248,6 @@ inline BOOL CWQSG_ISO_Raw::IsCanWrite()const
 inline void CWQSG_ISO_Raw::SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString )
 {
 	m_StringMgr.SetString( a_szUserString , a_uUserString );
-}
-
-inline u32 CWQSG_ISO_Raw::GetLangStringCount()const
-{
-	return m_StringMgr.GetStringCount();
 }
 
 inline const WCHAR* CWQSG_ISO_Raw::GetLangString( size_t a_uIndex )const

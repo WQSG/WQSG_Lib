@@ -914,3 +914,9 @@ const WCHAR* CWQSG_ISO_Interface::GetErrStr()const
 {
 	return m_strErrorStr.GetString();
 }
+
+void CWQSG_ISO_Interface::CleanErrStr()
+{
+	m_strErrorStr = L"";
+}
+

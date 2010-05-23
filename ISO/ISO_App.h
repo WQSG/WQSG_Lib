@@ -76,7 +76,11 @@ class CISO_App
 	TSIsoFileFindMgrVector m_Objs;
 
 	CWQSG_ISO_Interface* m_pIso;
-	CStringW m_strLastErr;
+	CStringW m_strLastErrW;
+
+	CWQSG_StringMgr m_StringMgr;
+	const WCHAR*const* m_szUserString;
+	u32 m_uUserString;
 
 	inline BOOL GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_strIsoPathA );
  	inline BOOL zzz_CreateDir( BOOL& a_bIsoBreak , CStringA a_strIsoName , CStringA a_strIsoPath );
@@ -84,6 +88,21 @@ class CISO_App
 		CStringA a_strIsoPath , const s32 a_nOffset , const BOOL a_bNew , const SIsoTime* a_pTime );
 
 	inline BOOL zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_strPathA , CStringA a_strNameA );
+	inline void SetErr( const WCHAR* a_pFmt , ... )
+	{
+		va_list v;
+		va_start( v , a_pFmt );
+		m_strLastErrW.FormatV( a_pFmt , v );
+		va_end(v);
+
+		if( m_pIso )
+		{
+			m_strLastErrW += L"\r\n=============================\r\n";
+			m_strLastErrW += m_pIso->GetErrStr();
+			m_pIso->CleanErrStr();
+		}
+	}
+
 public:
 	CISO_App(void);
 	~CISO_App(void);
@@ -95,6 +114,10 @@ public:
 	inline BOOL IsOpen()const;
 	inline BOOL IsCanWrite()const;
 	inline const CStringW& GetErrStr()const;
+	inline void CleanErrStr()
+	{
+		m_strLastErrW = L"";
+	}
 public:
 	BOOL ImportFile( BOOL& a_bIsoBreak , CStringA a_strPathA , CStringA a_strNameA , CStringW a_strInPathName );
 	BOOL ImportDir( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringW a_strInPathName );
@@ -124,6 +147,17 @@ public:
 	inline BOOL GetBlockInfo( s32 a_nSt , u32* a_puLen , bool* a_pbUse )const;
 	inline BOOL GetHead( SISO_Head2048& a_Head )const;
 	inline EWqsgIsoType GetIsoType()const;
+
+	inline void SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString );
+	inline const WCHAR* GetLangString( size_t a_uIndex )const;
+	static u32 GetDefaultLangStringCount();
+
+	inline void Base_SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString );
+
+	static u32 Base_GetDefaultLangStringCount()
+	{
+		return CWQSG_ISO_Interface::GetDefaultLangStringCount();
+	}
 };
 
 inline void CISO_App::CloseISO()
@@ -148,7 +182,7 @@ inline BOOL CISO_App::IsCanWrite()const
 
 inline const CStringW& CISO_App::GetErrStr()const
 {
-	return m_strLastErr;
+	return m_strLastErrW;
 }
 
 
@@ -185,4 +219,22 @@ inline BOOL CISO_App::GetHead( SISO_Head2048& a_Head )const
 inline EWqsgIsoType CISO_App::GetIsoType()const
 {
 	return m_pIso?m_pIso->GetIsoType():E_WIT_UNKNOWN;
+}
+
+inline void CISO_App::SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString )
+{
+	m_StringMgr.SetString( a_szUserString , a_uUserString );
+}
+
+inline const WCHAR* CISO_App::GetLangString( size_t a_uIndex )const
+{
+	return m_StringMgr.GetString( a_uIndex );
+}
+
+inline void CISO_App::Base_SetLangString( const WCHAR*const* a_szUserString , const u32 a_uUserString )
+{
+	m_szUserString = a_szUserString;
+	m_uUserString = a_uUserString;
+	if( m_pIso )
+		m_pIso->SetLangString( a_szUserString , a_uUserString );
 }

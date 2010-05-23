@@ -18,6 +18,7 @@
 #include "ISO_App.h"
 #include "../ISO/WQSG_PsxISO.h"
 #include "../ISO/WQSG_UMD.h"
+#include "ISO_App_Lang.h"
 #include <algorithm>
 #include <map>
 #include <hash_map>
@@ -174,6 +175,9 @@ static CSIsoFileFindMgr g_IsoFileFindMgr;
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 CISO_App::CISO_App(void)
 : m_pIso(NULL)
+, m_StringMgr( g_ISO_App_String , sizeof(g_ISO_App_String)/sizeof(*g_ISO_App_String) )
+, m_szUserString(NULL)
+, m_uUserString(0)
 {
 }
 
@@ -195,15 +199,21 @@ BOOL CISO_App::OpenISO( CStringW a_strPathName , const BOOL a_bCanWrite , EWqsgI
 		m_pIso = new CWQSG_UMD;
 		break;
 	default:
+		SetErr( L"???" );
 		return FALSE;
 	}
 
 	if( NULL == m_pIso )
+	{
+		SetErr( L"???" );
 		return FALSE;
+	}
+
+	m_pIso->SetLangString( m_szUserString , m_uUserString );
 
 	if( !m_pIso->OpenISO( a_strPathName , a_bCanWrite ) )
 	{
-		m_strLastErr = a_strPathName + L"\r\n\r\n" + m_pIso->GetErrStr();
+		SetErr( GetLangString(35) , a_strPathName.GetString() );
 		return FALSE;
 	}
 	return TRUE;
@@ -216,7 +226,7 @@ inline BOOL CISO_App::GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_s
 
 	if( !m_pIso->GetRootDirEnt( a_tDirEnt ) )
 	{
-		m_strLastErr = L"读取根目录失败";
+		SetErr( GetLangString(11) );
 		return FALSE;
 	}
 
@@ -239,13 +249,13 @@ inline BOOL CISO_App::GetPathDirEnt( SISO_DirEnt& a_tDirEnt , const CStringA a_s
 
 		if( m_pIso->FindFile( tmp , a_tDirEnt , strNameA.GetString() ) < 0 )
 		{
-			m_strLastErr.Format( L"%hs\r\n\r\n路经错误" , a_strIsoPathA.GetString() );
+			SetErr( GetLangString(24) , a_strIsoPathA.GetString() );
 			return FALSE;
 		}
 
 		if( 2 != (tmp.attr & 2) )
 		{
-			m_strLastErr.Format( L"%hs\r\n\r\n路经错误" , a_strIsoPathA.GetString() );
+			SetErr( GetLangString(24) , a_strIsoPathA.GetString() );
 			return FALSE;
 		}
 
@@ -264,8 +274,6 @@ inline static BOOL TestName( CStringA& strName )
 			( (ch < '0') || (ch > '9') ) &&
 			( ch != '.' ) && ( ch != '_' ) )
 		{
-			//			CStringW strNameW;
-			//			MessageBox( L"文件名只能用 字母 数字 点 下划线" , strNameW = strName );
 			return FALSE;
 		}
 	}
@@ -281,20 +289,17 @@ inline BOOL CISO_App::zzz_CreateDir( BOOL& a_bIsoBreak , CStringA a_strIsoName ,
 
 	if( !TestName(a_strIsoName) )
 	{
-		m_strLastErr.Format( L"%hs\r\n目录名只能用 字母 数字 点 下划线" , a_strIsoName.GetString() );
+		SetErr( GetLangString(34) , a_strIsoName.GetString() );
 		return FALSE;
 	}
 
 	SISO_DirEnt sDirEnt_Path;
 	if( !GetPathDirEnt( sDirEnt_Path , a_strIsoPath ) )
-	{
-		m_strLastErr.Format( L"%hs\r\nISO路径错误?" , a_strIsoPath.GetString() );
 		return FALSE;
-	}
 
 	if( !m_pIso->CreateDir( sDirEnt_Path , a_strIsoName ) )
 	{
-		m_strLastErr.Format( L"%hs\r\n创建目录失败?" , a_strIsoName.GetString() );
+		SetErr( GetLangString(33) , a_strIsoName.GetString() );
 		return FALSE;
 	}
 
@@ -352,7 +357,7 @@ BOOL CISO_App::EasyImport( BOOL& a_bIsoBreak , CStringW a_strInPathName , CStrin
 		const int pos = a_strInPathName.ReverseFind( '\\' );
 		if( pos <= 0 )
 		{
-			m_strLastErr = a_strInPathName + L"\r\n目录路径错误" ;
+			SetErr( GetLangString(28) , a_strInPathName.GetString() );
 			return FALSE;
 		}
 
@@ -377,7 +382,7 @@ BOOL CISO_App::EasyImport( BOOL& a_bIsoBreak , CStringW a_strInPathName , CStrin
 	}
 	else
 	{
-		m_strLastErr = a_strInPathName + L"\r\n文件不存在" ;
+		SetErr( GetLangString(27) , a_strInPathName.GetString() );
 		return FALSE;
 	}
 	return TRUE;
@@ -393,34 +398,26 @@ inline BOOL CISO_App::zzz_WriteFile( BOOL& a_bIsoBreak , CStringW a_strInPathNam
 
 	if( !TestName(a_strIsoName) )
 	{
-		m_strLastErr.Format( L"%hs\r\n文件名只能用 字母 数字 点 下划线" , a_strIsoName.GetString() );
+		SetErr( GetLangString(32) , a_strIsoName.GetString() );
 		return FALSE;
 	}
 
 	SISO_DirEnt sDirEnt_Path;
 	if( !GetPathDirEnt( sDirEnt_Path , a_strIsoPath ) )
 	{
-		m_strLastErr.Format( L"%hs\r\nISO路径错误?\r\n" , a_strIsoPath.GetString() );
 		return FALSE;
 	}
-
-// 	CWQSG_File fp;
-// 	if( !fp.OpenFile( strPathName.GetString() , 1 , 3 ) )
-// 	{
-// 		m_strLastErr = strPathName + L"\r\n打开文件失败";
-// 		return FALSE;
-// 	}
 
 	const s64 srcFileSize = a_InFp.GetFileSize();
 	if( ( srcFileSize < 0 ) || ( srcFileSize > (((u32)-1))>>1) )
 	{
-		m_strLastErr = a_strInPathName + L"\r\n文件大小错误" ;
+		SetErr( GetLangString(29) , a_strInPathName.GetString() );
 		return FALSE;
 	}
 
 	if( !m_pIso->WriteFile( sDirEnt_Path , a_strIsoName , a_InFp , (s32)srcFileSize , a_nOffset , a_bNew , FALSE , a_pTime ) )
 	{
-		m_strLastErr = a_strInPathName + L"\r\n写文件到ISO出错\r\n" + m_pIso->GetErrStr();
+		SetErr( GetLangString(30) , a_strInPathName.GetString() );
 		return FALSE;
 	}
 
@@ -445,7 +442,7 @@ BOOL CISO_App::ExportFile( CStringW a_strOutPathName , CStringA a_strIsoPathA , 
 	CWQSG_File fp;
 	if( !fp.OpenFile( a_strOutPathName.GetString() , 4 , 3 ) )
 	{
-		m_strLastErr = a_strOutPathName + L"\r\n打开文件失败" ;
+		SetErr( GetLangString(23) , a_strOutPathName.GetString() );
 		return FALSE;
 	}
 
@@ -453,7 +450,7 @@ BOOL CISO_App::ExportFile( CStringW a_strOutPathName , CStringA a_strIsoPathA , 
 	{
 		fp.Close();
 		::DeleteFile( a_strOutPathName );
-		m_strLastErr = a_strOutPathName + L"\r\n导出文件失败" ;
+		SetErr( GetLangString(31) , a_strOutPathName.GetString() );
 		return FALSE;
 	}
 
@@ -468,7 +465,7 @@ BOOL CISO_App::ExportDir( CStringW a_strOutPath , CStringA a_strIsoPathA )
 	SIsoFileFind* pFind = FindIsoFile( a_strIsoPathA );
 	if( !pFind )
 	{
-		m_strLastErr.Format( L"%hs\r\n找不到文件夹" , a_strIsoPathA.GetString() );
+		SetErr( GetLangString(24) , a_strIsoPathA.GetString() );
 		return FALSE;
 	}
 
@@ -480,7 +477,7 @@ BOOL CISO_App::ExportDir( CStringW a_strOutPath , CStringA a_strIsoPathA )
 
 	if ( !WQSG_CreateDir( a_strOutPath.GetString() ) )
 	{
-		m_strLastErr = a_strOutPath + L"\r\n创建文件夹失败" ;
+		SetErr( GetLangString(26) , a_strOutPath.GetString() );
 		return FALSE;
 	}
 
@@ -530,14 +527,14 @@ BOOL CISO_App::WriteFile( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringA 
 
 	if( sDirEnt_File.attr & 2 )
 	{
-		m_strLastErr.Format( L"%hs\r\n不能写文件夹" , (a_strIsoPathA + a_strIsoNameA).GetString() );
+		SetErr( GetLangString(25) , (a_strIsoPathA + a_strIsoNameA).GetString() );
 		return FALSE;
 	}
 
 	CWQSG_File fp;
 	if( !fp.OpenFile( a_strInPathName.GetString() , 1 , 3 ) )
 	{
-		m_strLastErr = a_strInPathName + L"\r\n打开文件失败";
+		SetErr( GetLangString(23) , a_strInPathName.GetString() );
 		return FALSE;
 	}
 
@@ -551,7 +548,7 @@ BOOL CISO_App::ImportFile( BOOL& a_bIsoBreak , CStringA a_strPathA , CStringA a_
 	CWQSG_File fp;
 	if( !fp.OpenFile( a_strInPathName.GetString() , 1 , 3 ) )
 	{
-		m_strLastErr = a_strInPathName + L"\r\n打开文件失败";
+		SetErr( GetLangString(23) , a_strInPathName.GetString() );
 		return FALSE;
 	}
 
@@ -571,7 +568,7 @@ inline BOOL CISO_App::zzz_GetFileData( SISO_DirEnt& a_tDirEnt , CStringA a_strPa
 	{
 		if( m_pIso->FindFile( a_tDirEnt , sDirEnt_Path , a_strNameA.GetString() ) < 0 )
 		{
-			m_strLastErr.Format( L"%hs\r\nISO没有此文件" , (a_strPathA + a_strNameA).GetString() );
+			SetErr( GetLangString(22) , (a_strPathA + a_strNameA).GetString() );
 			return FALSE;
 		}
 	}
@@ -631,7 +628,7 @@ BOOL CISO_App::FindNextIsoFile( SIsoFileFind* a_handle , SIsoFileData& a_data )
 
 	if( sDirEnt.len == 0 )
 	{
-		m_strLastErr = L"OK";
+		SetErr( L"OK" );
 		return FALSE;
 	}
 
@@ -658,24 +655,24 @@ void CISO_App::CloseFindIsoFile( SIsoFileFind* a_handle )
 BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 )
 {
 	a_bIsoBreak = FALSE;
-	m_strLastErr = L"";
+	SetErr( L"" );
 
 	SWQSG_IsoPatch_Head head;
 	if( sizeof(head) != a_InFp.Read( &head , sizeof(head) ) )
 	{
-		m_strLastErr = L"读补丁信息失败";
+		SetErr( GetLangString(21) );
 		return FALSE;
 	}
 
 	if( 0 != memcmp( head.m_Magic , DEF_WQSG_IsoPatch_Head_Magic , sizeof(head.m_Magic) ) )
 	{
-		m_strLastErr.Format( L"不是\"%hs\"文件" , DEF_WQSG_IsoPatch_Head_Magic );
+		SetErr( GetLangString(20) , DEF_WQSG_IsoPatch_Head_Magic );
 		return FALSE;
 	}
 
 	if( memcmp( head.m_Ver , "1.0" , 4 ) != 0 )
 	{
-		m_strLastErr = L"版本错误或者是不支持的版本";
+		SetErr( GetLangString(19) );
 		return FALSE;
 	}
 
@@ -687,21 +684,21 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 		const u32 uCrc32_new = crc32.GetCRC32( (u8*)&head , sizeof(head) );
 		if( uCrc32_new != uCrc32_old )
 		{
-			m_strLastErr = L"文件头校验错误（m_uCrc32）";
+			SetErr( GetLangString(18) );
 			return FALSE;
 		}
 	}
 
 	if( head.m_nSize < sizeof(head) )
 	{
-		m_strLastErr = L"文件头校验错误（m_nSize）";
+		SetErr( GetLangString(17) );
 		return FALSE;
 	}
 
 	const n64 nFileSize = a_InFp.GetFileSize();
 	if( nFileSize < head.m_nSize )
 	{
-		m_strLastErr = L"文件大小错误（nFileSize < head.m_nSize）";
+		SetErr( GetLangString(16) );
 		return FALSE;
 	}
 
@@ -709,14 +706,14 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 		SISO_Head2048 head_self;
 		if( !GetHead( head_self ) )
 		{
-			m_strLastErr = L"GetHead Error";
+			SetErr( GetLangString(1) );
 			return FALSE;
 		}
 
 		if( memcmp( head_self.SystemID , head.m_Head.SystemID , sizeof(head_self.SystemID) ) != 0 ||
 			memcmp( head_self.AppUse , head.m_Head.AppUse , sizeof(head_self.AppUse) ) != 0 )
 		{
-			m_strLastErr = L"此补丁不适用于本ISO";
+			SetErr( GetLangString(15) );
 			return FALSE;
 		}
 	}
@@ -733,13 +730,13 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 
 		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 		{
-			m_strLastErr = L"读取补丁文件错误";
+			SetErr( GetLangString(9) );
 			return FALSE;
 		}
 
 		if( blockInfo.m_uSize != sizeof(blockInfo) )
 		{
-			m_strLastErr = L"补丁文件参数错误(m_uSize)";
+			SetErr( GetLangString(14) );
 			return FALSE;
 		}
 
@@ -751,7 +748,7 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 
 		if( uCrc32New != uCrc32Src )
 		{
-			m_strLastErr = L"补丁文件校验错误(m_uCrc32)";
+			SetErr( GetLangString(13) );
 			return FALSE;
 		}
 
@@ -761,7 +758,7 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 
 	if( nFileCount != head.m_nFileCount )
 	{
-		m_strLastErr = L"补丁文件参数错误(m_nFileCount)";
+		SetErr( GetLangString(12) );
 		return FALSE;
 	}
 
@@ -777,14 +774,13 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 
 			if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 			{
-				m_strLastErr = L"读取补丁文件错误";
+				SetErr( GetLangString(9) );
 				return FALSE;
 			}
 
 			SISO_DirEnt tDirEnt_Dir;
 			if( !GetPathDirEnt( tDirEnt_Dir , blockInfo.m_PathName ) )
 			{
-				m_strLastErr.Format( L"目录(%hs)不存在" , blockInfo.m_PathName );
 				return FALSE;
 			}
 
@@ -794,7 +790,7 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 			{
 				if( blockInfo.m_uOldFileCrc32 != 0 )
 				{
-					m_strLastErr = L"blockInfo.m_uOldFileCrc32 != 0";
+					SetErr( L"blockInfo.m_uOldFileCrc32 != 0" );
 					return FALSE;
 				}
 			}
@@ -828,7 +824,7 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 
 				if( uCrc32 != blockInfo.m_uOldFileCrc32 )
 				{
-					m_strLastErr.Format( L"文件(%hs/%hs)的crc32校验失败\r\n当前:%08X\r\n原来:%08X" , blockInfo.m_PathName , blockInfo.m_FileName , uCrc32 , blockInfo.m_uOldFileCrc32 );
+					SetErr( GetLangString(10) , blockInfo.m_PathName , blockInfo.m_FileName , uCrc32 , blockInfo.m_uOldFileCrc32 );
 					return FALSE;
 				}
 			}
@@ -845,14 +841,14 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 
 		if( sizeof(blockInfo) != a_InFp.Read( &blockInfo , sizeof(blockInfo) ) )
 		{
-			m_strLastErr = L"读取补丁文件错误";
+			SetErr( GetLangString(9) );
 			return FALSE;
 		}
 
 		CWQSG_TempMapFile fp;
 		if( !fp.Init( &a_InFp , offset64 + sizeof(blockInfo) , blockInfo.m_uFileSize ) )
 		{
-			m_strLastErr = L"初始化临时文件错误";
+			SetErr( GetLangString(8) );
 			return FALSE;
 		}
 
@@ -861,7 +857,7 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 
 		if( !zzz_WriteFile( a_bIsoBreak , str , fp , blockInfo.m_FileName , blockInfo.m_PathName , 0 , TRUE , &blockInfo.m_time ) )
 		{
-			m_strLastErr.Insert( 0 , L"写补丁失败\r\n" );
+			m_strLastErrW.Insert( 0 , GetLangString(7) );
 			return FALSE;
 		}
 
@@ -875,19 +871,19 @@ BOOL CISO_App::MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_
 {
 	if( !a_Iso.IsOpen() )
 	{
-		m_strLastErr = L"原ISO还没打开呢";
+		SetErr( GetLangString(6) );
 		return FALSE;
 	}
 
 	if( !IsOpen() )
 	{
-		m_strLastErr = L"ISO还没打开呢";
+		SetErr( GetLangString(5) );
 		return FALSE;
 	}
 
 	if( GetIsoType() != a_Iso.GetIsoType() )
 	{
-		m_strLastErr = L"ISO类型不同";
+		SetErr( GetLangString(4) );
 		return FALSE;
 	}
 
@@ -899,7 +895,7 @@ BOOL CISO_App::MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_
 			!GetHead( head2 ) ||
 			0 != memcmp( head1.AppUse , head2.AppUse , sizeof(head1.AppUse) ) )
 		{
-			m_strLastErr = L"两ISO是不同的游戏";
+			SetErr( GetLangString(3) );
 			return FALSE;
 		}
 	}
@@ -908,7 +904,7 @@ BOOL CISO_App::MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_
 	SWQSG_IsoPatch_Head head = {};
 	if( sizeof(head) != a_OutFp.Write( &head , sizeof(head) ) )
 	{
-		m_strLastErr = L"写补丁文件头部失败";
+		SetErr( GetLangString(2) );
 		return FALSE;
 	}
 
@@ -919,7 +915,7 @@ BOOL CISO_App::MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_
 
 	if( !GetHead( head.m_Head ) )
 	{
-		m_strLastErr = L"GetHead error";
+		SetErr( GetLangString(1) );
 		return FALSE;
 	}
 
@@ -939,7 +935,7 @@ BOOL CISO_App::MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_
 	a_OutFp.Seek( nStartOffset );
 	if( sizeof(head) != a_OutFp.Write( &head , sizeof(head) ) )
 	{
-		m_strLastErr = L"更新补丁文件头部失败";
+		SetErr( GetLangString(0) );
 		return FALSE;
 	}
 
@@ -1189,4 +1185,9 @@ BOOL CISO_App::zzz_MakeFilePackage_File( CISO_App& a_Iso , CWQSG_xFile& a_OutFp 
 
 	//const n64 nEndOffset = a_OutFp.Tell();
 	return TRUE;
+}
+
+u32 CISO_App::GetDefaultLangStringCount()
+{
+	return sizeof(g_ISO_App_String)/sizeof(*g_ISO_App_String);
 }

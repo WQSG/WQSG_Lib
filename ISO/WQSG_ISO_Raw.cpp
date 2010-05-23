@@ -314,3 +314,7 @@ BOOL CWQSG_ISO_Raw::WriteUserData(void* a_pUserData, s32 a_nLBA)
 	return WriteSectors( szSectors , a_nLBA );
 }
 //|||||||||||||||||||||||||||||||||||||||||||||
+u32 CWQSG_ISO_Raw::GetDefaultLangStringCount()
+{
+	return (sizeof(g_WQSG_ISO_String)/sizeof(*g_WQSG_ISO_String));
+}
