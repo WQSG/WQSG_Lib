@@ -18,7 +18,7 @@
 #pragma once
 
 const WCHAR*const g_ISO_App_String[] = {
-	L"更新补丁文件头部失败",//0
+	L"???",//0
 	L"GetHead error",
 	L"写补丁文件头部失败",
 	L"两ISO是不同的游戏",
@@ -54,4 +54,5 @@ const WCHAR*const g_ISO_App_String[] = {
 	L"%hs\r\n创建ISO目录失败",
 	L"%hs\r\n目录名只能用 字母 数字 点 下划线",
 	L"%ls\r\n打开ISO失败",//35
+	L"更新补丁文件头部失败",//36
 };

@@ -935,7 +935,7 @@ BOOL CISO_App::MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_
 	a_OutFp.Seek( nStartOffset );
 	if( sizeof(head) != a_OutFp.Write( &head , sizeof(head) ) )
 	{
-		SetErr( GetLangString(0) );
+		SetErr( GetLangString(36) );
 		return FALSE;
 	}
 

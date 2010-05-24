@@ -80,7 +80,7 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 
 	if( !ReadUserData( &m_tHead , 16 ) )
 	{
-		DEF_ISO_SET_ERRMSG( GetLangString(0) );
+		DEF_ISO_SET_ERRMSG( GetLangString(50) );
 		goto __gtOpenErr;
 	}
 
@@ -148,7 +148,7 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 
 	if( !ReadUserData( szBuffer , 16+1 ) )
 	{
-		DEF_ISO_SET_ERRMSG( GetLangString(0) );
+		DEF_ISO_SET_ERRMSG( GetLangString(50) );
 		goto __gtOpenErr;
 	}
 

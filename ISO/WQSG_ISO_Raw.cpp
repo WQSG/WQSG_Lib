@@ -151,7 +151,7 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 
 	if( !ReadSectors( &tHead , 0 ) )
 	{
-		DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(0) );
+		DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(50) );
 		goto __gtOpenFileErr;
 	}
 
@@ -160,7 +160,7 @@ BOOL CWQSG_ISO_Raw::OpenFile( const WCHAR*const a_strISOPathName , const BOOL a_
 
 	if( !ReadSectors( &tHead , 16 ) )
 	{
-		DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(0) );
+		DEF_ISO_SET_ERRMSG( m_StringMgr.GetString(50) );
 		goto __gtOpenFileErr;
 	}
 

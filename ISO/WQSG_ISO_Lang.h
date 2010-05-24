@@ -18,7 +18,7 @@
 #pragma once
 
 const WCHAR*const g_WQSG_ISO_String[] = {
-	L"读取ISO信息失败",//0
+	L"???",//0
 	L"未知的 2352 Mode",
 	L"创建LBA分配表失败",
 	L"设置LBA保留区失败",
@@ -68,4 +68,5 @@ const WCHAR*const g_WQSG_ISO_String[] = {
 	L"文件结构版本不为 1",
 	L"此ISO不是UMD",
 	L"文件结构版本不为 2 or 1",
+	L"读取ISO信息失败",//50
 };
