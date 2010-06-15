@@ -20,7 +20,7 @@
 #define __WQSG_CxFILE_H__
 #include <stdio.h>
 #include <string.h>
-#include <WQSG_def.h>
+#include "WQSG_def.h"
 #define	__i__
 inline size_t WWW_WQSG_ReadFile( void const*const fileBuf , const size_t fileSize , const size_t fileOffset , void*const buffer , const size_t readSize )
 {

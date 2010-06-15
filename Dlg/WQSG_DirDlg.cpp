@@ -18,7 +18,7 @@
 //#include <stdafx.h>
 #include "WQSG_DirDlg.h"
 #include <shlobj.h>
-#include "WQSG_String.h"
+#include "../WQSG_String.h"
 #if !__WQSG_DIRBOX_SYSTEM_
 IMPLEMENT_DYNAMIC(CWQSG_DirDlg, CDialog)
 CWQSG_DirDlg::CWQSG_DirDlg(const WCHAR* title /*= NULL*/,

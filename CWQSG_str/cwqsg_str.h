@@ -16,8 +16,8 @@
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #pragma once
-#include <WQSG_def.h>
-#include <WQSG_string.h>
+#include "../WQSG_def.h"
+#include "../WQSG_string.h"
 #include <stdlib.h>
 //---------------------------------------------------------------------
 __i__

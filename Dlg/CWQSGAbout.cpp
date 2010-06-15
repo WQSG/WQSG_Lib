@@ -21,7 +21,7 @@
 #include <shellapi.h>
 #include <commctrl.h>
 #include <objbase.h>
-#include <WQSG.h>
+#include "../WQSG.h"
 #include "CWQSGAbout.h"
 #include "CAbout_data.h"
 

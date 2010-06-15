@@ -66,7 +66,7 @@ public:
     CString GetPath(void);
 };
 #else
-#include <WQSG.h>
+#include "../WQSG.h"
 #include <shtypes.h>
 #include <shlobj.h>
 class CWQSG_DirDlg
@@ -91,27 +91,41 @@ public:
 
 		if( path )
 			WQSG_strcpy( path , m_path );
+		else
+			m_path[0] = L'\0';
 	}
 
 	virtual ~CWQSG_DirDlg(){}
-	BOOL GetPath( WCHAR* path )
+	BOOL GetPath( WCHAR* path )const
 	{
-		LPITEMIDLIST idl = NULL;
 		BROWSEINFO bi = {};
 
 		bi.hwndOwner = m_hWnd;
-		bi.pidlRoot = idl;
-		bi.ulFlags = BIF_EDITBOX | BIF_NEWDIALOGSTYLE;
+		bi.ulFlags = BIF_EDITBOX | BIF_NEWDIALOGSTYLE /*| BIF_BROWSEFORCOMPUTER*/;
 
-		LPMALLOC pMalloc = NULL;
-		SHGetMalloc( &pMalloc );
-		SHGetFolderLocation( m_hWnd, 1, 0, 0, &idl );
+		LPITEMIDLIST pPidl = NULL;
+		if( m_path[0] )
+		{
+			IShellFolder* pDesktop = NULL;
+			SHGetDesktopFolder( &pDesktop );
+			if( pDesktop )
+			{
+				ULONG pchEaten = 0 , pdwAttributes = 0;
+				
+				pDesktop->ParseDisplayName( m_hWnd , NULL , (LPWSTR)m_path , &pchEaten , &pPidl , &pdwAttributes );
+				pDesktop->Release();
+				bi.pidlRoot = pPidl;
+			}
+		}
 
 		bi.lpszTitle = m_title;
 		LPITEMIDLIST ret = SHBrowseForFolder( &bi );
-		ret->mkid;
-		if( idl )
-			pMalloc->Free(idl);
+
+		LPMALLOC pMalloc = NULL;
+		SHGetMalloc( &pMalloc );
+
+		if( pPidl )
+			pMalloc->Free( pPidl );
 
 		SHGetPathFromIDList( ret , path );
 		if( ret )

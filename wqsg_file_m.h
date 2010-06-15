@@ -18,7 +18,7 @@
 #ifndef WQSG_File_M_H__
 #define WQSG_File_M_H__
 #pragma once
-#include <WQSG_def.h>
+#include "WQSG_def.h"
 #include<windows.h>
 
 
