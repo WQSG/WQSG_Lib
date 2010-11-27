@@ -247,7 +247,7 @@ inline char*	WQSG_DelSP_ALL	( char const*const _TXT )
 	return (char*)OUT_0;
 }
 //-------------------------------------------------------------------------------
-inline BOOL	WQSG_是十六进制文本	( char const*const _TXT )
+inline BOOL	WQSG_IsHexText	( char const*const _TXT )
 {
 	u8 const* TXT = (u8 const*)_TXT;
 
@@ -268,7 +268,7 @@ inline BOOL	WQSG_是十六进制文本	( char const*const _TXT )
 	return TRUE;
 }
 //-------------------------------------------------------------------------------
-inline BOOL	WQSG_是十进制文本	( char const*const _TXT )
+inline BOOL	WQSG_IsDecText	( char const*const _TXT )
 {
 	u8 const* TXT = (u8 const*)_TXT;
 
@@ -331,32 +331,32 @@ inline char*	WQSG_ABC_abc	( char const*const _da )
 	return (char*)XIAO_0;
 }
 //-------------------------------------------------------------------------------
-inline WCHAR*	WQSG_char_W	( char const*const TXT , const unsigned int 代码页 = CP_ACP )
+inline WCHAR*	WQSG_char_W	( char const*const TXT , const unsigned int codePage = CP_ACP )
 {
 	WCHAR* out = NULL;
-	int	iLen = ::MultiByteToWideChar( 代码页 , 0 , TXT , -1 , NULL , 0 );
+	int	iLen = ::MultiByteToWideChar( codePage , 0 , TXT , -1 , NULL , 0 );
 	if( (iLen >= 0) &&
 		((iLen+1) > 0) &&
 		( out = new WCHAR[iLen + 1] )
 		)
 	{
-		::MultiByteToWideChar ( 代码页 , 0 , TXT , -1 , (LPWSTR)out , iLen );
+		::MultiByteToWideChar ( codePage , 0 , TXT , -1 , (LPWSTR)out , iLen );
 	}
 	return out;
 }
 #define				WQSG_UTF8_W( utf8TXT )  WQSG_char_W( utf8TXT , CP_UTF8 )
 //-------------------------------------------------------------------------------
-inline char*	WQSG_W_char	( WCHAR const*const TXT , const unsigned int 代码页 = 936 )
+inline char*	WQSG_W_char	( WCHAR const*const TXT , const unsigned int codePage = 936 )
 {
 	char* out = NULL;
-	int	iLen = ::WideCharToMultiByte( 代码页, 0  ,(LPWSTR)TXT, -1 , NULL , 0 , NULL , NULL );
+	int	iLen = ::WideCharToMultiByte( codePage , 0 , (LPWSTR)TXT , -1 , NULL , 0 , NULL , NULL );
 
 	if( (iLen >= 0) &&
 		((iLen+1) > 0) &&
 		( out = new char[iLen + 1] )
 		)
 	{
-		::WideCharToMultiByte ( 代码页 , 0 , (LPWSTR)TXT , -1 , out , iLen , NULL , NULL );
+		::WideCharToMultiByte ( codePage , 0 , (LPWSTR)TXT , -1 , out , iLen , NULL , NULL );
 	}
 	return out;
 }
@@ -591,7 +591,7 @@ inline WCHAR*	WQSG_ABC_abc	( WCHAR const*const _da )
 	return XIAO_0;
 }
 //-------------------------------------------------------------------------------
-inline BOOL	WQSG_是十六进制文本	( WCHAR const*const _TXT )
+inline BOOL	WQSG_IsHexText	( WCHAR const*const _TXT )
 {
 	WCHAR const* TXT = (WCHAR const*)_TXT;
 
@@ -611,7 +611,7 @@ inline BOOL	WQSG_是十六进制文本	( WCHAR const*const _TXT )
 	return TRUE;
 }
 //-------------------------------------------------------------------------------
-inline BOOL	WQSG_是十进制文本	( WCHAR const*const _TXT )
+inline BOOL	WQSG_IsDecText	( WCHAR const*const _TXT )
 {
 
 	WCHAR const* TXT = (WCHAR const*)_TXT;
@@ -632,14 +632,14 @@ inline BOOL	WQSG_是十进制文本	( WCHAR const*const _TXT )
 #if WIN32
 inline int	WQSG_CheckFileName( WCHAR const*const pFileName )
 {
-    bool blank = true;
+	bool blank = true;
 	int i = 0;
-    if( (*pFileName == L' ') || (*pFileName == L'　') )
-        return i;
+	if( (*pFileName == L' ') || (*pFileName == L'　') )
+		return i;
 
-    for( ; pFileName[i] ; ++i )
+	for( ; pFileName[i] ; ++i )
 	{
-        switch( pFileName[i] )
+		switch( pFileName[i] )
 		{
 		case L'\\':
 		case L'/':

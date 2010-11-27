@@ -31,18 +31,23 @@
 #endif
 #endif
 
-
-#include<WQSG.h>
-#include "WQSG_CxFile.h"
+#include "atlstr.h"
+#include "../WQSG.h"
 
 #include<malloc.h>
 int _tmain(int argc, _TCHAR* argv[])
 {
 
-	WQSG_About( LoadIcon(NULL,MAKEINTRESOURCE(IDI_WARNING) ) , NULL , L"≤‚ ‘" , L"WQSG\r\nv2010.02.21.0" ,
-		L"œÓƒøsvn : <A HREF=\"http://code.google.com/p/wqsg-umd\">http://code.google.com/p/wqsg-umd</A>\r\n“¿¿µø‚svn : <A HREF=\"http://code.google.com/p/wqsglib\">http://code.google.com/p/wqsglib</A>\r\n                 <A HREF=\"http://wqsg.ys168.com\">http://wqsg.ys168.com</A>\r\n" ,
-		L"WQSG" );
+// 	WQSG_About( LoadIcon(NULL,MAKEINTRESOURCE(IDI_WARNING) ) , NULL , L"≤‚ ‘" , L"WQSG\r\nv2010.02.21.0" ,
+// 		L"œÓƒøsvn : <A HREF=\"http://code.google.com/p/wqsg-umd\">http://code.google.com/p/wqsg-umd</A>\r\n“¿¿µø‚svn : <A HREF=\"http://code.google.com/p/wqsglib\">http://code.google.com/p/wqsglib</A>\r\n                 <A HREF=\"http://wqsg.ys168.com\">http://wqsg.ys168.com</A>\r\n" ,
+// 		L"WQSG" );
 
+	CWQSGFileDialog_OpenS op;
+	op.DoModal();
+
+	POSITION p = op.GetStartPosition();
+	CString s;
+	op.GetNextPathName( s , p );
 	return 0;
 }
 

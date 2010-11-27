@@ -34,14 +34,14 @@ class WQSG_File_M
 	HANDLE W_hFile_M;//映射句柄
 protected:
 	::CWQSG_File m_File;
-	s64 W_文件长度 ,
+	s64 m_nFileSize ,
 		W_文件偏移 ; //文件偏移
 	DWORD W_分页的小偏移 ,//分页的小偏移
 		W_分页的小偏移界限 ;//分页的小偏移 < 界限 的数据才能用
 	PBYTE W_pbFile ,
 		W_映射界限 ;//W_pbFile < 界限 的数据才能用
 public:
-	void Set文件长度(u64 长度){W_文件长度 = 长度;}
+	void Set文件长度(u64 长度){m_nFileSize = 长度;}
 	s64 tell(void) const
 	{
 		return ( W_文件偏移 + W_分页的小偏移 );
@@ -66,9 +66,9 @@ public:
 	{
 		return W_映射界限;
 	}
-	s64 Get文件长度(void) const
+	s64 GetFileSize(void) const
 	{
-		return W_文件长度;
+		return m_nFileSize;
 	}
 	void 初始化(void)
 	{
@@ -84,7 +84,7 @@ public:
 		}
 		m_File.Close();
 		W_映射界限 = W_pbFile = NULL;
-		W_文件长度 = W_文件偏移 = 0; //文件长度
+		m_nFileSize = W_文件偏移 = 0; //文件长度
 		W_分页的小偏移界限 = W_分页的小偏移 = 0;
 	}
 	BOOL 到下一个映射段()
@@ -119,14 +119,14 @@ public:
 			return FALSE;
 		}
 
-		W_文件长度 = m_File.GetFileSize();
-		if(0 == W_文件长度){
+		m_nFileSize = m_File.GetFileSize();
+		if(0 == m_nFileSize){
 			初始化();
 			return FALSE;
 		}
 		
 		W_hFile_M = ::CreateFileMapping( m_File.GetFileHANDLE() , NULL ,PAGE_READONLY ,
-			(DWORD)(W_文件长度>>32) ,(DWORD)(W_文件长度&((DWORD)-1)) , NULL);
+			(DWORD)(m_nFileSize>>32) ,(DWORD)(m_nFileSize&((DWORD)-1)) , NULL);
 		if(NULL == W_hFile_M)
 		{
 			初始化();
@@ -134,7 +134,7 @@ public:
 		}
 	///////////////////////////////////////////////////////////////////////////
 
-		W_分页的小偏移界限 = (W_文件长度 < (s64)W_设定的分页)?(DWORD)W_文件长度:W_设定的分页;
+		W_分页的小偏移界限 = (m_nFileSize < (s64)W_设定的分页)?(DWORD)m_nFileSize:W_设定的分页;
 
 		W_pbFile = (PBYTE)::MapViewOfFile(W_hFile_M,FILE_MAP_READ,0,0,W_分页的小偏移界限);
 		
@@ -149,7 +149,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////////////
 	BOOL SeekTo( s64 point )
 	{
-		if( point >= W_文件长度 )
+		if( point >= m_nFileSize )
 			return FALSE;
 
 		u64 原地址 = tell();
@@ -160,7 +160,7 @@ public:
 
 		W_文件偏移 = point - W_分页的小偏移;
 
-		s64 剩余字节 = W_文件长度 - W_文件偏移;
+		s64 剩余字节 = m_nFileSize - W_文件偏移;
 
 		W_分页的小偏移界限 = (剩余字节 < (W_设定的分页))?(DWORD)剩余字节:(W_设定的分页);
 
@@ -183,7 +183,7 @@ public:
 
 		s64 地址 = tell();
 		SeekTo(0);
-		s64 size = W_文件长度;
+		s64 size = m_nFileSize;
 
 		_m_CRC32 _crc32;
 		_crc32.NEW_CRC32();
@@ -197,7 +197,7 @@ public:
 	}
 ///////////////////////////////////////////////////////////////////////////////////////
 };
-class WQSG_FM_FILE:public WQSG_File_M
+class WQSG_FM_FILE : public WQSG_File_M
 {
 public:
 	WQSG_FM_FILE(){}
@@ -339,7 +339,7 @@ public:
 			m_pbFile = NULL;
 		}
 	}
-	BOOL 计算CRC32( u32& _CRC )
+	BOOL GetCrc32( u32& _CRC )
 	{
 		_CRC = 0;
 		if( NULL == m_hFile_M )

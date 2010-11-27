@@ -19,27 +19,27 @@
 __i__
 
 ///|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-inline WCHAR* WQSG_GetTXT_Line( WCHAR** WTXT_ALL )
+inline WCHAR* WQSG_GetTXT_Line( WCHAR** a_pWTXT_ALL )
 {
-	if( (WTXT_ALL == NULL) || (NULL == (*WTXT_ALL)) )
+	if( (a_pWTXT_ALL == NULL) || (NULL == (*a_pWTXT_ALL)) )
 		return NULL;
 
-	WCHAR* tmp = *WTXT_ALL;
+	WCHAR* tmp = *a_pWTXT_ALL;
 
 	while((L'\0' != *tmp) && (0x0D != *tmp) && (0x0A != *tmp))
 		++tmp;
 
 	//定位0x0D或0x0A的位置
 
-	INT I = (INT)(tmp - *WTXT_ALL);//获取字数
+	INT I = (INT)(tmp - *a_pWTXT_ALL);//获取字数
 
-	BOOL 是否0D = (0x0D == *tmp);
+	BOOL bIs0D = (0x0D == *tmp);
 
 	if( I || *tmp )
 	{
 		WCHAR* const out = new WCHAR[I + 1];
 		WCHAR* s1 = out;
-		tmp = *WTXT_ALL;
+		tmp = *a_pWTXT_ALL;
 
 		//复制
 		while(I--)
@@ -51,26 +51,26 @@ inline WCHAR* WQSG_GetTXT_Line( WCHAR** WTXT_ALL )
 		{
 			++tmp;
 
-			if(0x0A == *tmp && 是否0D)
+			if(0x0A == *tmp && bIs0D)
 				++tmp;
 		}
-		*WTXT_ALL = tmp;
+		*a_pWTXT_ALL = tmp;
 		return out;
 	}
 
 	return NULL;
 }
 //--------------------------------------------------------------------------------
-inline WQSG_enCP WQSG_A_U_X( HANDLE hfile )
+inline WQSG_enCP WQSG_A_U_X( HANDLE a_hfile )
 {
-	if(NULL == hfile)
+	if(NULL == a_hfile)
 		return en_CP_NULL;
 
-	::SetFilePointer( hfile , 0 , NULL , FILE_BEGIN );
+	::SetFilePointer( a_hfile , 0 , NULL , FILE_BEGIN );
 
 	DWORD sizeH;
 
-	DWORD sizeL = ::GetFileSize( hfile , &sizeH );
+	DWORD sizeL = ::GetFileSize( a_hfile , &sizeH );
 
 	const s64 size = ( ((s64)sizeH)<<32) | sizeL;
 
@@ -82,7 +82,7 @@ inline WQSG_enCP WQSG_A_U_X( HANDLE hfile )
 		u32 con_i = 0;
 		sizeL = (size >= 3)?3:2;
 
-		if( (!::ReadFile( hfile , &con_i , sizeL , &sizeH , NULL ))
+		if( (!::ReadFile( a_hfile , &con_i , sizeL , &sizeH , NULL ))
 			|| (sizeH != sizeL) )
 		{
 			return en_CP_NULL;
@@ -119,7 +119,7 @@ inline void CMemTextW::Clear()
 	m_errTXT = m_Text = m_TXT = NULL;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CMemTextW::Load( WCHAR const*const 文件路径 , DWORD 允许文件最长长度  , const UINT codePage )
+inline BOOL	CMemTextW::Load( WCHAR const*const a_pFile , DWORD a_dwMaxLen  , const UINT a_uCodePage )
 {
 	m_errTXT = NULL;
 
@@ -127,7 +127,7 @@ inline BOOL	CMemTextW::Load( WCHAR const*const 文件路径 , DWORD 允许文件最长长度
 
 	::CWQSG_File TXT_File;
 
-	if( ! TXT_File.OpenFile(文件路径,1,3) )
+	if( ! TXT_File.OpenFile( a_pFile , 1 , 3 ) )
 	{
 		m_errTXT = L"打开失败";
 		return FALSE;
@@ -135,7 +135,7 @@ inline BOOL	CMemTextW::Load( WCHAR const*const 文件路径 , DWORD 允许文件最长长度
 
 	s64 size = TXT_File.GetFileSize( );
 
-	if(size > (s64)允许文件最长长度)
+	if(size > (s64)a_dwMaxLen)
 	{
 		/*
 		WCHAR tmp1[256];
@@ -160,7 +160,7 @@ inline BOOL	CMemTextW::Load( WCHAR const*const 文件路径 , DWORD 允许文件最长长度
 		TXT_File.Seek(0);
 		tmp = new u8 [(DWORD)size + 1];tmp[(DWORD)size] = 0;
 		TXT_File.Read( tmp ,(u32)size );
-		m_Text = ::WQSG_char_W( (char*)tmp , codePage );
+		m_Text = ::WQSG_char_W( (char*)tmp , a_uCodePage );
 		delete[]tmp;
 
 		break;
@@ -204,7 +204,7 @@ inline BOOL	CMemTextW::Load( WCHAR const*const 文件路径 , DWORD 允许文件最长长度
 	return TRUE;
 }
 ///--------------------------------------------------------------------------------
-inline WCHAR* CMemTextW::GetLine()
+inline const WCHAR* CMemTextW::GetLine()
 {
 	return ::WQSG_GetTXT_Line(&m_TXT);
 }
@@ -240,7 +240,7 @@ inline WCHAR* CMemTextW::切断( void )
 	return pTXT;
 }
 //------------------------------------------------------------------------------
-inline BOOL WQSG_取短路径( const WCHAR*const longPath , WCHAR* shortPath )
+inline BOOL WQSG_GetShortPath( const WCHAR*const longPath , WCHAR* shortPath )
 {
 	WCHAR tmp[ MAX_PATH ];
 	*shortPath = L'\0';
@@ -317,7 +317,7 @@ inline BOOL WQSG_取短路径( const WCHAR*const longPath , WCHAR* shortPath )
 	return TRUE;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL WQSG_取短路径文件名( const WCHAR*const longPath , WCHAR* shortPath )
+inline BOOL WQSG_GetShortPathName( const WCHAR*const longPath , WCHAR* shortPath )
 {
 	WCHAR tmp[ MAX_PATH ];
 	*shortPath = L'\0';

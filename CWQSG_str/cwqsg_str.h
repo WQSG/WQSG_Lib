@@ -73,7 +73,7 @@ class CWQSG_strT
 		m_maxlen = 0;
 		m_len = 0;
 	}
-	inline		void			SetStr ( TYPE_1* str , int len = -1 )
+	inline		void			SetStr ( const TYPE_1* str , int len = -1 )
 	{
 		SetNull ( );
 		m_len = WQSG_strlen( str );
@@ -126,7 +126,7 @@ class CWQSG_strT
 			m_len = t_len2;
 		}
 	}
-	inline		void			AddStr( TYPE_1* str )
+	inline		void			AddStr( const TYPE_1* str )
 	{
 		int t_len = WQSG_strlen(str);
 		int t_len2 = t_len + m_len;
@@ -218,7 +218,7 @@ public:
 		TYPE_1 szStr[2] = { tCh , 0 };
 		SetStr( szStr );
 	}
-	inline						CWQSG_strT( TYPE_1* str )
+	inline						CWQSG_strT( const TYPE_1* str )
 		: m_str(&m_null)
 		, m_null(_T('\0'))
 		, m_len(0)
@@ -226,7 +226,7 @@ public:
 	{
 		SetStr( str );
 	}
-	inline						CWQSG_strT( TYPE_1* str , int nCount )
+	inline						CWQSG_strT( const TYPE_1* str , int nCount )
 		: m_str(&m_null)
 		, m_null(_T('\0'))
 		, m_len(0)
@@ -261,7 +261,7 @@ public:
 		SetStr( szStr );
 		return *this;
 	}
-	inline	__i__	CWQSG_strT& operator = ( TYPE_1* str )
+	inline	__i__	CWQSG_strT& operator = ( const TYPE_1* str )
 	{
 		SetStr( str );
 		return *this;
@@ -277,7 +277,7 @@ public:
 		AddStr(str);
 		return *this;
 	}
-	inline	__i__	CWQSG_strT& operator += ( TYPE_1* str )
+	inline	__i__	CWQSG_strT& operator += ( const TYPE_1* str )
 	{
 		AddStr(str);
 		return *this;
@@ -292,11 +292,11 @@ public:
 	{
 		return ( str1.比较(str2) == 0 );
 	}
-	inline	friend	bool operator == ( TYPE_1* str1 , const CWQSG_strT& str2 )
+	inline	friend	bool operator == ( const TYPE_1* str1 , const CWQSG_strT& str2 )
 	{
 		return (str2.比较(str1) == 0);
 	}
-	inline	friend	bool operator == ( const CWQSG_strT& str1 , TYPE_1* str2 )
+	inline	friend	bool operator == ( const CWQSG_strT& str1 , const TYPE_1* str2 )
 	{
 		return ( str1.比较(str2) == 0 );
 	}
@@ -305,11 +305,11 @@ public:
 	{
 		return ( str1.比较(str2) != 0 );
 	}
-	inline	friend	bool operator != ( TYPE_1* str1 , const CWQSG_strT& str2 )
+	inline	friend	bool operator != ( const TYPE_1* str1 , const CWQSG_strT& str2 )
 	{
 		return (str2.比较(str1) != 0);
 	}
-	inline	friend	bool operator != ( const CWQSG_strT& str1  ,TYPE_1* str2 )
+	inline	friend	bool operator != ( const CWQSG_strT& str1  , const TYPE_1* str2 )
 	{
 		return (str1.比较(str2) != 0);
 	}
@@ -318,11 +318,11 @@ public:
 	{
 		return (str1.比较(str2) < 0);
 	}
-	inline	friend	bool operator > ( TYPE_1* str1 , const CWQSG_strT& str2 )
+	inline	friend	bool operator > ( const TYPE_1* str1 , const CWQSG_strT& str2 )
 	{
 		return (str2.比较(str1) > 0);
 	}
-	inline	friend	bool operator > ( const CWQSG_strT& str1 , TYPE_1* str2 )
+	inline	friend	bool operator > ( const CWQSG_strT& str1 , const TYPE_1* str2 )
 	{
 		return (str1.比较(str2) < 0);
 	}
@@ -331,11 +331,11 @@ public:
 	{
 		return (str1.比较(str2) > 0);
 	}
-	inline	friend	bool operator < ( TYPE_1* str1 , const CWQSG_strT& str2 )
+	inline	friend	bool operator < ( const TYPE_1* str1 , const CWQSG_strT& str2 )
 	{
 		return (str2.比较(str1) < 0);
 	}
-	inline	friend	bool operator < ( const CWQSG_strT& str1 , TYPE_1* str2 )
+	inline	friend	bool operator < ( const CWQSG_strT& str1 , const TYPE_1* str2 )
 	{
 		return (str1.比较(str2) > 0);
 	}
@@ -344,11 +344,11 @@ public:
 	{
 		return (str1.比较(str2) <= 0);
 	}
-	inline	friend	bool operator >= ( TYPE_1* str1 , const CWQSG_strT& str2 )
+	inline	friend	bool operator >= ( const TYPE_1* str1 , const CWQSG_strT& str2 )
 	{
 		return (str2.比较(str1) >= 0);
 	}
-	inline	friend	bool operator >= ( const CWQSG_strT& str1 , TYPE_1* str2 )
+	inline	friend	bool operator >= ( const CWQSG_strT& str1 , const TYPE_1* str2 )
 	{
 		return (str1.比较(str2) <= 0);
 	}
@@ -357,11 +357,11 @@ public:
 	{
 		return (str1.比较(str2) >= 0);
 	}
-	inline	friend	bool operator <= ( TYPE_1* str1 , const CWQSG_strT& str2 )
+	inline	friend	bool operator <= ( const TYPE_1* str1 , const CWQSG_strT& str2 )
 	{
 		return (str2.比较(str1) <= 0);
 	}
-	inline	friend	bool operator <= ( const CWQSG_strT& str1 , TYPE_1* str2 )
+	inline	friend	bool operator <= ( const CWQSG_strT& str1 , const TYPE_1* str2 )
 	{
 		return (str1.比较(str2) >= 0);
 	}
@@ -381,12 +381,12 @@ public:
 		CWQSG_strT str_out(str1);
 		return (str_out += tCh);
 	}
-	inline	friend	CWQSG_strT operator + ( TYPE_1* str1 , const CWQSG_strT& str2 )
+	inline	friend	CWQSG_strT operator + ( const TYPE_1* str1 , const CWQSG_strT& str2 )
 	{
 		CWQSG_strT str_out(str1);
 		return (str_out += str2);
 	}
-	inline	friend	CWQSG_strT operator + ( const CWQSG_strT& str1 , TYPE_1* str2 )
+	inline	friend	CWQSG_strT operator + ( const CWQSG_strT& str1 , const TYPE_1* str2 )
 	{
 		CWQSG_strT str_out(str1);
 		return (str_out += str2);
@@ -395,7 +395,7 @@ public:
 	{
 		return					FindChr( ch , iStart );
 	}
-	inline	__i__	int			Find( TYPE_1* str , int iStart = 0 )const
+	inline	__i__	int			Find( const TYPE_1* str , int iStart = 0 )const
 	{
 		return					FindStr( str , iStart );
 	}
@@ -407,7 +407,7 @@ public:
 	{
 		return ReFindChr( ch , iStart );
 	}
-	inline	__i__	int			ReFind( TYPE_1* str , int iStart = -1 )const
+	inline	__i__	int			ReFind( const TYPE_1* str , int iStart = -1 )const
 	{
 		return ReFindStr( str , iStart );
 	}

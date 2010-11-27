@@ -29,6 +29,26 @@
 #include <atlstr.h>
 #endif
 
+#include "objbase.h"
+class CWQSG_ML
+{
+	void zzz_UnInit(void)
+	{
+		::CoUninitialize();
+	}
+protected:
+	bool	m_Init;
+	CWQSG_ML() : m_Init(false){}
+	virtual ~CWQSG_ML(){	zzz_UnInit();	}
+	bool zzz_Init(void)
+	{
+		if( !m_Init )
+			m_Init = SUCCEEDED( ::CoInitialize(NULL) );
+
+		return m_Init;
+	}
+};
+
 class CWQSG_XML :public CWQSG_ML
 {
 	CString m_根节点名;

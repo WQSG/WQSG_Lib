@@ -147,7 +147,7 @@ public:
 	__i__	virtual	BOOL		IsCanWrite	( void )const					= 0;
 };
 //------------------------------------------
-class CWQSG_bufFile:public CWQSG_xFile
+class CWQSG_bufFile : public CWQSG_xFile
 {
 	u8*		m_buffer;
 	size_t	m_pos;
@@ -174,7 +174,7 @@ public:
 	__i__	BOOL		OpenFile( void*const buffer , const size_t size , const BOOL bCanWrite );
 };
 //------------------------------------------
-class CWQSG_File:public CWQSG_xFile
+class CWQSG_File : public CWQSG_xFile
 {
 	HANDLE		m_hFile;
 	DWORD		m_dwDesiredAccess;
@@ -208,7 +208,7 @@ public:
 	__i__		HANDLE		GetFileHANDLE( void )const;
 };
 //------------------------------------------
-class CWQSG_memFile:public CWQSG_xFile
+class CWQSG_memFile : public CWQSG_xFile
 {
 	void*	m_mem;
 	size_t	m_pointer;
@@ -250,8 +250,8 @@ public:
 //WCHAR*		WQSG_加载文本文件到内存( ::CWQSG_File* lpFile );
 __i__
 //CWD_BIN*	WQSG_ReadBIN	( HANDLE FILE_ID , UINT len );
-WCHAR*		WQSG_GetTXT_Line	( WCHAR** WTXT_ALL );
-WQSG_enCP	WQSG_A_U_X	( HANDLE hfile );
+WCHAR*		WQSG_GetTXT_Line	( WCHAR** a_pWTXT_ALL );
+WQSG_enCP	WQSG_A_U_X	( HANDLE a_hfile );
 ///--------------------------------------------------------------------------------
 class CMemTextW
 {
@@ -265,9 +265,9 @@ public:
 	virtual	inline ~CMemTextW(void){	CMemTextW::Clear();	}
 	inline 	const WCHAR* GetErrTXT(void){	return m_errTXT;	}
 	inline 	void	Clear(void);
-	inline 	BOOL	Load( const WCHAR*const 文件路径 , DWORD 允许文件最长长度 , const UINT codePage = CP_ACP );
-	inline 	WCHAR*	GetLine(void);
-	inline 	WCHAR*	GetText(void){	m_errTXT = NULL;return m_Text;	}
+	inline 	BOOL	Load( const WCHAR*const a_pFile , DWORD a_dwMaxLen , const UINT a_uCodePage = CP_ACP );
+	inline 	const WCHAR*	GetLine(void);
+	inline 	const WCHAR*	GetText(void){	m_errTXT = NULL;return m_Text;	}
 	inline  BOOL	ReStart( void )
 	{
 		m_errTXT = NULL;
@@ -283,8 +283,8 @@ public:
 	inline 	WCHAR*	切断( void );
 };
 ///--------------------------------------------------------------------------------
-inline BOOL WQSG_取短路径( const WCHAR*const longPath , WCHAR* shortPath );
-inline BOOL WQSG_取短路径文件名( const WCHAR*const longPath , WCHAR* shortPath );
+inline BOOL WQSG_GetShortPath( const WCHAR*const longPath , WCHAR* shortPath );
+inline BOOL WQSG_GetShortPathName( const WCHAR*const longPath , WCHAR* shortPath );
 //---------------------------------------------------------------------------------
 ///		取自身exe的路径
 ///--------------------------------------------------------------------------------

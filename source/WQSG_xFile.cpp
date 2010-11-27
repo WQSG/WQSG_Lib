@@ -526,7 +526,7 @@ BOOL	CWQSG_File::OpenFile	( WCHAR const*const _lpFileName , const DWORD MODE , c
 		dwShareMode = 0;
 	}
 
-__gt重试:
+__gtReOpen:
 
 	m_hFile = ::CreateFile ( lpFileName , m_dwDesiredAccess , dwShareMode , NULL , dwCreationDisposition , NULL , NULL );
 
@@ -538,12 +538,12 @@ __gt重试:
 		{
 			if( OPEN_EXISTING == dwCreationDisposition )
 			{
-				if( !WQSG_取短路径文件名( lpFileName , shortPathName ) )
+				if( !WQSG_GetShortPathName( lpFileName , shortPathName ) )
 					return FALSE;
 			}
 			else
 			{
-				if( !WQSG_取短路径( lpFileName , shortPathName ) )
+				if( !WQSG_GetShortPath( lpFileName , shortPathName ) )
 					return FALSE;
 
 				WCHAR* tmp = (WCHAR*)lpFileName;
@@ -558,7 +558,7 @@ __gt重试:
 
 			lpFileName = (WCHAR const*)shortPathName;
 
-			goto __gt重试;
+			goto __gtReOpen;
 		}
 
 		return FALSE;

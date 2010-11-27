@@ -18,33 +18,29 @@
 #pragma once
 #ifndef __WQSG_H__
 #define __WQSG_H__
+
+#if defined(WIN32) && !defined(ASSERT)
+#define ASSERT( x ) do{if( !(x) ) _asm int 3}while(0)
+#endif
+
 #include <crtdbg.h>
 
 #include "WQSG_def.h"
 #include "WQSG_xFile.h"
 #include "WQSG_String.h"
 
-#include "CWQSG_str/CWQSG_str.h"
-#include "CWD/CWD.h"
+#include "./CWQSG_str/CWQSG_str.h"
+#include "./CWD/CWD.h"
 
 #include "WQSG_File_M.h"
 
-#include "Dlg/CWQSGAbout.h"
-#include "Dlg/WQSG_DirDlg.h"
+#include "./Dlg/CWQSGAbout.h"
+#include "./Dlg/WQSG_DirDlg.h"
+
 //------------------------------------------------------------------
 template <typename TYPE_1>
 class CWQSG_TypeLinkList
 {
-	CRITICAL_SECTION	m_cs_mutex;
-	inline	void	zzz_Lock()
-	{
-		::EnterCriticalSection( &m_cs_mutex );
-	}
-	inline	void	zzz_UnLock()
-	{
-		::LeaveCriticalSection( &m_cs_mutex );
-	}
-	//-------------------------------
 	struct	tgNode
 	{
 		TYPE_1	Type;
@@ -58,17 +54,14 @@ class CWQSG_TypeLinkList
 public:
 	CWQSG_TypeLinkList():m_head(NULL),m_Count(0),m_PosPtr(NULL),m_Pos(-1)
 	{
-		::InitializeCriticalSectionAndSpinCount( &m_cs_mutex , 1 );
 	}
 	virtual	~CWQSG_TypeLinkList()
 	{
 		DelAll();
-		::DeleteCriticalSection( &m_cs_mutex );
 	}
 	//-------------------------------------------------------------------------------------
 	inline	void		DelAll()
     {
-		zzz_Lock();
         m_PosPtr = m_head;
         while(m_PosPtr)
         {
@@ -78,7 +71,6 @@ public:
         }
         m_Count = 0;
         m_Pos = -1;
-		zzz_UnLock();
     }
 	inline	int			AddItem( const TYPE_1& type )
     {
@@ -106,7 +98,6 @@ public:
     }
 	inline	int			InsetItem( const int _index , const TYPE_1& type )
     {
-		zzz_Lock();
 		const int index = ( (unsigned int)_index > (unsigned int)m_Count )?m_Count:_index;
 		if(
 			( m_Pos >= 0 )//存在
@@ -149,18 +140,15 @@ public:
 			m_PosPtr->next = m_head;
 			m_head = m_PosPtr;
         }
-		zzz_UnLock();
+
         return ++m_Count,++m_Pos;
 __gtErr:
-		zzz_UnLock();
 		return -1;
     }
 	inline	bool		GetItem( const int index , TYPE_1& type )
     {
-		zzz_Lock();
         if( (unsigned int)index >= (unsigned int)m_Count )
 		{
-			zzz_UnLock();
 			return false;
 		}
 
@@ -176,15 +164,12 @@ __gtErr:
         }
         type = m_PosPtr->Type;
 
-		zzz_UnLock();
         return true;
     }
 	inline	bool		SetItem( const int index , const TYPE_1& type )
     {
-		zzz_Lock();
         if( (unsigned int)index >= (unsigned int)m_Count )
 		{
-			zzz_UnLock();
 			return false;
 		}
 
@@ -200,15 +185,12 @@ __gtErr:
         }
         m_PosPtr->Type = type;
 
-		zzz_UnLock();
         return true;
     }
 	inline	bool		DelItem( const int index )
     {
-		zzz_Lock();
         if( (unsigned int)index >= (unsigned int)m_Count )
 		{
-			zzz_UnLock();
 			return false;
 		}
 
@@ -249,18 +231,15 @@ __gtErr:
             }
         }
 
-		zzz_UnLock();
         return true;
     }
 	inline	int			GetCount( void ){   return m_Count; }
 	inline	int			GetPos( void ){ return m_Pos;   }
 	inline	TYPE_1*		MakeArray( void )
 	{
-		zzz_Lock();
 		TYPE_1* line = new TYPE_1[ m_Count ];
 		if( NULL == line )
 		{
-			zzz_UnLock();
 			return NULL;
 		}
 
@@ -271,7 +250,6 @@ __gtErr:
 			line[i] = tmpNode->Type;
 			tmpNode = tmpNode->next;
 		}
-		zzz_Lock();
 		return line;
 	}
 };
@@ -366,123 +344,127 @@ inline BOOL WQSG_LoadResW( const WORD resID , WCHAR const*const resType , CWD_BI
 //------------------------------------------------------------------
 class CWQSG_MSG_W
 {
-	HWND W_hwnd;
-	LPCWSTR W_标题;
+	HWND m_hWnd;
+	LPCWSTR m_pTitle;
 public:
-	CWQSG_MSG_W(HWND hwnd,LPCWSTR 标题)
+	CWQSG_MSG_W( HWND a_hWnd , LPCWSTR a_pTitle )
+		: m_hWnd(a_hWnd) , m_pTitle (a_pTitle)
 	{
-		W_hwnd = hwnd;
-		W_标题 = 标题;
 	}
+
 	~CWQSG_MSG_W(){}
-	INT show(LPCWSTR TXT1,UINT 样式 = 0)
+
+	INT show(LPCWSTR TXT1,UINT a_uType = 0)
 	{
-		return ::MessageBoxW(W_hwnd,TXT1,W_标题,样式);
+		return ::MessageBoxW(m_hWnd,TXT1,m_pTitle,a_uType);
 	}
-	INT show(LPCWSTR TXT1,LPCWSTR TXT2,UINT 样式 = 0)
+
+	INT show(LPCWSTR TXT1,LPCWSTR TXT2,UINT a_uType = 0)
 	{
 		UINT len = ::WQSG_strlen((WCHAR*)TXT1) + ::WQSG_strlen((WCHAR*)TXT2) + 3;
 		WCHAR *const SHOWTXT = new WCHAR[len],
 			*s1 = SHOWTXT;
 		s1 += ::WQSG_strcpy((WCHAR*)TXT1,s1);
-		s1 += ::WQSG_strcpy(L"\15\12",s1);
+		s1 += ::WQSG_strcpy(L"\r\n",s1);
 		s1 += ::WQSG_strcpy((WCHAR*)TXT2,s1);
-		len = ::MessageBoxW(W_hwnd,SHOWTXT,W_标题,样式);
-		delete SHOWTXT;
+		len = ::MessageBoxW(m_hWnd,SHOWTXT,m_pTitle,a_uType);
+		delete[]SHOWTXT;
 		return (INT)len;
 	}
-	INT show(LPCWSTR TXT1,LPCWSTR TXT2,LPCWSTR TXT3,UINT 样式 = 0)
+
+	INT show(LPCWSTR TXT1,LPCWSTR TXT2,LPCWSTR TXT3,UINT a_uType = 0)
 	{
 		UINT len = ::WQSG_strlen((WCHAR*)TXT1) + ::WQSG_strlen((WCHAR*)TXT2) + ::WQSG_strlen((WCHAR*)TXT3) + 5;
 		WCHAR *const SHOWTXT = new WCHAR [len],
 			*s1 = SHOWTXT;
 		s1 += ::WQSG_strcpy((WCHAR*)TXT1,s1);
-		s1 += ::WQSG_strcpy(L"\15\12",s1);
+		s1 += ::WQSG_strcpy(L"\r\n",s1);
 		s1 += ::WQSG_strcpy((WCHAR*)TXT2,s1);
-		s1 += ::WQSG_strcpy(L"\15\12",s1);
+		s1 += ::WQSG_strcpy(L"\r\n",s1);
 		s1 += ::WQSG_strcpy((WCHAR*)TXT3,s1);
-		len = ::MessageBoxW(W_hwnd,SHOWTXT,W_标题,样式);
-		delete SHOWTXT;
+		len = ::MessageBoxW(m_hWnd,SHOWTXT,m_pTitle,a_uType);
+		delete[]SHOWTXT;
 		return (INT)len;
 	}
-	INT show(LPCWSTR TXT1,LPCWSTR TXT2,LPCWSTR TXT3,LPCWSTR TXT4,UINT 样式 = 0)
+
+	INT show(LPCWSTR TXT1,LPCWSTR TXT2,LPCWSTR TXT3,LPCWSTR TXT4,UINT a_uType = 0)
 	{
 		UINT len = ::WQSG_strlen((WCHAR*)TXT1) + ::WQSG_strlen((WCHAR*)TXT2) + ::WQSG_strlen((WCHAR*)TXT3) + ::WQSG_strlen((WCHAR*)TXT4) + 7;
 		WCHAR *const SHOWTXT = new WCHAR [len],
 			*s1 = SHOWTXT;
 		s1 += ::WQSG_strcpy((WCHAR*)TXT1,s1);
-		s1 += ::WQSG_strcpy(L"\15\12",s1);
+		s1 += ::WQSG_strcpy(L"\r\n",s1);
 		s1 += ::WQSG_strcpy((WCHAR*)TXT2,s1);
-		s1 += ::WQSG_strcpy(L"\15\12",s1);
+		s1 += ::WQSG_strcpy(L"\r\n",s1);
 		s1 += ::WQSG_strcpy((WCHAR*)TXT3,s1);
-		s1 += ::WQSG_strcpy(L"\15\12",s1);
+		s1 += ::WQSG_strcpy(L"\r\n",s1);
 		s1 += ::WQSG_strcpy((WCHAR*)TXT4,s1);
-		len = ::MessageBoxW(W_hwnd,SHOWTXT,W_标题,样式);
-		delete SHOWTXT;
+		len = ::MessageBoxW(m_hWnd,SHOWTXT,m_pTitle,a_uType);
+		delete[]SHOWTXT;
 		return (INT)len;
 	}
-	void Set_W_标题(LPCWSTR 标题){W_标题 = 标题;}
-	void Set_W_hwnd(HWND hwnd){W_hwnd = hwnd;}
+	void SetTitle(LPCWSTR a_pTitle){m_pTitle = a_pTitle;}
+	void SetHwmd(HWND a_hWnd){m_hWnd = a_hWnd;}
 };
 class CWQSG_MSG_A
 {
-	HWND W_hwnd;
-	UCHAR*W_TTT;
+	HWND m_hWnd;
+	LPCSTR m_pTitle;
 public:
-	CWQSG_MSG_A(HWND hwnd,UCHAR*TTT)
+	CWQSG_MSG_A( HWND a_hWnd , LPCSTR a_pTitle )
+		: m_hWnd(a_hWnd) , m_pTitle (a_pTitle)
 	{
-		W_hwnd = hwnd;
-		W_TTT = TTT;
 	}
 	~CWQSG_MSG_A(){}
-	INT show(UCHAR*TXT1,UINT 样式 = 0)
+
+	INT show( LPCSTR TXT1 , UINT a_uType = 0 )
 	{
-		return ::MessageBoxA(W_hwnd,(char*)TXT1,(char*)W_TTT,样式);
+		return ::MessageBoxA( m_hWnd , TXT1 , m_pTitle , a_uType );
 	}
-	INT show(UCHAR*TXT1,UCHAR*TXT2,UINT 样式 = 0)
+	INT show(LPCSTR TXT1 , LPCSTR TXT2 , UINT a_uType = 0)
 	{
-		UINT len = ::WQSG_strlen((char*)TXT1) + ::WQSG_strlen((char*)TXT2) + 3;
-		UCHAR *const SHOWTXT = new UCHAR [len],
+		UINT len = ::WQSG_strlen( TXT1 ) + ::WQSG_strlen( TXT2 ) + 3;
+		CHAR*const SHOWTXT = new CHAR [len],
 			*s1 = SHOWTXT;
-		s1 += ::WQSG_strcpy((char*)TXT1,(char*)s1);
-		s1 += ::WQSG_strcpy("\15\12",(char*)s1);
-		s1 += ::WQSG_strcpy((char*)TXT2,(char*)s1);
-		len = ::MessageBoxA(W_hwnd,(char*)SHOWTXT,(char*)W_TTT,样式);
-		delete SHOWTXT;
+		s1 += ::WQSG_strcpy(TXT1,s1);
+		s1 += ::WQSG_strcpy("\r\n",s1);
+		s1 += ::WQSG_strcpy(TXT2,s1);
+		len = ::MessageBoxA( m_hWnd , SHOWTXT , m_pTitle , a_uType );
+		delete[]SHOWTXT;
 		return (INT)len;
 	}
-	INT show(UCHAR*TXT1,UCHAR*TXT2,UCHAR*TXT3,UINT 样式 = 0)
+	INT show( LPCSTR TXT1 , LPCSTR TXT2 , LPCSTR TXT3 , UINT a_uType = 0)
 	{
-		UINT len = ::WQSG_strlen((char*)TXT1) + ::WQSG_strlen((char*)TXT2) + ::WQSG_strlen((char*)TXT3) + 5;
-		UCHAR *const SHOWTXT = new UCHAR [len],
+		UINT len = ::WQSG_strlen(TXT1) + ::WQSG_strlen( TXT2 ) + ::WQSG_strlen( TXT3 ) + 5;
+		CHAR *const SHOWTXT = new CHAR [len],
 			*s1 = SHOWTXT;
-		s1 += ::WQSG_strcpy((char*)TXT1,(char*)s1);
-		s1 += ::WQSG_strcpy("\15\12",(char*)s1);
-		s1 += ::WQSG_strcpy((char*)TXT2,(char*)s1);
-		s1 += ::WQSG_strcpy("\15\12",(char*)s1);
-		s1 += ::WQSG_strcpy((char*)TXT3,(char*)s1);
-		len = ::MessageBoxA(W_hwnd,(char*)SHOWTXT,(char*)W_TTT,样式);
-		delete SHOWTXT;
+		s1 += ::WQSG_strcpy( TXT1,s1);
+		s1 += ::WQSG_strcpy("\r\n",s1);
+		s1 += ::WQSG_strcpy( TXT2,s1);
+		s1 += ::WQSG_strcpy("\r\n",s1);
+		s1 += ::WQSG_strcpy( TXT3,s1);
+		len = ::MessageBoxA( m_hWnd , SHOWTXT , m_pTitle , a_uType );
+		delete[]SHOWTXT;
 		return (INT)len;
 	}
-	INT show(UCHAR*TXT1,UCHAR*TXT2,UCHAR*TXT3,UCHAR*TXT4,UINT 样式 = 0)
+	INT show( LPCSTR TXT1 , LPCSTR TXT2 , LPCSTR TXT3 , LPCSTR TXT4 , UINT a_uType = 0)
 	{
-		UINT len = ::WQSG_strlen((char*)TXT1) + ::WQSG_strlen((char*)TXT2) + ::WQSG_strlen((char*)TXT3) + ::WQSG_strlen((char*)TXT4) + 7;
-		UCHAR *const SHOWTXT = new UCHAR [len],
+		UINT len = ::WQSG_strlen(TXT1) + ::WQSG_strlen(TXT2) + ::WQSG_strlen(TXT3) + ::WQSG_strlen(TXT4) + 7;
+		CHAR *const SHOWTXT = new CHAR [len],
 			*s1 = SHOWTXT;
-		s1 += ::WQSG_strcpy((char*)TXT1,(char*)s1);
-		s1 += ::WQSG_strcpy("\15\12",(char*)s1);
-		s1 += ::WQSG_strcpy((char*)TXT2,(char*)s1);
-		s1 += ::WQSG_strcpy((char*)"\15\12",(char*)s1);
-		s1 += ::WQSG_strcpy((char*)TXT3,(char*)s1);
-		s1 += ::WQSG_strcpy("\15\12",(char*)s1);
-		s1 += ::WQSG_strcpy((char*)TXT4,(char*)s1);
-		len = ::MessageBoxA(W_hwnd,(char*)SHOWTXT,(char*)W_TTT,样式);
-		delete SHOWTXT;
+		s1 += ::WQSG_strcpy(TXT1,s1);
+		s1 += ::WQSG_strcpy("\r\n",s1);
+		s1 += ::WQSG_strcpy(TXT2,s1);
+		s1 += ::WQSG_strcpy("\r\n",s1);
+		s1 += ::WQSG_strcpy(TXT3,s1);
+		s1 += ::WQSG_strcpy("\r\n",s1);
+		s1 += ::WQSG_strcpy(TXT4,s1);
+		len = ::MessageBoxA( m_hWnd , SHOWTXT , m_pTitle , a_uType );
+		delete[]SHOWTXT;
 		return (INT)len;
 	}
-	void Set_W_TTT(UCHAR*w_ttt){W_TTT = w_ttt;}
-	void Set_W_hwnd(HWND w_hwnd){W_hwnd = w_hwnd;}
+	void SetTitle(LPCSTR a_pTitle){m_pTitle = a_pTitle;}
+	void SetHwmd(HWND a_hWnd){m_hWnd = a_hWnd;}
 };
 //------------------------------------------------------------------
 #include <vector>
@@ -515,34 +497,15 @@ public:
 	}
 };
 //------------------------------------------------------------------
-#include "objbase.h"
-class CWQSG_ML
-{
-	void zzz_UnInit(void)
-	{
-		::CoUninitialize();
-	}
-protected:
-	bool	m_Init;
-	CWQSG_ML() : m_Init(false){}
-	virtual ~CWQSG_ML(){	zzz_UnInit();	}
-	bool zzz_Init(void)
-	{
-		if( !m_Init )
-			m_Init = SUCCEEDED( ::CoInitialize(NULL) );
-
-		return m_Init;
-	}
-};
-class CWQSG_CRITICAL_SECTION
+class CWQSG_CriticalSection
 {
 	CRITICAL_SECTION	m_cs_mutex;
 public:
-	inline	CWQSG_CRITICAL_SECTION()
+	inline	CWQSG_CriticalSection()
 	{
-		::InitializeCriticalSectionAndSpinCount( &m_cs_mutex , 1 );
+		::InitializeCriticalSectionAndSpinCount( &m_cs_mutex , 100 );
 	}
-	inline	virtual ~CWQSG_CRITICAL_SECTION()
+	inline	virtual ~CWQSG_CriticalSection()
 	{
 		::DeleteCriticalSection( &m_cs_mutex );
 	}
@@ -560,6 +523,7 @@ public:
 		return TryEnterCriticalSection( &m_cs_mutex );
 	}
 };
+//------------------------------------------------------------------
 class CWQSG_Mutex
 {
 	HANDLE m_Mutex;
@@ -690,7 +654,7 @@ public:
 
 		do
 		{
-			if( (tmp->m_start >= startPos) && ( ! tmp->m_use ) && ( tmp->m_len >= len ) )
+			if( (tmp->m_start >= (u32)startPos) && ( ! tmp->m_use ) && ( tmp->m_len >= len ) )
 			{
 				u32 x = tmp->m_start % align;
 
@@ -868,8 +832,8 @@ public:
 		}
 		return false;
 	}
-#ifdef DEBUG
-	void 写出调试信息( CStringW& log )
+#if defined(DEBUG) && (defined(__AFXDLGS_H__) || defined(__ATLSTR_H__))
+	void DebugInfo( CStringW& log )
 	{
 		log = L"";
 		CLinkList* tmp = &m_head;
@@ -884,6 +848,7 @@ public:
 #endif
 };
 
+//------------------------------------------------------------------
 template<typename TType , size_t TAlign>
 inline BOOL WQSG_Bin2c_template( CWQSG_xFile& a_Out ,
 						 const void* a_pBin , size_t a_size ,
@@ -944,7 +909,7 @@ inline BOOL WQSG_Bin2c_32Bit( CWQSG_xFile& a_Out , const void* a_pBin , size_t a
 {
 	return WQSG_Bin2c_template<u32 , 16>( a_Out , a_pBin , a_size , a_szTag , "0x%08X" , "u32" );
 }
-
+//------------------------------------------------------------------
 class CWQSG_StringMgr
 {
 	const WCHAR*const* m_szDefaultString;
