@@ -206,6 +206,7 @@ public:
 	__i__		BOOL		OpenFile( WCHAR const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
 	__i__		BOOL		OpenFile( char const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
 	__i__		HANDLE		GetFileHANDLE( void )const;
+	__i__		BOOL		Flush( void );
 };
 //------------------------------------------
 class CWQSG_memFile : public CWQSG_xFile

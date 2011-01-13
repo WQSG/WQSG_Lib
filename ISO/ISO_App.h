@@ -158,6 +158,11 @@ public:
 	{
 		return CWQSG_ISO_Interface::GetDefaultLangStringCount();
 	}
+
+	BOOL Flush( void )
+	{
+		return ( m_pIso )?m_pIso->Flush():FALSE;
+	}
 };
 
 inline void CISO_App::CloseISO()

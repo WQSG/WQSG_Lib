@@ -106,7 +106,7 @@ struct tgHTTP_HeadInfo
 GET %s HTTP/1.1\r\n\
 Host:%s\r\n\
 Accept:*/*\r\n\
-User-Agent: HttpDownload/2.0 \r\n\
+User-Agent: WQSG/2.0 \r\n\
 Connection: close\r\n"
 	,strAObject.GetBuffer() , strAHostName.GetBuffer()
 	);

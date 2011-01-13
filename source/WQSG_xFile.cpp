@@ -584,6 +584,11 @@ HANDLE	CWQSG_File::GetFileHANDLE( void )const
 {
 	return m_hFile;
 }
+
+BOOL	CWQSG_File::Flush( void )
+{
+	return FlushFileBuffers( m_hFile );
+}
 //|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 #if WIN32
 #include <malloc.h>

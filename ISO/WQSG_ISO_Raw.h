@@ -223,6 +223,11 @@ public:
 	inline const WCHAR* GetLangString( size_t a_uIndex )const;
 
 	static u32 GetDefaultLangStringCount();
+
+	inline BOOL Flush( void )
+	{
+		return m_ISOfp.Flush();
+	}
 };
 
 inline void CWQSG_ISO_Raw::SetErrMsg( WCHAR const*const a_msg )
