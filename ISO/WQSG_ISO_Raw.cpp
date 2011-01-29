@@ -38,15 +38,15 @@ static inline void GetLastErrorText( CString& a_str , DWORD a_dwErrId )
 #include "WQSG_ISO_Raw.h"
 bool SISO_DirEnt::cheak()const
 {
-	if( xx_cmpeq( &lba_le , &lba_be , sizeof(lba_le) ) && lba_le >= 0 &&
-		xx_cmpeq( &sp3_le , &sp3_be , sizeof(sp3_le) ) && sp3_le >= 0 &&
-		/*xx_cmpeq( &size_le , &size_be , sizeof(size_le) ) &&*/ size_le >= 0 &&
+	if( L2H(lba_LE) == B2H(lba_BE) && L2H(lba_LE) >= 0 &&
+		L2H(sp3_LE) == B2H(sp3_BE) && L2H(sp3_LE) >= 0 &&
+		/*xx_cmpeq( &size_le , &size_be , sizeof(size_le) ) &&*/ L2H(size_LE) >= 0 &&
 		(len&1) == 0 && len > 0 && len_ex == 0 &&
-		nameLen > 0 && nameLen<=127 && size_le >= 0 )
+		nameLen > 0 && nameLen<=127 && L2H(size_LE) >= 0 )
 	{
 		if( attr & 2 )
 		{
-			if( (size_le % 2048) != 0 )
+			if( (L2H(size_LE) % 2048) != 0 )
 				return false;
 		}
 		return true;

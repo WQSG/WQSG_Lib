@@ -47,4 +47,14 @@ typedef unsigned __int64	u64;
 typedef unsigned int	uint;
 #endif
 
+#if defined(_M_IX86)
+#define WQSG_BIG_ENDIAN 0
+#elif defined(_M_AMD64)
+#error _M_AMD64
+#define WQSG_BIG_ENDIAN 0
+#else
+#error WQSG_BIG_ENDIAN 1
+#define WQSG_BIG_ENDIAN 1
+#endif
+
 #endif

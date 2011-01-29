@@ -947,5 +947,44 @@ public:
 		m_uUserString = a_uUserString;
 	}
 };
+//===========================================================
+template<typename TType>
+class CValReverse
+{
+	TType m_Val;
+public:
+	inline CValReverse( const TType& a_Val )
+	{
+		u8* pDst = (u8*)&m_Val;
+		const u8* pSrc = (const u8*)&a_Val;
+
+		for ( size_t n = 0 ; n < sizeof(TType) ; ++n )
+			pDst[sizeof(TType)-n-1] = pSrc[n];
+	}
+
+	inline const TType& GetVal()const
+	{
+		return m_Val;
+	}
+};
+template<typename TType>
+inline CValReverse<TType> _ValReverse_Helper( const TType& a_Val )
+{
+	return CValReverse<TType>( a_Val );
+}
+
+#if WQSG_BIG_ENDIAN
+#define H2L( _v ) _ValReverse_Helper(_v).GetVal()
+#define H2B( _v ) (_v)
+#define L2H( _v ) _ValReverse_Helper(_v).GetVal()
+#define B2H( _v ) (_v)
+#else //WQSG_BIG_ENDIAN
+#define H2L( _v ) (_v)
+#define H2B( _v ) _ValReverse_Helper(_v).GetVal()
+#define L2H( _v ) (_v)
+#define B2H( _v ) _ValReverse_Helper(_v).GetVal()
+#endif //WQSG_BIG_ENDIAN
+#define L2B( _v ) _ValReverse_Helper(_v).GetVal()
+#define B2H( _v ) _ValReverse_Helper(_v).GetVal()
 
 #endif

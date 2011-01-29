@@ -17,14 +17,6 @@
 */
 
 #include "WQSG_ISO_BASE.h"
-static inline void memcpyR( void* a_dst , const void* a_src , const size_t a_size )
-{
-	u8* dp = (u8*)a_dst;
-	const u8* sp = (const u8*)a_src;
-
-	for( size_t i = 0 ; i < a_size ; ++i )
-		dp[i] = sp[a_size-i-1];
-}
 //----------------------------------------------------------------------------------------------------
 static const u8 g_fileLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x0D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 static const u8 g_dirLastData[14] = { 0x00, 0x00, 0x00, 0x00, 0x8D, 0x55, 0x58, 0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -42,15 +34,15 @@ BOOL CWQSG_ISO_Base::InitLbaList( u32 a_uLbaCount )
 		return FALSE;
 	}
 
-	if( 0 != m_pLBA_List->Alloc( m_tHead.rootDirEnt.lba_le ) )
+	if( 0 != m_pLBA_List->Alloc( L2H(m_tHead.rootDirEnt.lba_LE) ) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(3) );
 		return FALSE;
 	}
 
-	if( (m_tHead.rootDirEnt.size_le < 2048) ||
-		((m_tHead.rootDirEnt.size_le % 2048)!=0) ||
-		(!m_pLBA_List->AllocPos( m_tHead.rootDirEnt.lba_le , m_tHead.rootDirEnt.size_le/2048 )) )
+	if( (L2H(m_tHead.rootDirEnt.size_LE) < 2048) ||
+		((L2H(m_tHead.rootDirEnt.size_LE) % 2048)!=0) ||
+		(!m_pLBA_List->AllocPos( L2H(m_tHead.rootDirEnt.lba_LE) , L2H(m_tHead.rootDirEnt.size_LE)/2048 )) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(4) );
 		return FALSE;
@@ -99,16 +91,15 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 		goto __gtOpenErr;
 	}
 
-	if( !xx_cmpeq( &m_tHead.LB_Size_LE ,
-		&m_tHead.LB_Size_BE , sizeof(m_tHead.LB_Size_LE) ) )
+	if( L2H(m_tHead.LB_Size_le) != B2H(m_tHead.LB_Size_be) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(7) );
 		goto __gtOpenErr;
 	}
 
-	if( m_tHead.LB_Size_LE != 2048 )
+	if( L2H(m_tHead.LB_Size_le) != 2048 )
 	{
-		DEF_ISO_SET_ERRMSG( GetLangString(8) , m_tHead.LB_Size_LE );
+		DEF_ISO_SET_ERRMSG( GetLangString(8) , L2H(m_tHead.LB_Size_le) );
 		goto __gtOpenErr;
 	}
 
@@ -118,21 +109,19 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 		goto __gtOpenErr;
 	}
 
-	if( !xx_cmpeq( &m_tHead.VolumeLBA_Total_LE ,
-		&m_tHead.VolumeLBA_Total_BE , sizeof(m_tHead.VolumeLBA_Total_LE) ) )
+	if( L2H(m_tHead.VolumeLBA_Total_le) != B2H(m_tHead.VolumeLBA_Total_be) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(10) );
 		goto __gtOpenErr;
 	}
 
-	if( !xx_cmpeq( &m_tHead.PathTableSize_LE ,
-		&m_tHead.PathTableSize_BE , sizeof(m_tHead.PathTableSize_LE) ) )
+	if( L2H(m_tHead.PathTableSize_le) != B2H(m_tHead.PathTableSize_be) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(11) );
 		goto __gtOpenErr;
 	}
 
-	if( !xx_cmpeq( &m_tHead.v6_LE , &m_tHead.v6_BE , sizeof(m_tHead.v6_LE) ) )
+	if( L2H(m_tHead.v6_le) != B2H(m_tHead.v6_be) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(12) );
 		goto __gtOpenErr;
@@ -170,7 +159,7 @@ BOOL CWQSG_ISO_Base::Open( const WCHAR*const a_strISOPathName , const BOOL a_bCa
 		goto __gtOpenErr;
 	}
 
-	if( !InitLbaList( m_tHead.VolumeLBA_Total_LE ) )
+	if( !InitLbaList( L2H(m_tHead.VolumeLBA_Total_le) ) )
 		goto __gtOpenErr;
 
 	return TRUE;
@@ -190,14 +179,14 @@ void CWQSG_ISO_Base::Close()
 s32 CWQSG_ISO_Base::ReadDirEnt( SISO_DirEnt& a_tDirEnt , char*const a_strFileName ,
 								const SISO_DirEnt& a_ParentDirEnt , s32 a_nOffset , BOOL a_bNext )
 {
-	if( !a_ParentDirEnt.cheak() || a_ParentDirEnt.lba_le < m_tHead.rootDirEnt.lba_le ||
+	if( !a_ParentDirEnt.cheak() || L2H(a_ParentDirEnt.lba_LE) < L2H(m_tHead.rootDirEnt.lba_LE) ||
 		a_nOffset < 0 || (a_nOffset%2) != 0 )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(17) );
 		return -1;
 	}
 
-	const s32 nLbaCount = a_ParentDirEnt.size_le/2048;
+	const s32 nLbaCount = L2H(a_ParentDirEnt.size_LE)/2048;
 	s32 nLbaIndex;
 	s32 nLbaOffset;
 	u8 szBuffer[2048];
@@ -218,7 +207,7 @@ __gtReRead:
 			if( a_bNext )
 			{
 				DEF_ISO_SET_ERRMSG( GetLangString(19) ,
-					a_ParentDirEnt.size_le , nLbaOffset , (2048-DEF_FN_make_DirLen(0)) );
+					L2H(a_ParentDirEnt.size_LE) , nLbaOffset , (2048-DEF_FN_make_DirLen(0)) );
 				return -1;
 			}
 			else
@@ -232,7 +221,7 @@ __gtReRead:
 		nLbaOffset = 0;
 	}
 __gtReRead2:
-	if( !ReadUserData( szBuffer , a_ParentDirEnt.lba_le + nLbaIndex ) )
+	if( !ReadUserData( szBuffer , L2H(a_ParentDirEnt.lba_LE) + nLbaIndex ) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(20) );
 		return -1;
@@ -291,7 +280,7 @@ __gtReRead2:
 inline BOOL CWQSG_ISO_Base::IsDirEnt( const SISO_DirEnt& a_ParentDirEnt )
 {
 	if( (a_ParentDirEnt.attr & 2) != 2 || !a_ParentDirEnt.cheak() ||
-		a_ParentDirEnt.lba_le < m_tHead.rootDirEnt.lba_le )
+		L2H(a_ParentDirEnt.lba_LE) < L2H(m_tHead.rootDirEnt.lba_LE) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(23) );
 		return FALSE;
@@ -303,7 +292,7 @@ inline BOOL CWQSG_ISO_Base::IsDirEnt( const SISO_DirEnt& a_ParentDirEnt )
 	nOffset = 0;
 	if( nOffset != ReadDirEnt( sDirEnt , NULL , a_ParentDirEnt , nOffset , FALSE ) ||
 		( sDirEnt.len != 0x30 ) || ( sDirEnt.nameLen != 1 ) ||
-		(sDirEnt.lba_le != a_ParentDirEnt.lba_le) )
+		(L2H(sDirEnt.lba_LE) != L2H(a_ParentDirEnt.lba_LE)) )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(24) );
 		return FALSE;
@@ -348,10 +337,10 @@ inline BOOL CWQSG_ISO_Base::XXX_遍历目录申请( const SISO_DirEnt& a_ParentDirEnt 
 			return TRUE;
 
 		{
-			const n32 nLbaCount = ((sDirEnt.size_le%2048)==0)?(sDirEnt.size_le/2048):(sDirEnt.size_le/2048) + 1;
+			const n32 nLbaCount = ((L2H(sDirEnt.size_LE)%2048)==0)?(L2H(sDirEnt.size_LE)/2048):(L2H(sDirEnt.size_LE)/2048) + 1;
 
 			if( nLbaCount > 0 )
-				if( !m_pLBA_List->AllocPos( sDirEnt.lba_le , ((nLbaCount == 0)?1:nLbaCount) ) )
+				if( !m_pLBA_List->AllocPos( L2H(sDirEnt.lba_LE) , ((nLbaCount == 0)?1:nLbaCount) ) )
 				{
 					DEF_ISO_SET_ERRMSG( GetLangString(26) );
 					return FALSE;
@@ -492,7 +481,7 @@ BOOL CWQSG_ISO_Base::ReadFile( const SISO_DirEnt& a_tDirEnt_File ,
 		return FALSE;
 	}
 	//-----------------------------------------------------------------
-	if( ( a_tDirEnt_File.size_le - a_startOffset ) < a_buflen )
+	if( ( L2H(a_tDirEnt_File.size_LE) - a_startOffset ) < a_buflen )
 	{
 		DEF_ISO_SET_ERRMSG( GetLangString(31) );
 		return FALSE;
@@ -500,7 +489,7 @@ BOOL CWQSG_ISO_Base::ReadFile( const SISO_DirEnt& a_tDirEnt_File ,
 
 	u8 buffer[2352];
 #if 1
-	n32 nLbaIndex = a_startOffset / 2048 + a_tDirEnt_File.lba_le;
+	n32 nLbaIndex = a_startOffset / 2048 + L2H(a_tDirEnt_File.lba_LE);
 	n32 nLbaOffset = a_startOffset % 2048;
 
 	s32 nBuflen = a_buflen;
@@ -588,14 +577,14 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 		}
 
 		if( !a_bNew )
-			最终fileSize = ((最终fileSize>dirEnt_File.size_le)?(最终fileSize):dirEnt_File.size_le);
+			最终fileSize = ((最终fileSize>L2H(dirEnt_File.size_LE))?(最终fileSize):L2H(dirEnt_File.size_LE));
 
 		const s32 需要的LBA = DEF_FN_toLBA( 最终fileSize , 2048 );
-		const s32 拥有LBA = DEF_FN_toLBA( dirEnt_File.size_le , 2048 );
+		const s32 拥有LBA = DEF_FN_toLBA( L2H(dirEnt_File.size_LE) , 2048 );
 
 		if( 拥有LBA != 需要的LBA )
 		{
-			const s32 nOldLba = dirEnt_File.lba_le;
+			const s32 nOldLba = L2H(dirEnt_File.lba_LE);
 
 			if( 拥有LBA > 0 )
 			{
@@ -609,15 +598,15 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 				{
 					if( !m_pLBA_List->AllocPos( nOldLba , 需要的LBA ) )
 					{
-						dirEnt_File.lba_le = -1;
+						dirEnt_File.lba_LE = H2L(-1);
 					}
 				}
 			}
 
-			if( dirEnt_File.lba_le < 0 && 需要的LBA > 拥有LBA )
-				dirEnt_File.lba_le = m_pLBA_List->Alloc( 需要的LBA );
+			if( L2H(dirEnt_File.lba_LE) < 0 && 需要的LBA > 拥有LBA )
+				dirEnt_File.lba_LE = H2L(m_pLBA_List->Alloc( 需要的LBA ));
 
-			if( dirEnt_File.lba_le < 0 )
+			if( L2H(dirEnt_File.lba_LE) < 0 )
 			{
 				if( !AddLbaCount( 需要的LBA ) )
 				{
@@ -632,9 +621,9 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 					return FALSE;
 				}
 
-				dirEnt_File.lba_le = m_pLBA_List->Alloc( 需要的LBA );
+				dirEnt_File.lba_LE = H2L(m_pLBA_List->Alloc( 需要的LBA ));
 
-				if( dirEnt_File.lba_le < 0 )
+				if( L2H(dirEnt_File.lba_LE) < 0 )
 				{
 					m_pLBA_List->AllocPos( nOldLba , 拥有LBA );
 					DEF_ISO_SET_ERRMSG( GetLangString(41) );
@@ -642,10 +631,10 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 				}
 			}
 
-			memcpyR( &dirEnt_File.lba_be , &dirEnt_File.lba_le , sizeof(dirEnt_File.lba_le) );
+			dirEnt_File.lba_BE = L2B(dirEnt_File.lba_LE);
 
 			//LBA move
-			if( nOldLba != dirEnt_File.lba_le )
+			if( nOldLba != L2H(dirEnt_File.lba_LE) )
 			{
 				if( a_insertOffset != 0 )
 				{
@@ -676,7 +665,7 @@ BOOL CWQSG_ISO_Base::WriteFile( const SISO_DirEnt& a_tDirEnt_Path , const char*c
 
 		界限长度 = nDirOffset - ( nDirOffset % 2048 ) + 2048;
 __gtReTest:
-		if(	界限长度 <= nDirOffset || 界限长度 > a_tDirEnt_Path.size_le )
+		if(	界限长度 <= nDirOffset || 界限长度 > L2H(a_tDirEnt_Path.size_LE) )
 		{
 			DEF_ISO_SET_ERRMSG( GetLangString(44) );
 			return FALSE;
@@ -712,14 +701,14 @@ __gtReTest:
 				}
 			}
 
-			dirEnt_File.lba_le = LBA_Pos;
-			memcpyR( &dirEnt_File.lba_be , &dirEnt_File.lba_le , sizeof(dirEnt_File.lba_le) );
+			dirEnt_File.lba_LE = H2L(LBA_Pos);
+			dirEnt_File.lba_BE = H2B(LBA_Pos);
 		}
 
 		//	dirEnt.attr;	dirEnt.sp1;	dirEnt.sp2;
 
-		dirEnt_File.sp3_le = 1;
-		memcpyR( &dirEnt_File.sp3_be , &dirEnt_File.sp3_le , sizeof(dirEnt_File.sp3_be) );
+		dirEnt_File.sp3_LE = H2L(1);
+		dirEnt_File.sp3_BE = H2B(1);
 
 		dirEnt_File.nameLen = (u8)strlen(a_fileName);
 		//----------------------------------------------------------
@@ -731,9 +720,8 @@ __gtReTest:
 	}
 
 	//--------------------------------------------------------------------------------
-	dirEnt_File.size_le = a_bDir?(2048):(最终fileSize);
-
-	memcpyR( &dirEnt_File.size_be , &dirEnt_File.size_le , sizeof(dirEnt_File.size_le) );
+	dirEnt_File.size_LE = H2L(a_bDir?(2048):(最终fileSize));
+	dirEnt_File.size_BE = L2B(dirEnt_File.size_LE);
 	//------------------------------------------------------------------------------------------------------------
 
 	CWQSG_memFile memfp;
@@ -791,7 +779,7 @@ __gtReTest:
 
 	while( bufLen_tmp > 0 )
 	{
-		const s32 nLbaIndex = offset_tmp / 2048 + dirEnt_File.lba_le;
+		const s32 nLbaIndex = offset_tmp / 2048 + L2H(dirEnt_File.lba_LE);
 		const s32 nLbaOffset = offset_tmp % 2048;
 
 		u8 szLba[2048];
@@ -836,7 +824,7 @@ __gtReTest:
 	}*/
 	//------------------------------------------------------------------------------------------------------------
 	{
-		const s32 nLbaIndex = nDirOffset / 2048 + a_tDirEnt_Path.lba_le;
+		const s32 nLbaIndex = nDirOffset / 2048 + L2H(a_tDirEnt_Path.lba_LE);
 		const s32 nLbaOffset = nDirOffset % 2048;
 
 		u8 szLba[2048];
@@ -899,8 +887,8 @@ BOOL CWQSG_ISO_Base::AddLbaCount( n32 a_nLbaCount )
 	}
 
 	SISO_Head2048 tHead = m_tHead;
-	tHead.VolumeLBA_Total_LE = nMaxLbaCountX;
-	memcpyR( &tHead.VolumeLBA_Total_BE , &nMaxLbaCountX , 4 );
+	tHead.VolumeLBA_Total_le = H2L(nMaxLbaCountX);
+	tHead.VolumeLBA_Total_be = H2B(nMaxLbaCountX);
 
 	if( !WriteUserData( &tHead , 16 ) )
 		return FALSE;

@@ -446,7 +446,7 @@ BOOL CISO_App::ExportFile( CStringW a_strOutPathName , CStringA a_strIsoPathA , 
 		return FALSE;
 	}
 
-	if( !m_pIso->ReadFile( sDirEnt_Path , a_strIsoNameA , fp , sDirEnt_File.size_le , 0 ) )
+	if( !m_pIso->ReadFile( sDirEnt_Path , a_strIsoNameA , fp , L2H(sDirEnt_File.size_LE) , 0 ) )
 	{
 		fp.Close();
 		::DeleteFile( a_strOutPathName );
@@ -584,8 +584,8 @@ BOOL CISO_App::GetFileData( SIsoFileData& a_data , CStringA a_strPathA , CString
 	if( zzz_GetFileData( tmp , a_strPathA , a_strNameA ) )
 	{
 		a_data.isDir = ( (tmp.attr & 2) == 2 );
-		a_data.size = tmp.size_le;
-		a_data.lba = tmp.lba_le;
+		a_data.size = L2H(tmp.size_LE);
+		a_data.lba = L2H(tmp.lba_LE);
 		a_data.time = tmp.time;
 
 		WQSG_strcpy( a_strNameA.GetString() , a_data.name );
@@ -634,8 +634,8 @@ BOOL CISO_App::FindNextIsoFile( SIsoFileFind* a_handle , SIsoFileData& a_data )
 
 	a_handle->m_nOffset = nOffset;
 
-	a_data.size = sDirEnt.size_le;
-	a_data.lba = sDirEnt.lba_le;
+	a_data.size = L2H(sDirEnt.size_LE);
+	a_data.lba = L2H(sDirEnt.lba_LE);
 	a_data.isDir = (sDirEnt.attr & 2) == 2;
 	a_data.time = sDirEnt.time;
 
@@ -798,7 +798,7 @@ BOOL CISO_App::ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL
 			{
 				_m_CRC32 crc32_v;
 
-				s32 len = dirEnt_File.size_le;
+				s32 len = L2H(dirEnt_File.size_LE);
 				s32 offset32 = 0;
 
 				CWQSG_memFile mfp;

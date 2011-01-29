@@ -25,27 +25,6 @@
 	str.AppendFormat( __def_fmt , __VA_ARGS__  );\
 	SetErrMsg( str.GetString() ); }while(0)
 
-inline static bool xx_cmpeq( void const*const bufferLE , void const*const bufferBE , const size_t len )
-{
-	u8 const* buf1 = (u8 const*const)bufferLE;
-	u8 const* buf2 = (u8 const*const)bufferBE;
-
-	if( ( buf1 + len ) < buf1 )
-		return false;
-	if( ( buf2 + (len-1) ) < buf2 )
-		return false;
-
-	buf2 += (len-1);
-	for( size_t i = 0 , last_i = 0 ; (i >= last_i) && (i < len) ; last_i = i++ )
-	{
-		if( *buf1 !=  *buf2 )
-			return false;
-
-		++buf1,--buf2;
-	}
-	return true;
-}
-
 #pragma pack(1)
 
 struct SIsoTime
@@ -63,16 +42,16 @@ struct SISO_DirEnt
 {
 	u8	len;
 	s8	len_ex;
-	s32 lba_le;
-	s32 lba_be;
-	s32	size_le;
-	s32	size_be;
+	s32 lba_LE;
+	s32 lba_BE;
+	s32	size_LE;
+	s32	size_BE;
 	SIsoTime time;
 	u8	attr;
 	u8	sp1;
 	u8	sp2;
-	u16	sp3_le;
-	u16	sp3_be;
+	u16	sp3_LE;
+	u16	sp3_BE;
 	u8 nameLen;
 	bool cheak() const;
 };
@@ -93,21 +72,21 @@ struct SISO_Head2048
 	u8				SystemID[0x20];
 	u8				VolumeID[0x20];
 	u8				Unused_2[8];			//0
-	s32				VolumeLBA_Total_LE;
-	s32				VolumeLBA_Total_BE;
+	s32				VolumeLBA_Total_le;
+	s32				VolumeLBA_Total_be;
 	u8				Unused_3[0x20];	//0
-	s32				v6_LE;			//
-	s32				v6_BE;			//
-	s16				LB_Size_LE;
-	s16				LB_Size_BE;
-	s32				PathTableSize_LE;
-	s32				PathTableSize_BE;
+	s32				v6_le;			//
+	s32				v6_be;			//
+	s16				LB_Size_le;
+	s16				LB_Size_be;
+	s32				PathTableSize_le;
+	s32				PathTableSize_be;
 	struct
 	{
-		s32				pathTable1_LE;	//??
-		s32				pathTable2_LE;	//??
-		s32				pathTable3_BE;	//??
-		s32				pathTable4_BE;	//??
+		s32				pathTable1_le;	//??
+		s32				pathTable2_le;	//??
+		s32				pathTable3_be;	//??
+		s32				pathTable4_be;	//??
 	}pathTable;
 	union
 	{
