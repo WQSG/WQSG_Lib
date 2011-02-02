@@ -15,25 +15,24 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#pragma once
 
-/*<A HREF=\"http://www.help.com\">Website</A>,*/
-
-INT_PTR WQSG_About( HICON a_hIcon , HWND a_hWndParent ,
-				   const WCHAR* a_pTitle , const WCHAR* a_pAppName ,
-				   const WCHAR* a_pUrl , const WCHAR* a_pProgrammed );
-
-#if _MSC_VER
-#pragma pack(push,1)
-#endif//_MSC_VER
-struct SWQSG_AboutDlgID
+#include "wqsg_psxiso.h"
+//--------------------------------------------------------------------------------------------------
+BOOL CWQSG_PsxISO::OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite )
 {
-	int m_nIcon;
-	int m_nAppName;
-	int m_nLink;
-	int m_nText0;
-	int m_nEdit;
-}WQSG_LINUX_PACK;
-#if _MSC_VER
-#pragma pack(pop)
-#endif//_MSC_VER
+	if( CWQSG_ISO_Interface::Open( a_isoPathName , a_bCanWrite  ) )
+	{
+		if( m_tHead.FileStructureVersion == 1 )
+			return TRUE;
+
+		DEF_ISO_SET_ERRMSG( GetLangString(47) );
+	}
+
+	CloseISO();
+	return FALSE;
+}
+
+void CWQSG_PsxISO::CloseISO()
+{
+	CWQSG_ISO_Interface::Close();
+}

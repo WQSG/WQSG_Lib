@@ -521,9 +521,7 @@ public:
 		CLinkList* tmp = &m_head;
 		while( tmp )
 		{
-			CString str;
-			str.Format( L"\"%08d\"\11\11\"%d\"\11\11\"%d\"\r\n" , tmp->m_start , tmp->m_len , tmp->m_use );
-			log += str;
+			log.AppendFormat( L"\"%08d\"\11\11\"%d\"\11\11\"%d\"\r\n" , tmp->m_start , tmp->m_len , tmp->m_use );
 			tmp = tmp->next;
 		}
 	}

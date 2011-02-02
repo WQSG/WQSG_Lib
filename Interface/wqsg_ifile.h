@@ -16,8 +16,8 @@
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #pragma once
-#ifndef __WQSG_IFile_H__
-#define __WQSG_IFile_H__
+#ifndef __WQSG_IFILE_H__
+#define __WQSG_IFILE_H__
 #include "wqsg_def.h"
 
 //------------------------------------------
@@ -59,4 +59,4 @@ inline BOOL	CWQSG_IFile::WriteStrW	( WCHAR const*const str )
 	return ( Write( str , con_i ) == con_i );
 }
 
-#endif //__WQSG_IFile_H__
+#endif //__WQSG_IFILE_H__

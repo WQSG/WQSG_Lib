@@ -15,25 +15,33 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#pragma once
+#ifndef __WQSG_UMD_H__
+#define __WQSG_UMD_H__
 
-/*<A HREF=\"http://www.help.com\">Website</A>,*/
+#include "wqsg_iso_base.h"
 
-INT_PTR WQSG_About( HICON a_hIcon , HWND a_hWndParent ,
-				   const WCHAR* a_pTitle , const WCHAR* a_pAppName ,
-				   const WCHAR* a_pUrl , const WCHAR* a_pProgrammed );
-
-#if _MSC_VER
-#pragma pack(push,1)
-#endif//_MSC_VER
-struct SWQSG_AboutDlgID
+class CWQSG_UMD : public CWQSG_ISO_Interface
 {
-	int m_nIcon;
-	int m_nAppName;
-	int m_nLink;
-	int m_nText0;
-	int m_nEdit;
-}WQSG_LINUX_PACK;
-#if _MSC_VER
-#pragma pack(pop)
-#endif//_MSC_VER
+public:
+	//------------------------------------------
+private:
+protected:
+	//----------------------------------------------
+public:
+	//------------------------------------------
+	CWQSG_UMD(void);
+	virtual ~CWQSG_UMD(void);
+	//------------------------------------------
+	virtual	BOOL OpenISO( const WCHAR*const a_isoPathName , const BOOL a_bCanWrite );
+	virtual	void CloseISO();
+
+	BOOL GetUmdID( u8 a_IdBuffer[32] );
+
+	virtual BOOL IsOpen()
+	{
+		return CWQSG_ISO_Interface::IsOpen();
+	}
+	//------------------------------------------
+};
+
+#endif //__WQSG_UMD_H__

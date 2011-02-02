@@ -25,6 +25,7 @@
 #if WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #endif
 
 #define		__i__ 
@@ -46,6 +47,13 @@ typedef unsigned __int64	u64;
 
 
 typedef unsigned int	uint;
+#endif
+
+
+#if _MSC_VER
+#define WQSG_LINUX_PACK
+#else
+#define WQSG_LINUX_PACK __attribute__ ((packed))
 #endif
 
 #if defined(_M_IX86)

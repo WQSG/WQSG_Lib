@@ -443,12 +443,32 @@
 						</File>
 					</Filter>
 				</Filter>
+				<Filter
+					Name="iso"
+					>
+					<File
+						RelativePath="..\iso\ISO_App.h"
+						>
+					</File>
+					<File
+						RelativePath="..\iso\ISO_App_Lang.h"
+						>
+					</File>
+					<File
+						RelativePath="..\iso\ISO_cpp.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 			<Filter
 				Name="Common"
 				>
 				<File
 					RelativePath="..\..\Common\cwd_bin.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\Common\cwqsg_str.h"
 					>
 				</File>
 				<File
@@ -467,6 +487,26 @@
 					RelativePath="..\..\Common\wqsg_xfile_inline.h"
 					>
 				</File>
+				<Filter
+					Name="iso"
+					>
+					<File
+						RelativePath="..\..\Common\iso\wqsg_iso_base.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\Common\iso\wqsg_iso_raw.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\Common\iso\wqsg_psxiso.h"
+						>
+					</File>
+					<File
+						RelativePath="..\..\Common\iso\wqsg_umd.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter
