@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WQSG_lib", "WQSG_lib.vcproj", "{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_Exe|Win32 = Debug_Exe|Win32
+		MDD|Win32 = MDD|Win32
+		MDR|Win32 = MDR|Win32
+		MTD|Win32 = MTD|Win32
+		MTR|Win32 = MTR|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.Debug_Exe|Win32.ActiveCfg = Debug_Exe|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.Debug_Exe|Win32.Build.0 = Debug_Exe|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MDD|Win32.ActiveCfg = MDD|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MDD|Win32.Build.0 = MDD|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MDR|Win32.ActiveCfg = MDR|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MDR|Win32.Build.0 = MDR|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MTD|Win32.ActiveCfg = MTD|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MTD|Win32.Build.0 = MTD|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MTR|Win32.ActiveCfg = MTR|Win32
+		{F7611A46-2D1D-4A4B-91CD-4D4845E9C996}.MTR|Win32.Build.0 = MTR|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

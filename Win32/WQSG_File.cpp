@@ -15,6 +15,4 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#if WIN32
-#include "Win32/WQSG_Lib_Include.h"
-#endif //WIN32
+#include "WQSG_File.h"

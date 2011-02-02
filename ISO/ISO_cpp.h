@@ -1,5 +1,0 @@
-#include "WQSG_ISO_Raw.cpp"
-#include "WQSG_ISO_BASE.cpp"
-#include "WQSG_PsxISO.cpp"
-#include "WQSG_UMD.cpp"
-#include "ISO_App.cpp"
