@@ -490,6 +490,7 @@ public:
 		int nLength = TCWQSG_StrHelper::FormatVLen( pszFormat , args );
 		TYPE_1* pszBuffer = GetWordBuf( nLength );
 		TCWQSG_StrHelper::FormatV( pszBuffer , pszFormat , args );
+		m_iStrLen = nLength;
 	}
 	inline	__i__	void Format( const TYPE_1* pszFormat , ... )
 	{
@@ -504,6 +505,7 @@ public:
 		int nAppendLength = TCWQSG_StrHelper::FormatVLen( pszFormat , args );
 		TYPE_1* pszBuffer = GetWordBuf( nCurrentLength+nAppendLength );
 		TCWQSG_StrHelper::FormatV( pszBuffer + nCurrentLength , pszFormat , args );
+		m_iStrLen = nCurrentLength+nAppendLength;
 	}
 	inline	__i__	void AppendFormat( const TYPE_1* pszFormat , ... )
 	{
