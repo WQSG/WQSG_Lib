@@ -559,7 +559,11 @@ inline BOOL WQSG_Bin2c_template( CWQSG_xFile& a_Out ,
 			a_Out.Write( "\r\n" , 2 );
 		}
 
+#pragma warning( push )
+#pragma warning( disable : 4996 )
 		sprintf( szBuf , a_szFmt , *pType );
+#pragma warning( pop )
+
 		pType++;
 
 		const size_t len = strlen(szBuf);

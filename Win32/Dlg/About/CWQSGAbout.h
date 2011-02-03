@@ -16,16 +16,15 @@
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #pragma once
-
+#include "../../../Interface/wqsg_def.h"
 /*<A HREF=\"http://www.help.com\">Website</A>,*/
 
 INT_PTR WQSG_About( HICON a_hIcon , HWND a_hWndParent ,
 				   const WCHAR* a_pTitle , const WCHAR* a_pAppName ,
 				   const WCHAR* a_pUrl , const WCHAR* a_pProgrammed );
 
-#if _MSC_VER
-#pragma pack(push,1)
-#endif//_MSC_VER
+WQSG_WIN_PACK_BEGIN()
+
 struct SWQSG_AboutDlgID
 {
 	int m_nIcon;
@@ -34,6 +33,5 @@ struct SWQSG_AboutDlgID
 	int m_nText0;
 	int m_nEdit;
 }WQSG_LINUX_PACK;
-#if _MSC_VER
-#pragma pack(pop)
-#endif//_MSC_VER
+
+WQSG_WIN_PACK_END()

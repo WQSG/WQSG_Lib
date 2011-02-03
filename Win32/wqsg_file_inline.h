@@ -653,14 +653,11 @@ _gt_start:
 			newname = tmpNew;
 			if( WQSG_strlen ( newFileName ) > ( MAX_PATH - 10 ) )
 				return FALSE;
-#if ___SW_ÆÁ±Î¾¯¸æ___
-#pragma warning(disable: 4996)
-#endif
+#pragma warning( push )
+#pragma warning( disable : 4996 )
 			_wsplitpath( newFileName , path , B , C , extName );
 			_wmakepath( path , tmpNew , B , C , L"" );
-#if ___SW_ÆÁ±Î¾¯¸æ___
-#pragma warning(default: 4996)
-#endif
+#pragma warning(pop )
 		}
 		if( 3 == wsprintfW( tmpNew , L"%s (%u)%s" , path , ++i , extName ) )
 			goto _gt_start;

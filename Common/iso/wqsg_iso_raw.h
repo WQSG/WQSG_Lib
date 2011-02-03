@@ -25,9 +25,7 @@
 	str.AppendFormat( __def_fmt , __VA_ARGS__  );\
 	SetErrMsg( str.GetString() ); }while(0)
 
-#if _MSC_VER
-#pragma pack(push,1)
-#endif//_MSC_VER
+WQSG_WIN_PACK_BEGIN()
 
 #ifndef WQSG_LINUX_PACK
 #error don't define WQSG_LINUX_PACK
@@ -151,9 +149,7 @@ union UISO_Head2352
 	SISO_Head2048 m_Head2048;
 }WQSG_LINUX_PACK;
 
-#if _MSC_VER
-#pragma pack(pop)
-#endif//_MSC_VER
+WQSG_WIN_PACK_END()
 
 enum EIsoType
 {

@@ -32,7 +32,10 @@ public:
 	}
 	static inline int FormatV( char* pszBuffer , const char* pszFormat , va_list args )
 	{
+#pragma warning( push )
+#pragma warning( disable : 4996 )
 		return vsprintf( pszBuffer , pszFormat , args );
+#pragma warning( pop )
 	}
 };
 
@@ -45,7 +48,10 @@ public:
 	}
 	static inline int FormatV( WCHAR* pszBuffer , const WCHAR* pszFormat , va_list args )
 	{
+#pragma warning( push )
+#pragma warning( disable : 4996 )
 		return vswprintf( pszBuffer , pszFormat , args );
+#pragma warning( pop )
 	}
 };
 #if UNICODE

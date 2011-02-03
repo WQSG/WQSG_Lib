@@ -78,7 +78,10 @@ bool CWQSG_CFILE::IsOpen		( void )const
 bool CWQSG_CFILE::fopen		( const char *filename , const char *mode )
 {
 	fclose();
+#pragma warning( push )
+#pragma warning( disable : 4996 )
 	m_fp = ::fopen( filename , mode );
+#pragma warning( pop )
 	return IsOpen();
 }
 ///------------------------------------------------------------------------------------

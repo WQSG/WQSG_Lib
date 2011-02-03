@@ -42,8 +42,12 @@ typedef unsigned int	uint;
 
 
 #if _MSC_VER
+#define WQSG_WIN_PACK_BEGIN() __pragma(pack(push,1))
+#define WQSG_WIN_PACK_END() __pragma(pack(pop))
 #define WQSG_LINUX_PACK
 #else
+#define WQSG_WIN_PACK_BEGIN()
+#define WQSG_WIN_PACK_END()
 #define WQSG_LINUX_PACK __attribute__ ((packed))
 #endif
 

@@ -45,9 +45,8 @@ enum E_WQSG_IsoPatch_Mask
 
 	E_WIPM_MAX,
 };
-#if _MSC_VER
-#pragma pack(push,1)
-#endif//_MSC_VER
+WQSG_WIN_PACK_BEGIN()
+
 struct SWQSG_IsoPatch_Head
 {
 	u8 m_Magic[16];//DEF_WQSG_IsoPatch_Head_Magic "WQSG-IsoFilePack"
@@ -70,10 +69,7 @@ struct SWQSG_IsoPatch_Block
 	SIsoTime m_time;
 };
 
-#if _MSC_VER
-#pragma pack(pop)
-#endif//_MSC_VER
-
+WQSG_WIN_PACK_END()
 
 class CISO_App
 {

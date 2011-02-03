@@ -161,17 +161,28 @@ class CWQSG_Ips_Maker
 {
 	WCHAR m_szMsgBuffer[1024];
 
+	void SetErrMsg( const WCHAR* a_Fmt , ... )
+	{
+#pragma warning( push )
+#pragma warning( disable : 4996 )
+		va_list _Arglist;
+		_crt_va_start(_Arglist, a_Fmt);
+		_vswprintf( m_szMsgBuffer , a_Fmt, _Arglist );
+		_crt_va_end(_Arglist);
+#pragma warning( pop )
+	}
+
 	BOOL StartMaker30( WQSG_File_mem& a_OldFile , WQSG_File_mem& a_NewFile , ::CWQSG_File& a_IPS_File ,
 		const s64 a_pos_begin , const s64 a_pos_end )
 	{
 		if( a_pos_begin < 0 )
 		{
-			swprintf( m_szMsgBuffer , L"开始地址 不能超过 0x7FFFFFFFFFFFFFFF" );
+			SetErrMsg( L"开始地址 不能超过 0x7FFFFFFFFFFFFFFF" );
 			return FALSE;
 		}
 		if( a_pos_end < 0 )
 		{
-			swprintf( m_szMsgBuffer , L"结束地址 不能超过 0x7FFFFFFFFFFFFFFF" );
+			SetErrMsg( L"结束地址 不能超过 0x7FFFFFFFFFFFFFFF" );
 			return FALSE;
 		}
 
@@ -181,12 +192,12 @@ class CWQSG_Ips_Maker
 
 		if( a_pos_begin > a_pos_end )
 		{
-			swprintf( m_szMsgBuffer , L"结束地址 不能大于 开始地址" );
+			SetErrMsg( L"结束地址 不能大于 开始地址" );
 			return FALSE;
 		}
 		if( ((u64)a_pos_begin>(u64)界限pos原) || ((u64)a_pos_begin>(u64)界限pos新) )
 		{
-			swprintf( m_szMsgBuffer , L"不存在 公共开始地址" );
+			SetErrMsg( L"不存在 公共开始地址" );
 			return FALSE;
 		}
 
@@ -261,12 +272,12 @@ class CWQSG_Ips_Maker
 					{
 						if( 1 != a_IPS_File.Write( "\1" , 1 ) )
 						{
-							swprintf( m_szMsgBuffer , L"写出补丁失败(1),磁盘空间不足?" );
+							SetErrMsg( L"写出补丁失败(1),磁盘空间不足?" );
 							return FALSE;
 						}
 						if( 4 != a_IPS_File.Write( &H2L((u32)def_offset) , 4 ) )
 						{
-							swprintf( m_szMsgBuffer , L"写出补丁失败(-0),磁盘空间不足?" );
+							SetErrMsg( L"写出补丁失败(-0),磁盘空间不足?" );
 							return FALSE;
 						}
 					}
@@ -274,23 +285,23 @@ class CWQSG_Ips_Maker
 					{
 						if( 1 != a_IPS_File.Write( "\2" , 1 ) )
 						{
-							swprintf( m_szMsgBuffer , L"写出补丁失败(1),磁盘空间不足?" );
+							SetErrMsg( L"写出补丁失败(1),磁盘空间不足?" );
 							return FALSE;
 						}
 						if( 8 != a_IPS_File.Write( &H2L((u64)commBeginPos) , 8 ) )
 						{
-							swprintf( m_szMsgBuffer , L"写出补丁失败(-0),磁盘空间不足?" );
+							SetErrMsg( L"写出补丁失败(-0),磁盘空间不足?" );
 							return FALSE;
 						}
 					}
 					if( 2 != a_IPS_File.Write( &H2L((u16)binbuf.LEN) , 2 ) )
 					{
-						swprintf( m_szMsgBuffer , L"写出补丁失败(-1),磁盘空间不足?" );
+						SetErrMsg( L"写出补丁失败(-1),磁盘空间不足?" );
 						return FALSE;
 					}
 					if( binbuf.LEN != a_IPS_File.Write( binbuf.BIN , binbuf.LEN ) )
 					{
-						swprintf( m_szMsgBuffer , L"写出补丁失败(-2),磁盘空间不足?" );
+						SetErrMsg( L"写出补丁失败(-2),磁盘空间不足?" );
 						return FALSE;
 					}
 					commbase = commBeginPos;
@@ -323,13 +334,13 @@ class CWQSG_Ips_Maker
 					if( 1 != a_IPS_File.Write( "\1" , 1 ) )
 					{
 						a_NewFile.Free();
-						swprintf( m_szMsgBuffer , L"写出补丁失败(1),磁盘空间不足?" );
+						SetErrMsg( L"写出补丁失败(1),磁盘空间不足?" );
 						return FALSE;
 					}
 					if( 4 != a_IPS_File.Write( &H2L((u32)def_offset) , 4 ) )
 					{
 						a_NewFile.Free();
-						swprintf( m_szMsgBuffer , L"写出补丁失败(-0),磁盘空间不足?" );
+						SetErrMsg( L"写出补丁失败(-0),磁盘空间不足?" );
 						return FALSE;
 					}
 				}
@@ -338,26 +349,26 @@ class CWQSG_Ips_Maker
 					if( 1 != a_IPS_File.Write( "\2" , 1 ) )
 					{
 						a_NewFile.Free();
-						swprintf( m_szMsgBuffer , L"写出补丁失败(1),磁盘空间不足?" );
+						SetErrMsg( L"写出补丁失败(1),磁盘空间不足?" );
 						return FALSE;
 					}
 					if( 8 != a_IPS_File.Write( &H2L((u64)commBeginPos) , 8 ) )
 					{
 						a_NewFile.Free();
-						swprintf( m_szMsgBuffer , L"写出补丁失败(-0),磁盘空间不足?" );
+						SetErrMsg( L"写出补丁失败(-0),磁盘空间不足?" );
 						return FALSE;
 					}
 				}
 				if( 2 != a_IPS_File.Write( &H2L((u16)curlen) , 2 ) )
 				{
 					a_NewFile.Free();
-					swprintf( m_szMsgBuffer , L"写出补丁失败(-1),磁盘空间不足?" );
+					SetErrMsg( L"写出补丁失败(-1),磁盘空间不足?" );
 					return FALSE;
 				}
 				if( curlen != a_IPS_File.Write( ptr新 , curlen ) )
 				{
 					a_NewFile.Free();
-					swprintf( m_szMsgBuffer , L"写出补丁失败(-2),磁盘空间不足?" );
+					SetErrMsg( L"写出补丁失败(-2),磁盘空间不足?" );
 					return FALSE;
 				}
 				a_NewFile.Free();
@@ -389,23 +400,23 @@ public:
 	{
 		if( a_nBeginOffset < 0 )
 		{
-			swprintf( m_szMsgBuffer , L"开始地址 不能超过 0x7FFFFFFFFFFFFFFF" );
+			SetErrMsg( L"开始地址 不能超过 0x7FFFFFFFFFFFFFFF" );
 			return FALSE;
 		}
 		if( a_nEndOffset < 0 )
 		{
-			swprintf( m_szMsgBuffer , L"结束地址 不能超过 0x7FFFFFFFFFFFFFFF" );
+			SetErrMsg( L"结束地址 不能超过 0x7FFFFFFFFFFFFFFF" );
 			return FALSE;
 		}
 		if( a_nEndOffset < a_nBeginOffset )
 		{
-			swprintf( m_szMsgBuffer , L"结束地址 不能比 开始地址小" );
+			SetErrMsg( L"结束地址 不能比 开始地址小" );
 			return FALSE;
 		}
 
 		if( a_dwDescLen > 65535 )
 		{
-			swprintf( m_szMsgBuffer , L"说明文字 字数不能超过65535个" );
+			SetErrMsg( L"说明文字 字数不能超过65535个" );
 			return FALSE;
 		}
 		//打开原文件
@@ -413,13 +424,13 @@ public:
 
 		if( !oldFile.OpenFile( a_pOldFile , 3 ) )
 		{
-			swprintf( m_szMsgBuffer , L"原文件打开失败" );
+			SetErrMsg( L"原文件打开失败" );
 			return FALSE;
 		}
 		//打开新文件
 		if( !newFile.OpenFile( a_pNewFile , 3 ) )
 		{
-			swprintf( m_szMsgBuffer , L"新文件打开失败" );
+			SetErrMsg( L"新文件打开失败" );
 			return FALSE;
 		}
 		//判定开始地址 合法性
@@ -428,12 +439,12 @@ public:
 
 		if( a_nBeginOffset >= size1 )
 		{
-			swprintf( m_szMsgBuffer , L"开始地址 不能比 原文件大\r\n没意义" );
+			SetErrMsg( L"开始地址 不能比 原文件大\r\n没意义" );
 			return FALSE;
 		}
 		if( a_nBeginOffset >= size2 )
 		{
-			swprintf( m_szMsgBuffer , L"开始地址 不能比 新文件大\r\n没意义" );
+			SetErrMsg( L"开始地址 不能比 新文件大\r\n没意义" );
 			return FALSE;
 		}
 
@@ -443,7 +454,7 @@ public:
 		::CWQSG_File IPS_File;
 		if( ! IPS_File.OpenFile( a_pWipsFile ,(a_nBaseOffset==0)?4:2,3) )
 		{
-			swprintf( m_szMsgBuffer , L"创建补丁文件失败" );
+			SetErrMsg( L"创建补丁文件失败" );
 			return FALSE;
 		}
 		IPS_File.Seek(a_nBaseOffset);
@@ -453,7 +464,7 @@ public:
 		{
 			if( !oldFile.GetCrc32( CRC32 ) )
 			{
-				swprintf( m_szMsgBuffer , L"计算CRC32失败" );
+				SetErrMsg( L"计算CRC32失败" );
 				return FALSE;
 			}//
 		}
@@ -467,32 +478,32 @@ public:
 		//写文标识
 		if( 16 != IPS_File.Write("WQSG-PATCH3.0\0\0\0",16) )
 		{
-			swprintf( m_szMsgBuffer , L"WIPS信息失败(1)" );
+			SetErrMsg( L"WIPS信息失败(1)" );
 			return FALSE;
 		}
 		//写文件长度
 		if( 8 != IPS_File.Write( &H2L((u64)size2) , 8 ) )
 		{
-			swprintf( m_szMsgBuffer , L"WIPS信息失败(2)" );
+			SetErrMsg( L"WIPS信息失败(2)" );
 			return FALSE;
 		}
 		////写出CRC验证
 		if( 4 != IPS_File.Write( &H2L((u32)CRC32) ,4 ) )
 		{
-			swprintf( m_szMsgBuffer , L"WIPS信息失败(3)" );
+			SetErrMsg( L"WIPS信息失败(3)" );
 			return FALSE;
 		}
 		//写出数据偏移
 		size1 = 0x28;
 		if( 4 != IPS_File.Write( &H2L((u32)size1) ,4 ) )
 		{
-			swprintf( m_szMsgBuffer , L"WIPS信息失败(4)" );
+			SetErrMsg( L"WIPS信息失败(4)" );
 			return FALSE;
 		}
 		//写出说明文本偏移
 		if( 8 != IPS_File.Write( &H2H((u64)0) , 8 ) )
 		{
-			swprintf( m_szMsgBuffer , L"WIPS信息失败(5)" );
+			SetErrMsg( L"WIPS信息失败(5)" );
 			return FALSE;
 		}
 		///////////////////
@@ -506,7 +517,7 @@ public:
 				IPS_File.Seek( uExeOffset + a_nBaseOffset + 0x20 );
 				IPS_File.Write( &H2L((u64)pos) , 8 );
 			}
-			swprintf( m_szMsgBuffer , L"补丁制作完毕" );
+			SetErrMsg( L"补丁制作完毕" );
 			return TRUE;
 		}
 		return FALSE;
@@ -521,6 +532,17 @@ public:
 class CWQSG_Ips_In
 {
 	WCHAR m_szMsgBuffer[1024];
+	void SetErrMsg( const WCHAR* a_Fmt , ... )
+	{
+#pragma warning( push )
+#pragma warning( disable : 4996 )
+		va_list _Arglist;
+		_crt_va_start(_Arglist, a_Fmt);
+		_vswprintf( m_szMsgBuffer , a_Fmt, _Arglist );
+		_crt_va_end(_Arglist);
+#pragma warning( pop )
+	}
+
 	u8 m_buf[0xFFFF];
 
 	BOOL 打补丁30( CWQSG_File& a_IPS_File , CWQSG_File& a_ROM_File )
@@ -532,7 +554,7 @@ class CWQSG_Ips_In
 		{
 			if( !a_IPS_File.Read( m_buf , 1 ) )
 			{
-				swprintf( m_szMsgBuffer , L"打补丁失败\n补丁文件已损坏(5)" );
+				SetErrMsg( L"打补丁失败\n补丁文件已损坏(5)" );
 				return FALSE;
 			}
 			switch(*m_buf)
@@ -540,7 +562,7 @@ class CWQSG_Ips_In
 			case 0x01://相对偏移
 				if( !a_IPS_File.Read( m_buf , 4 ) )
 				{
-					swprintf( m_szMsgBuffer , L"打补丁失败\n补丁文件已损坏(6.1)" );
+					SetErrMsg( L"打补丁失败\n补丁文件已损坏(6.1)" );
 					return FALSE;
 				}
 				nPos += L2H(*(u32*)m_buf);
@@ -548,7 +570,7 @@ class CWQSG_Ips_In
 			case 0x02://绝对偏移
 				if( !a_IPS_File.Read( &nPos , 8 ) )
 				{
-					swprintf( m_szMsgBuffer , L"打补丁失败\n补丁文件已损坏(6.2)" );
+					SetErrMsg( L"打补丁失败\n补丁文件已损坏(6.2)" );
 					return FALSE;
 				}
 				nPos = L2H(nPos);
@@ -557,32 +579,32 @@ class CWQSG_Ips_In
 				return TRUE;
 				break;
 			default:
-				swprintf( m_szMsgBuffer , L"非法的WIPS补丁文件(2)" );
+				SetErrMsg( L"非法的WIPS补丁文件(2)" );
 				return FALSE;
 			}
 			dwLen = 0;
 
 			if( !a_IPS_File.Read( &dwLen , 2 ) )
 			{
-				swprintf( m_szMsgBuffer , L"打补丁失败\n补丁文件已损坏(7)" );
+				SetErrMsg( L"打补丁失败\n补丁文件已损坏(7)" );
 				return FALSE;
 			}
 			dwLen = L2H(dwLen);
 
 			if( !a_IPS_File.Read( m_buf , dwLen ) )
 			{
-				swprintf( m_szMsgBuffer , L"打补丁失败\n补丁文件已损坏(8)" );
+				SetErrMsg( L"打补丁失败\n补丁文件已损坏(8)" );
 				return FALSE;
 			}
 
 			if( !a_ROM_File.Seek( nPos ) )
 			{
-				swprintf( m_szMsgBuffer , L"打补丁失败\n设置ROM文件位置失败" );
+				SetErrMsg( L"打补丁失败\n设置ROM文件位置失败" );
 				return FALSE;
 			}
 			if( dwLen != a_ROM_File.Write( m_buf , dwLen ) )
 			{
-				swprintf( m_szMsgBuffer , L"打补丁失败\n写数据失败失败" );
+				SetErrMsg( L"打补丁失败\n写数据失败失败" );
 				return FALSE;
 			}
 		}
@@ -602,20 +624,20 @@ public:
 	{
 		if( a_nBaseOffset < 0 )
 		{
-			swprintf( m_szMsgBuffer , L"基础地址不能小于0" );
+			SetErrMsg( L"基础地址不能小于0" );
 			return FALSE;
 		}
 
 		::CWQSG_File IPS_File,ROM_File;
 		if( !IPS_File.OpenFile( a_pWipsFile , 1 , 3 ) )
 		{
-			swprintf( m_szMsgBuffer , L"补丁文件打开失败" );
+			SetErrMsg( L"补丁文件打开失败" );
 			return FALSE;
 		}
 
 		if( !ROM_File.OpenFile( a_pTFile , 3 , 3 ) )
 		{
-			swprintf( m_szMsgBuffer , L"目标文件打开失败" );
+			SetErrMsg( L"目标文件打开失败" );
 			return FALSE;
 		}
 
@@ -623,7 +645,7 @@ public:
 
 		if( !IPS_File.Read( m_buf,16) )
 		{
-			swprintf( m_szMsgBuffer , L"非法的WIPS补丁文件" );
+			SetErrMsg( L"非法的WIPS补丁文件" );
 			return FALSE;
 		}
 
@@ -631,18 +653,18 @@ public:
 		int X,Y;
 		if(2 != ::sscanf_s((CHAR*)m_buf,"WQSG-PATCH%d.%d",&X,&Y))
 		{
-			swprintf( m_szMsgBuffer , L"非法的WIPS补丁文件" );
+			SetErrMsg( L"非法的WIPS补丁文件" );
 			return FALSE;
 		}
 
 		switch(X)
 		{
 		case 1:
-			swprintf( m_szMsgBuffer , L"暂不支持老版本的WIPS补丁文件" );
+			SetErrMsg( L"暂不支持老版本的WIPS补丁文件" );
 			return FALSE;
 			break;
 		case 2:
-			swprintf( m_szMsgBuffer , L"暂不支持老版本的WIPS补丁文件" );
+			SetErrMsg( L"暂不支持老版本的WIPS补丁文件" );
 			return FALSE;
 			break;
 		case 3:
@@ -653,7 +675,7 @@ public:
 					s64 nFinalFileSize;
 					if( !IPS_File.Read( &nFinalFileSize , 8 ) )
 					{
-						swprintf( m_szMsgBuffer , L"补丁文件已损坏(1)" );
+						SetErrMsg( L"补丁文件已损坏(1)" );
 						return FALSE;
 					}
 					nFinalFileSize = L2H(nFinalFileSize);
@@ -663,7 +685,7 @@ public:
 						u32 CRC32;
 						if( !IPS_File.Read(&CRC32,4) )
 						{
-							swprintf( m_szMsgBuffer , L"补丁文件已损坏(2)" );
+							SetErrMsg( L"补丁文件已损坏(2)" );
 							return FALSE;
 						}
 						CRC32 = L2H(CRC32);
@@ -673,7 +695,7 @@ public:
 						s64 nDataOffset = 0;
 						if( !IPS_File.Read( &nDataOffset , 4 ) )
 						{
-							swprintf( m_szMsgBuffer , L"补丁文件已损坏(3)" );
+							SetErrMsg( L"补丁文件已损坏(3)" );
 							return FALSE;
 						}
 						nDataOffset = L2H((u32)nDataOffset);
@@ -681,18 +703,18 @@ public:
 							const s64 size = IPS_File.GetFileSize() - a_nBaseOffset;
 							if( nDataOffset < 40 || size <= nDataOffset )
 							{
-								swprintf( m_szMsgBuffer , L"补丁文件已损坏(4)" );
+								SetErrMsg( L"补丁文件已损坏(4)" );
 								return FALSE;
 							}
 						}
 						if( !ROM_File.SetFileLength(nFinalFileSize) )
 						{
-							swprintf( m_szMsgBuffer , L"改变文件大小失败,可能是磁盘容量不足" );
+							SetErrMsg( L"改变文件大小失败,可能是磁盘容量不足" );
 							return FALSE;
 						}
 						if( ! IPS_File.Seek( a_nBaseOffset + nDataOffset ) )
 						{
-							swprintf( m_szMsgBuffer , L"设置文件指针错误(1)" );
+							SetErrMsg( L"设置文件指针错误(1)" );
 							return FALSE;
 						}
 					}
@@ -700,13 +722,13 @@ public:
 				
 				if( 打补丁30( IPS_File , ROM_File ) )
 				{
-					swprintf( m_szMsgBuffer , L"补丁成功" );
+					SetErrMsg( L"补丁成功" );
 					return TRUE;
 				}
 				return FALSE;
 				break;
 			default:
-				swprintf( m_szMsgBuffer , L"未知版本的WIPS补丁文件" );
+				SetErrMsg( L"未知版本的WIPS补丁文件" );
 				return FALSE;
 			}
 			break;
@@ -714,7 +736,7 @@ public:
 			break;
 		}
 
-		swprintf( m_szMsgBuffer , L"未知版本的WIPS补丁文件" );
+		SetErrMsg( L"未知版本的WIPS补丁文件" );
 		return FALSE;
 	}
 };
