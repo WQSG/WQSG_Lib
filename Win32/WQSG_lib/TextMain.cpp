@@ -2,7 +2,7 @@
 
 #include "../WQSG_Lib.h"
 #include "../../Common/wqsg_ips.h"
-#include "../../Common/cwqsg_str.h"
+//#include "../../Common/cwqsg_str.h"
 int main()
 {
 	CWQSG_strA strA;

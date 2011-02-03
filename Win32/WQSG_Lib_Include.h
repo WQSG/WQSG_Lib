@@ -20,6 +20,8 @@
 
 #include "WQSG_Lib.h"
 
+
+
 #if defined(_DEBUG) && defined(_DLL) && defined(_X86_)
 #pragma comment(lib, "WQSG_lib_MDD_x86.lib")
 #endif

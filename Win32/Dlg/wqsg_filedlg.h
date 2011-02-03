@@ -15,11 +15,9 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-//#include <windows.h>
-
 #include <Commdlg.h>
 #ifdef OPENFILENAME_SIZE_VERSION_400
-#include "WQSG_xFile.h"
+
 class WQSG_FileDlgW
 {
 	BOOL m_ÊÇ·ñ´ò¿ª;

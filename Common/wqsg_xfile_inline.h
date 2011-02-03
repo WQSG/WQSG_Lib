@@ -23,33 +23,19 @@
 inline u32		CWQSG_memFile::Read			( void*const lpBuffre , const u32 len )
 {
 	if( (NULL != lpBuffre) && (len > 0) && (m_pointer < m_FileSize) && (m_pointer>=0) )
-
 	{
-
 		size_t iLen = m_FileSize - m_pointer;
 
-
-
 		if( (size_t)len < iLen )
-
 			iLen = len;
 
-
-
 		if( ( m_pointer + len ) > m_pointer )
-
 		{
-
 			memcpy( lpBuffre , (u8*)m_mem + m_pointer , iLen );
-
 			m_pointer += len;
-
 			return len;
-
 		}
-
 	}
-
 	return 0;
 }
 ///--------------------------------------------------------------------------------
@@ -59,31 +45,29 @@ inline u32		CWQSG_memFile::Write		( void const*const lpBuffre , const u32 len )
 		return 0;//错误或无需写出
 
 	void* tmp;
-	size_t v需要len;
+	size_t vNeedSize;
 
 	{
-		const size_t 目标长度 = m_pointer + len;
-		if( 目标长度 < m_pointer )
+		const size_t finalSize = m_pointer + len;
+		if( finalSize < m_pointer )
 			return 0;
 
-		v需要len = (目标长度 <= m_FileSize)?0:(目标长度 - m_FileSize);
+		vNeedSize = (finalSize <= m_FileSize)?0:(finalSize - m_FileSize);
 
-		if( v需要len > 0 )
-
+		if( vNeedSize > 0 )
 		{
+			const size_t overSize = (finalSize%m_inc);
+			const size_t finalBufferSize = (finalSize - overSize) + ((overSize>0)?m_inc:0);
 
-			const size_t xxsize = (目标长度%m_inc);
-			const size_t 目标mem长度 = (目标长度 - xxsize) + ((xxsize>0)?m_inc:0);
-
-			if( 目标mem长度 < 目标长度 )
+			if( finalBufferSize < finalSize )
 				return 0;//上溢
 
-			tmp = ::realloc( m_mem , 目标mem长度 );
+			tmp = ::realloc( m_mem , finalBufferSize );
 
 			if( tmp != NULL )
 			{
 				m_mem = tmp;
-				m_memSize = 目标mem长度;
+				m_memSize = finalBufferSize;
 			}
 		}
 		else
@@ -96,7 +80,7 @@ inline u32		CWQSG_memFile::Write		( void const*const lpBuffre , const u32 len )
 	memcpy( (u8*)tmp + m_pointer , lpBuffre , (size_t)len );
 	m_pointer += (size_t)len;
 
-	m_FileSize += v需要len;
+	m_FileSize += vNeedSize;
 
 	return len;
 }
@@ -155,41 +139,9 @@ inline BOOL	CWQSG_memFile::Seek			( const s64 offset )
 ///--------------------------------------------------------------------------------
 inline u32		CWQSG_memFile::GetCRC32		( void )
 {
-#if 1
-
 	CWQSG_bufFile tmp( m_mem , m_FileSize , FALSE );
 
 	return tmp.GetCRC32( );
-
-#else
-
-	if( m_mem == NULL ) return 0;
-
-	_m_CRC32	_CRC32;
-
-	u32 CRC;
-
-	size_t fSize = m_FileSize;
-	size_t offset = 0;
-
-	while( fSize )
-	{
-		if( fSize > (u32)-1 )
-		{
-			CRC = _CRC32.GetCRC32( (u8*)m_mem + offset , (u32)-1 );
-			offset += (u32)-1;
-			fSize -= (u32)-1;
-		}
-		else
-		{
-			CRC = _CRC32.GetCRC32( (u8*)m_mem + offset , (u32)fSize );
-			offset += fSize;
-			fSize = 0;
-		}
-	}
-
-	return CRC;
-#endif
 }
 ///--------------------------------------------------------------------------------
 inline BOOL	CWQSG_memFile::IsOpen		( void )const

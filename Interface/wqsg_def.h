@@ -18,15 +18,7 @@
 #ifndef __WQSG_DEF_H__
 #define __WQSG_DEF_H__
 
-#define ___SW_ÆÁ±Î¾¯¸æ___ 1
-
 #define WQSG_BIT(x) (1<<(x))
-
-#if WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#endif
 
 #define		__i__ 
 
@@ -47,7 +39,6 @@ typedef unsigned __int64	u64;
 
 
 typedef unsigned int	uint;
-#endif
 
 
 #if _MSC_VER

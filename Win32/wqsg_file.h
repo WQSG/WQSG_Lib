@@ -18,8 +18,6 @@
 #ifndef __WQSG_FILE_H__
 #define __WQSG_FILE_H__
 
-#include <Windows.h>
-
 #include "../Interface/wqsg_ifile.h"
 #include "../Common/wqsg_xfile.h"
 
@@ -117,4 +115,5 @@ inline BOOL WQSG_IsFile( const WCHAR*const pathName );
 inline BOOL WQSG_CreateDir( const WCHAR*const path );
 __i__
 #include "wqsg_file_inline.h"
+
 #endif //__WQSG_FILE_H__

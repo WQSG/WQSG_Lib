@@ -559,7 +559,7 @@ inline BOOL WQSG_Bin2c_template( CWQSG_xFile& a_Out ,
 			a_Out.Write( "\r\n" , 2 );
 		}
 
-		sprintf_s( szBuf , sizeof(szBuf) , a_szFmt , *pType );
+		sprintf( szBuf , a_szFmt , *pType );
 		pType++;
 
 		const size_t len = strlen(szBuf);

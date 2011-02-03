@@ -18,7 +18,15 @@
 #ifndef __WQSG_LIB_H__
 #define	__WQSG_LIB_H__
 
+#define WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
+#include <crtdbg.h>
+#include <tchar.h>
+#include <crtdbg.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #if defined(WIN32) && !defined(ASSERT)
 #define ASSERT( x ) do{if( !(x) ) _asm int 3}while(0)
@@ -28,12 +36,10 @@
 #include "../Common/wqsg_xfile.h"
 #include "../Common/wqsg_string.h"
 #include "../Common/cwd_bin.h"
+#include "../Common/cwqsg_str.h"
 
-#include <crtdbg.h>
 #include "WQSG_File.h"
-// #include "./CWQSG_str/CWQSG_str.h"
 #include "WQSG_File_M.h"
-//
 #include "./Dlg/WQSG_DirDlg.h"
 #include "./Dlg/About/CWQSGAbout.h"
 
@@ -312,4 +318,4 @@ public:
 //#include "ISO/WQSG_UMD.h"
 //#include "ISO/WQSG_PsxISO.h"
 
-#endif
+#endif //__WQSG_LIB_H__

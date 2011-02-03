@@ -18,15 +18,8 @@
 #pragma once
 #ifndef __WQSG_xFile_H__
 #define __WQSG_xFile_H__
-#include "../Interface/wqsg_ifile.h"
-#if WIN32
-#include<windows.h>
-#include<crtdbg.h>
-#include<TCHAR.h>
 
-#include "WQSG_CxFile.h"
-#include "WQSG_String.h"
-#endif //WIN32
+#include "../Interface/wqsg_ifile.h"
 /**************************************************************************
 **************************************************************************/
 enum EWQSG_CodePage
@@ -167,7 +160,7 @@ public:
 		, m_memSize(0)
 		, m_inc(2048)
 	{
-		_ASSERT( sizeof(s64) > sizeof(size_t) );
+		ASSERT( sizeof(s64) > sizeof(size_t) );
 	}
 	virtual	~CWQSG_memFile()
 	{
@@ -188,7 +181,7 @@ public:
 	//----------------------------------------------------------------------
 	__i__		void*	GetBuf	( void )const	{	return m_mem;	}
 	__i__		BOOL	SetInc	( int inc );
-	__i__		void*	ÇÐ¶Ï	( void )	{	void*const rt = m_mem;m_memSize = m_FileSize = m_pointer = 0;m_mem = NULL;	return rt;	}
+	__i__		void*	Detach	( void )	{	void*const rt = m_mem;m_memSize = m_FileSize = m_pointer = 0;m_mem = NULL;	return rt;	}
 };
 //------------------------------------------
 class CWQSG_bufFile : public CWQSG_IFile

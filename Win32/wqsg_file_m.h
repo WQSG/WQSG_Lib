@@ -15,15 +15,10 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#ifndef WQSG_File_M_H__
-#define WQSG_File_M_H__
+#ifndef __WQSG_File_M_H__
+#define __WQSG_File_M_H__
 #pragma once
-#include "../Interface/wqsg_def.h"
-#include<windows.h>
-
-
 #include "WQSG_File.h"
-#include "../Common/WQSG_String.h"
 
 /******************************************************************
 
@@ -33,7 +28,7 @@ class WQSG_File_M
 	DWORD W_设定的分页;  //内存分页
 	HANDLE W_hFile_M;//映射句柄
 protected:
-	::CWQSG_File m_File;
+	CWQSG_File m_File;
 	s64 m_nFileSize ,
 		W_文件偏移 ; //文件偏移
 	DWORD W_分页的小偏移 ,//分页的小偏移
@@ -371,4 +366,4 @@ public:
 	//
 };
 
-#endif
+#endif //__WQSG_File_M_H__

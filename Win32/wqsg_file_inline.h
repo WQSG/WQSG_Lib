@@ -68,6 +68,7 @@ inline EWQSG_CodePage WQSG_A_U_X( HANDLE a_hfile )
 
 	return E_CP_ANSI;
 }
+//------------------------------------------------------------------------------
 inline u32		CWQSG_File::Read		( void*const lpBuffre , const u32 len )
 {
 	if( NULL == m_hFile )
@@ -121,18 +122,6 @@ inline s64		CWQSG_File::Tell		( void )const
 
 	if( NULL != m_hFile )
 	{
-#if 0
-		union
-		{
-			struct{	u32 LowPart;u32 HighPart;};
-			s64 QuadPart;
-		}x6432;
-
-		x6432.QuadPart = 0;
-		x6432.LowPart = ::SetFilePointer( m_hFile , (LONG)0 ,(PLONG)&x6432.HighPart , FILE_CURRENT );
-		if( x6432.QuadPart >= 0 )
-			rtOffset = x6432.QuadPart;
-#else
 		_ASSERT( sizeof( LARGE_INTEGER ) == sizeof(rtOffset) );
 
 		LARGE_INTEGER offset_in;	offset_in.QuadPart = 0;
@@ -140,7 +129,6 @@ inline s64		CWQSG_File::Tell		( void )const
 
 		if( ::SetFilePointerEx( m_hFile , offset_in , &offset_out , FILE_CURRENT ) )
 			rtOffset = offset_out.QuadPart;
-#endif
 	}
 
 	return rtOffset;
@@ -151,128 +139,6 @@ inline BOOL	CWQSG_File::Seek		( const s64 offset )
 
 	if( ( NULL == m_hFile )||( offset < 0 ) )
 		return FALSE;
-#if 0
-	union
-	{
-		struct{	u32 LowPart;u32 HighPart;};
-		s64 QuadPart;
-	}offset_6432;
-
-	offset_6432.QuadPart = offset;
-
-	s32 xH , xL;
-
-	if( offset_6432.HighPart > (u32)0x7FFFFFFF )//高位 太大/////////////////////////////////////////////////
-	{
-		if( offset_6432.LowPart > (s32)0x7FFFFFFF )// 高位太大,低位也太大
-		{
-			xL = (s32)0x7FFFFFFF;
-			xH = (s32)0x7FFFFFFF;
-			offset_6432.HighPart -= (s32)0x7FFFFFFF;
-			offset_6432.LowPart -= (s32)0x7FFFFFFF;
-
-			if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_BEGIN ) )
-				return FALSE;
-
-			//------------------------------------------------------------------------------
-
-			if(offset_6432.HighPart > (u32)0x7FFFFFFF)//再次确认 高位太大///////////////////////////
-			{
-				if( offset_6432.LowPart > (u32)0x7FFFFFFF )//再次 高位太大,低位也太大
-				{
-					xL = (s32)0x7FFFFFFF;
-					xH = (s32)0x7FFFFFFF;
-					offset_6432.HighPart -= (s32)0x7FFFFFFF;
-					offset_6432.LowPart -= (s32)0x7FFFFFFF;
-
-					if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_CURRENT ) )
-						return FALSE;
-				}
-				else//再次 高位太大,低位OK
-				{
-					xL = offset_6432.LowPart;
-					xH = (s32)0x7FFFFFFF;
-					offset_6432.HighPart -= (s32)0x7FFFFFFF;
-					offset_6432.LowPart = (s32)0;
-
-					if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_CURRENT ) )
-						return FALSE;
-				}
-			}
-			else//再次 确认 高位OK////////////////////////////////////////////////
-			{
-				if( offset_6432.LowPart > (u32)0x7FFFFFFF )//再次 确认高位OK,低位太大
-				{
-					xL = offset_6432.HighPart;
-					xH = (s32)0x7FFFFFFF;
-					offset_6432.HighPart = (s32)0;
-					offset_6432.LowPart -= (s32)0x7FFFFFFF;
-
-					if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_CURRENT ) )
-						return FALSE;
-				}
-			}
-		}
-		else//高位 太大 ,低位OK////////////////////////////////////////////////////////
-		{
-			xH = (s32)0x7FFFFFFF;
-			xL = offset_6432.LowPart ;
-			offset_6432.LowPart = (s32)0;
-			offset_6432.HighPart -= (s32)0x7FFFFFFF;
-
-			if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_BEGIN ) )
-				return FALSE;
-
-			if(offset_6432.HighPart > (u32)0x7FFFFFFF)//再次验证 高位,低位OK///////
-			{
-				xH = (s32)0x7FFFFFFF;
-				xL = offset_6432.LowPart ;
-				offset_6432.LowPart = (s32)0;
-				offset_6432.HighPart -= (s32)0x7FFFFFFF;
-
-				if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_CURRENT ) )
-					return FALSE;
-			}
-		}
-	}
-	else//高位OK..........验证低位.................................................................
-	{
-		if( offset_6432.LowPart > (u32)0x7FFFFFFF )//低位 太大
-		{
-			xL = (s32)0x7FFFFFFF;
-			xH = offset_6432.HighPart ;
-			offset_6432.LowPart -= (s32)0x7FFFFFFF;
-			offset_6432.HighPart = (s32)0;
-
-			if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_BEGIN ) )
-				return FALSE;
-
-			if( offset_6432.LowPart > (u32)0x7FFFFFFF )//再次 验证低位
-			{
-
-				xL = (s32)0x7FFFFFFF;
-				xH = offset_6432.HighPart ;
-				offset_6432.LowPart -= (s32)0x7FFFFFFF;
-				offset_6432.HighPart = (s32)0;
-
-				if( INVALID_SET_FILE_POINTER == ::SetFilePointer( m_hFile , xL , &xH , FILE_CURRENT ) )
-					return FALSE;
-			}
-		}
-		else
-		{
-			xL = offset_6432.LowPart;
-			xH = offset_6432.HighPart ;
-
-			return( INVALID_SET_FILE_POINTER != ::SetFilePointer( m_hFile , xL , &xH , FILE_BEGIN ) );
-		}
-	}
-
-	xL = offset_6432.LowPart;
-	xH = offset_6432.HighPart ;
-
-	return( INVALID_SET_FILE_POINTER != ::SetFilePointer( m_hFile , xL ,&xH , FILE_CURRENT ) );
-#else
 
 	_ASSERT( sizeof( LARGE_INTEGER ) >= sizeof(offset) );
 
@@ -281,7 +147,6 @@ inline BOOL	CWQSG_File::Seek		( const s64 offset )
 	LARGE_INTEGER offset_out;
 
 	return ::SetFilePointerEx( m_hFile , offset_in , &offset_out , FILE_BEGIN );
-#endif
 }
 ///--------------------------------------------------------------------------------
 inline u32		CWQSG_File::GetCRC32	( void )
@@ -290,10 +155,10 @@ inline u32		CWQSG_File::GetCRC32	( void )
 	if(NULL == m_hFile)
 		return rtCRC;
 	////////////////
-	const s64 当前位置 = Tell( );
+	const s64 nOldPos = Tell( );
 	s64 size = GetFileSize( );
 
-	if( (当前位置 < 0) || (size < 0) )
+	if( (nOldPos < 0) || (size < 0) )
 		return rtCRC;
 	////////////////
 	Seek( 0 );
@@ -323,7 +188,7 @@ inline u32		CWQSG_File::GetCRC32	( void )
 
 	delete[]pbuf;
 
-	Seek( 当前位置 );
+	Seek( nOldPos );
 
 	return rtCRC;
 }
