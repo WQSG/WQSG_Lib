@@ -32,7 +32,7 @@ public:
 		: m_hFile(NULL)
 		, m_dwDesiredAccess(0)
 	{
-		_ASSERT( sizeof( LARGE_INTEGER ) == sizeof(s64) );
+		ASSERT( sizeof( LARGE_INTEGER ) == sizeof(s64) );
 	}
 
 	virtual	~CWQSG_File( void )
@@ -44,18 +44,18 @@ public:
 	__i__	virtual	u32			Write		( void const*const lpBuffre , const u32 len ) override;
 	__i__	virtual	void		Close		( void ) override;
 	__i__	virtual	s64			GetFileSize	( void )const override;
-	__i__	virtual	BOOL		SetFileLength( const s64 Length ) override;
+	__i__	virtual	bool		SetFileLength( const s64 Length ) override;
 	__i__	virtual	s64			Tell		( void )const override;
-	__i__	virtual	BOOL		Seek		( const s64 offset ) override;
+	__i__	virtual	bool		Seek		( const s64 offset ) override;
 	__i__	virtual	u32			GetCRC32	( void ) override;
-	__i__	virtual	BOOL		IsOpen		( void )const override;
-	__i__	virtual	BOOL		IsCanRead	( void )const override;
-	__i__	virtual	BOOL		IsCanWrite	( void )const override;
+	__i__	virtual	bool		IsOpen		( void )const override;
+	__i__	virtual	bool		IsCanRead	( void )const override;
+	__i__	virtual	bool		IsCanWrite	( void )const override;
 	//---------------------------------------------------
-	__i__		BOOL		OpenFile( WCHAR const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
-	__i__		BOOL		OpenFile( char const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
-	__i__		HANDLE		GetFileHANDLE( void )const;
-	__i__		BOOL		Flush( void );
+	inline	__i__	bool		OpenFile( WCHAR const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
+	inline	__i__	bool		OpenFile( char const*const lpFileName , const DWORD MODE , const DWORD ShareMode = FILE_SHARE_READ );
+	inline	__i__	HANDLE		GetFileHANDLE( void )const;
+	inline	__i__	bool		Flush( void );
 };
 ///--------------------------------------------------------------------------------
 class CMemTextW

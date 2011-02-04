@@ -153,7 +153,7 @@ class CWQSG_memFile : public CWQSG_IFile
 	size_t	m_memSize;
 	size_t	m_inc;
 public:
-	CWQSG_memFile()
+	inline CWQSG_memFile()
 		: m_mem(NULL)
 		, m_pointer(0)
 		, m_FileSize(0)
@@ -171,17 +171,17 @@ public:
 	__i__	virtual	u32			Write		( void const*const lpBuffre , const u32 len ) override;
 	__i__	virtual	void		Close		( void ) override;
 	__i__	virtual	s64			GetFileSize	( void )const override;
-	__i__	virtual	BOOL		SetFileLength( const s64 Length ) override;
+	__i__	virtual	bool		SetFileLength( const s64 Length ) override;
 	__i__	virtual	s64			Tell		( void )const override;
-	__i__	virtual	BOOL		Seek		( const s64 offset ) override;
+	__i__	virtual	bool		Seek		( const s64 offset ) override;
 	__i__	virtual	u32			GetCRC32	( void ) override;
-	__i__	virtual	BOOL		IsOpen		( void )const override;
-	__i__	virtual	BOOL		IsCanRead	( void )const override;
-	__i__	virtual	BOOL		IsCanWrite	( void )const override;
+	__i__	virtual	bool		IsOpen		( void )const override;
+	__i__	virtual	bool		IsCanRead	( void )const override;
+	__i__	virtual	bool		IsCanWrite	( void )const override;
 	//----------------------------------------------------------------------
-	__i__		void*	GetBuf	( void )const	{	return m_mem;	}
-	__i__		BOOL	SetInc	( int inc );
-	__i__		void*	Detach	( void )	{	void*const rt = m_mem;m_memSize = m_FileSize = m_pointer = 0;m_mem = NULL;	return rt;	}
+	inline	__i__	void*	GetBuf	( void )const	{	return m_mem;	}
+	inline	__i__	bool	SetInc	( int inc );
+	inline	__i__	void*	Detach	( void )	{	void*const rt = m_mem;m_memSize = m_FileSize = m_pointer = 0;m_mem = NULL;	return rt;	}
 };
 //------------------------------------------
 class CWQSG_bufFile : public CWQSG_IFile
@@ -189,26 +189,26 @@ class CWQSG_bufFile : public CWQSG_IFile
 	u8*		m_buffer;
 	size_t	m_pos;
 	size_t	m_size;
-	BOOL	m_bCanWrite;
+	bool	m_bCanWrite;
 protected:
 public:
-	CWQSG_bufFile();
-	CWQSG_bufFile( void*const buffer , const size_t size , const BOOL bCanWrite );
+	inline CWQSG_bufFile();
+	inline CWQSG_bufFile( void*const buffer , const size_t size , const bool bCanWrite );
 	virtual	~CWQSG_bufFile();
 	__i__	virtual u32			Read		( void*const lpBuffre , const u32 len ) override;
 	__i__	virtual u32			Write		( const void*const lpBuffre , const u32 len ) override;
 	__i__	virtual void		Close		( void ) override;
 //	__i__	virtual BOOL		WriteStrW	( WCHAR const*const str );		//
 	__i__	virtual s64			GetFileSize	( void )const override;
-	__i__	virtual BOOL		SetFileLength( const s64 Length ) override;
+	__i__	virtual bool		SetFileLength( const s64 Length ) override;
 	__i__	virtual s64			Tell		( void )const override;
-	__i__	virtual BOOL		Seek		( const s64 offset ) override;
+	__i__	virtual bool		Seek		( const s64 offset ) override;
 	__i__	virtual u32			GetCRC32	( void ) override;
-	__i__	virtual BOOL		IsOpen		( void )const override;
-	__i__	virtual	BOOL		IsCanRead	( void )const override;
-	__i__	virtual	BOOL		IsCanWrite	( void )const override;
+	__i__	virtual bool		IsOpen		( void )const override;
+	__i__	virtual	bool		IsCanRead	( void )const override;
+	__i__	virtual	bool		IsCanWrite	( void )const override;
 	//---------------------------------------------------
-	__i__	BOOL		OpenFile( void*const buffer , const size_t size , const BOOL bCanWrite );
+	inline	__i__	bool		OpenFile( void*const buffer , const size_t size , const bool bCanWrite );
 };
 //------------------------------------------
 WCHAR* WQSG_GetTXT_Line( WCHAR** a_pWTXT_ALL );

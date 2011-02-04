@@ -163,13 +163,12 @@ class CWQSG_Ips_Maker
 
 	void SetErrMsg( const WCHAR* a_Fmt , ... )
 	{
-#pragma warning( push )
-#pragma warning( disable : 4996 )
+WQSG_WIN_DISABLE_WARNING_BEGIN(4996)
 		va_list _Arglist;
 		_crt_va_start(_Arglist, a_Fmt);
 		_vswprintf( m_szMsgBuffer , a_Fmt, _Arglist );
 		_crt_va_end(_Arglist);
-#pragma warning( pop )
+WQSG_WIN_DISABLE_WARNING_END()
 	}
 
 	BOOL StartMaker30( WQSG_File_mem& a_OldFile , WQSG_File_mem& a_NewFile , ::CWQSG_File& a_IPS_File ,
@@ -534,13 +533,12 @@ class CWQSG_Ips_In
 	WCHAR m_szMsgBuffer[1024];
 	void SetErrMsg( const WCHAR* a_Fmt , ... )
 	{
-#pragma warning( push )
-#pragma warning( disable : 4996 )
+WQSG_WIN_DISABLE_WARNING_BEGIN(4996)
 		va_list _Arglist;
 		_crt_va_start(_Arglist, a_Fmt);
 		_vswprintf( m_szMsgBuffer , a_Fmt, _Arglist );
 		_crt_va_end(_Arglist);
-#pragma warning( pop )
+WQSG_WIN_DISABLE_WARNING_END()
 	}
 
 	u8 m_buf[0xFFFF];

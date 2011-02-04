@@ -559,10 +559,9 @@ inline BOOL WQSG_Bin2c_template( CWQSG_xFile& a_Out ,
 			a_Out.Write( "\r\n" , 2 );
 		}
 
-#pragma warning( push )
-#pragma warning( disable : 4996 )
+WQSG_WIN_DISABLE_WARNING_BEGIN(4996)
 		sprintf( szBuf , a_szFmt , *pType );
-#pragma warning( pop )
+WQSG_WIN_DISABLE_WARNING_END()
 
 		pType++;
 

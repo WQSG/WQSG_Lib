@@ -28,14 +28,18 @@ class CWQSG_StrHelperA
 public:
 	static inline int FormatVLen( const char* pszFormat , va_list args )
 	{
+#if WIN32
 		return _vscprintf( pszFormat , args );
+#else
+		return vfprintf( stderr , pszFormat , args );
+#endif
 	}
-	static inline int FormatV( char* pszBuffer , const char* pszFormat , va_list args )
+	static inline int FormatV( char* pszBuffer , size_t a_BufLen , const char* pszFormat , va_list args )
 	{
-#pragma warning( push )
-#pragma warning( disable : 4996 )
+		(void)a_BufLen;
+WQSG_WIN_DISABLE_WARNING_BEGIN(4996)
 		return vsprintf( pszBuffer , pszFormat , args );
-#pragma warning( pop )
+WQSG_WIN_DISABLE_WARNING_END()
 	}
 };
 
@@ -44,14 +48,17 @@ class CWQSG_StrHelperW
 public:
 	static inline int FormatVLen( const WCHAR* pszFormat , va_list args )
 	{
+#if WIN32
 		return _vscwprintf( pszFormat , args );
+#else
+		return vfwprintf( stderr , pszFormat , args );
+#endif
 	}
-	static inline int FormatV( WCHAR* pszBuffer , const WCHAR* pszFormat , va_list args )
+	static inline int FormatV( WCHAR* pszBuffer , size_t a_BufLen , const WCHAR* pszFormat , va_list args )
 	{
-#pragma warning( push )
-#pragma warning( disable : 4996 )
-		return vswprintf( pszBuffer , pszFormat , args );
-#pragma warning( pop )
+WQSG_WIN_DISABLE_WARNING_BEGIN(4996)
+		return vswprintf( pszBuffer , a_BufLen , pszFormat , args );
+WQSG_WIN_DISABLE_WARNING_END()
 	}
 };
 #if UNICODE
@@ -98,7 +105,7 @@ class CWQSG_strT
 				return NULL;
 			}
 		}
-		m_pszStrBuffer[ maxlen ] = L'\0';
+		m_pszStrBuffer[ maxlen ] = 0;
 //		m_iStrLen = wordLen;
 		m_BufferLen = maxlen;
 
@@ -145,12 +152,12 @@ class CWQSG_strT
 			{
 				++dp;
 			}
-			*dp = L'\0';
+			*dp = 0;
 		}
 	}
 	inline		void			AddStr( TYPE_1 tCh )
 	{
-		if( tCh == _T('\0') )
+		if( tCh == 0 )
 			return;
 
 		int t_len2 = 1 + m_iStrLen;
@@ -165,7 +172,7 @@ class CWQSG_strT
 				}
 			}
 			m_pszStrBuffer[m_iStrLen] = tCh;
-			m_pszStrBuffer[m_iStrLen+1] = _T('\0');
+			m_pszStrBuffer[m_iStrLen+1] = 0;
 			m_iStrLen = t_len2;
 		}
 	}
@@ -298,7 +305,7 @@ public:
 	///-------------------------------------------------------------------
 	inline	__i__	CWQSG_strT& operator = ( TYPE_1 tCh )
 	{
-		TYPE_1	szStr[2] = { tCh , _T('\0') };
+		TYPE_1	szStr[2] = { tCh , 0 };
 		SetStr( szStr );
 		return *this;
 	}
@@ -495,7 +502,7 @@ public:
 	{
 		int nLength = TCWQSG_StrHelper::FormatVLen( pszFormat , args );
 		TYPE_1* pszBuffer = GetWordBuf( nLength );
-		TCWQSG_StrHelper::FormatV( pszBuffer , pszFormat , args );
+		TCWQSG_StrHelper::FormatV( pszBuffer , nLength , pszFormat , args );
 		m_iStrLen = nLength;
 	}
 	inline	__i__	void Format( const TYPE_1* pszFormat , ... )
@@ -510,7 +517,7 @@ public:
 		int nCurrentLength = strlen();
 		int nAppendLength = TCWQSG_StrHelper::FormatVLen( pszFormat , args );
 		TYPE_1* pszBuffer = GetWordBuf( nCurrentLength+nAppendLength );
-		TCWQSG_StrHelper::FormatV( pszBuffer + nCurrentLength , pszFormat , args );
+		TCWQSG_StrHelper::FormatV( pszBuffer + nCurrentLength , nCurrentLength+nAppendLength , pszFormat , args );
 		m_iStrLen = nCurrentLength+nAppendLength;
 	}
 	inline	__i__	void AppendFormat( const TYPE_1* pszFormat , ... )
@@ -528,7 +535,7 @@ public:
 };
 __i__
 typedef CWQSG_strT< char    , 128 , CWQSG_StrHelperA >		CWQSG_strA;
-typedef CWQSG_strT< wchar_t , 128 , CWQSG_StrHelperW >		CWQSG_strW;
+typedef CWQSG_strT< WCHAR , 128 , CWQSG_StrHelperW >		CWQSG_strW;
 typedef CWQSG_strT< TCHAR   , 128 , CWQSG_StrHelperT >		CWQSG_str;
 __i__
 #endif //__CWQSG_STR_H__

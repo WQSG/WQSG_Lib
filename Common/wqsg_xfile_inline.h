@@ -97,7 +97,7 @@ inline s64		CWQSG_memFile::GetFileSize	( void )const
 	return (s64)m_FileSize;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_memFile::SetFileLength	( const s64 Length )
+inline bool	CWQSG_memFile::SetFileLength	( const s64 Length )
 {
 	if( Length > 0 )
 	{
@@ -127,7 +127,7 @@ inline s64		CWQSG_memFile::Tell			( void )const
 }
 
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_memFile::Seek			( const s64 offset )
+inline bool	CWQSG_memFile::Seek			( const s64 offset )
 {
 	if( (u64)offset > (size_t)-1 )
 		return FALSE;
@@ -144,22 +144,22 @@ inline u32		CWQSG_memFile::GetCRC32		( void )
 	return tmp.GetCRC32( );
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_memFile::IsOpen		( void )const
+inline bool	CWQSG_memFile::IsOpen		( void )const
 {
 	return TRUE;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_memFile::IsCanRead	( void )const
+inline bool	CWQSG_memFile::IsCanRead	( void )const
 {
 	return IsOpen();
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_memFile::IsCanWrite	( void )const
+inline bool	CWQSG_memFile::IsCanWrite	( void )const
 {
 	return IsOpen();
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_memFile::SetInc		( int inc )
+inline bool	CWQSG_memFile::SetInc		( int inc )
 {
 	if( inc >= 0 )
 	{
@@ -178,7 +178,7 @@ inline CWQSG_bufFile::CWQSG_bufFile()
 {
 }
 ///--------------------------------------------------------------------------------
-inline CWQSG_bufFile::CWQSG_bufFile( void*const buffer , const size_t size , const BOOL bCanWrite )
+inline CWQSG_bufFile::CWQSG_bufFile( void*const buffer , const size_t size , const bool bCanWrite )
 : m_buffer( (u8*)buffer )
 , m_pos(0)
 , m_size(size)
@@ -230,14 +230,14 @@ inline s64		CWQSG_bufFile::GetFileSize	( void )const
 	return ( IsOpen()?m_size:-1 );
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_bufFile::SetFileLength( const s64 Length )
+inline bool	CWQSG_bufFile::SetFileLength( const s64 Length )
 {
-	BOOL rt = FALSE;
+	bool rt = false;
 
 	if( IsOpen() && (Length >= 0) && (Length <= (s64)m_size) )
 	{
 		m_size = (size_t)Length;
-		rt = TRUE;
+		rt = true;
 	}
 
 	return rt;
@@ -248,14 +248,14 @@ inline s64		CWQSG_bufFile::Tell		( void )const
 	return( (IsOpen())?(m_pos):(-1) );
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_bufFile::Seek		( const s64 offset )
+inline bool	CWQSG_bufFile::Seek		( const s64 offset )
 {
-	BOOL rt = FALSE;
+	bool rt = false;
 
 	if( IsOpen() && (offset >= 0) && (offset <= ((size_t)-1)) )
 	{
 		m_pos = ((size_t)offset);
-		rt = TRUE;
+		rt = true;
 	}
 	return rt;
 }
@@ -293,22 +293,22 @@ inline u32		CWQSG_bufFile::GetCRC32	( void )
 	return CRC;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_bufFile::IsOpen		( void )const
+inline bool	CWQSG_bufFile::IsOpen		( void )const
 {
 	return( m_buffer != NULL );
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_bufFile::IsCanRead	( void )const
+inline bool	CWQSG_bufFile::IsCanRead	( void )const
 {
 	return IsOpen();
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_bufFile::IsCanWrite	( void )const
+inline bool	CWQSG_bufFile::IsCanWrite	( void )const
 {
 	return m_bCanWrite;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_bufFile::OpenFile( void*const buffer , const size_t size , const BOOL bCanWrite )
+inline bool	CWQSG_bufFile::OpenFile( void*const buffer , const size_t size , const bool bCanWrite )
 {
 	Close();
 	if( m_buffer = (u8*)buffer )

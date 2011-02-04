@@ -19,12 +19,6 @@
 #define __WQSG_STRING_H__
 
 #include "../Interface/wqsg_def.h"
-#ifdef	WIN32
-#else
-#include <pspkernel.h>
-#include <string.h>
-typedef	u16	WCHAR;
-#endif
 __i__
 inline int	WQSG_strlen( char const*const TXT )
 {

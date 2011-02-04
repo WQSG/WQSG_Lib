@@ -30,29 +30,29 @@ public:
 	__i__	virtual	u32			Read		( void*const lpBuffre , const u32 len ) = 0;
 	__i__	virtual	u32			Write		( const void*const lpBuffre , const u32 len ) = 0;
 	__i__	virtual	void		Close		( void )						= 0;
-	__i__	virtual	BOOL		WriteStrW	( const WCHAR*const str );		//
+	__i__	virtual	bool		WriteStrW	( const WCHAR*const str );		//
 	__i__	virtual	s64			GetFileSize	( void )const					= 0;
-	__i__	virtual	BOOL		SetFileLength( const s64 Length )			= 0;
+	__i__	virtual	bool		SetFileLength( const s64 Length )			= 0;
 	__i__	virtual	s64			Tell		( void )const					= 0;
-	__i__	virtual	BOOL		Seek		( const s64 offset )			= 0;
+	__i__	virtual	bool		Seek		( const s64 offset )			= 0;
 	__i__	virtual	u32			GetCRC32	( void )						= 0;
-	__i__	virtual	BOOL		IsOpen		( void )const					= 0;
-	__i__	virtual	BOOL		IsCanRead	( void )const					= 0;
-	__i__	virtual	BOOL		IsCanWrite	( void )const					= 0;
+	__i__	virtual	bool		IsOpen		( void )const					= 0;
+	__i__	virtual	bool		IsCanRead	( void )const					= 0;
+	__i__	virtual	bool		IsCanWrite	( void )const					= 0;
 };
 //------------------------------------------
 typedef CWQSG_IFile CWQSG_xFile;
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 #include "../Common/wqsg_string.h"
-inline BOOL	CWQSG_IFile::WriteStrW	( WCHAR const*const str )
+inline bool	CWQSG_IFile::WriteStrW	( WCHAR const*const str )
 {
 	if( NULL == str )
-		return FALSE;
+		return false;
 
 	u32 con_i = ::WQSG_strlen(str);
 
 	if( con_i & 0x80000000 )
-		return FALSE;
+		return false;
 
 	con_i <<= 1;
 

@@ -111,7 +111,7 @@ inline s64		CWQSG_File::GetFileSize	( void )const
 	return size;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_File::SetFileLength	( const s64 Length )
+inline bool	CWQSG_File::SetFileLength	( const s64 Length )
 {
 	return ( Seek( Length ) && ::SetEndOfFile( m_hFile ) );
 }
@@ -134,19 +134,18 @@ inline s64		CWQSG_File::Tell		( void )const
 	return rtOffset;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_File::Seek		( const s64 offset )
+inline bool	CWQSG_File::Seek		( const s64 offset )
 {
-
 	if( ( NULL == m_hFile )||( offset < 0 ) )
-		return FALSE;
+		return false;
 
-	_ASSERT( sizeof( LARGE_INTEGER ) >= sizeof(offset) );
+	ASSERT( sizeof( LARGE_INTEGER ) >= sizeof(offset) );
 
 	LARGE_INTEGER offset_in;
 	offset_in.QuadPart = offset;
 	LARGE_INTEGER offset_out;
 
-	return ::SetFilePointerEx( m_hFile , offset_in , &offset_out , FILE_BEGIN );
+	return ::SetFilePointerEx( m_hFile , offset_in , &offset_out , FILE_BEGIN ) != FALSE;
 }
 ///--------------------------------------------------------------------------------
 inline u32		CWQSG_File::GetCRC32	( void )
@@ -193,22 +192,22 @@ inline u32		CWQSG_File::GetCRC32	( void )
 	return rtCRC;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_File::IsOpen		( void )const
+inline bool	CWQSG_File::IsOpen		( void )const
 {
 	return (NULL != m_hFile);
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_File::IsCanRead	( void )const
+inline bool	CWQSG_File::IsCanRead	( void )const
 {
-	return m_dwDesiredAccess & GENERIC_READ;
+	return (m_dwDesiredAccess & GENERIC_READ) != 0;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_File::IsCanWrite	( void )const
+inline bool	CWQSG_File::IsCanWrite	( void )const
 {
-	return m_dwDesiredAccess & GENERIC_WRITE;
+	return (m_dwDesiredAccess & GENERIC_WRITE) != 0;
 }
 //============================================================================================
-inline BOOL	CWQSG_File::OpenFile	( WCHAR const*const _lpFileName , const DWORD MODE , const DWORD ShareMode )
+inline bool	CWQSG_File::OpenFile	( WCHAR const*const _lpFileName , const DWORD MODE , const DWORD ShareMode )
 {
 	Close();
 
@@ -290,19 +289,19 @@ __gtReOpen:
 			if( OPEN_EXISTING == dwCreationDisposition )
 			{
 				if( !WQSG_GetShortPathName( lpFileName , shortPathName ) )
-					return FALSE;
+					return false;
 			}
 			else
 			{
 				if( !WQSG_GetShortPath( lpFileName , shortPathName ) )
-					return FALSE;
+					return false;
 
 				WCHAR* tmp = (WCHAR*)lpFileName;
 				while( *tmp )++tmp;
 				while( ( tmp > lpFileName ) && ( *tmp != L'\\' ) )--tmp;
 
 				if( *tmp != L'\\' )
-					return FALSE;
+					return false;
 
 				WQSG_strcpy( ++tmp , shortPathName + WQSG_strlen ( shortPathName ) );
 			}
@@ -312,19 +311,19 @@ __gtReOpen:
 			goto __gtReOpen;
 		}
 
-		return FALSE;
+		return false;
 	}
 
 	::SetFilePointer( m_hFile , 0 , NULL , ( MODE == 9 )?FILE_END:FILE_BEGIN );
 
-	return TRUE;
+	return true;
 }
 ///--------------------------------------------------------------------------------
-inline BOOL	CWQSG_File::OpenFile	( char const*const lpFileName , const DWORD MODE , const DWORD ShareMode )
+inline bool	CWQSG_File::OpenFile	( char const*const lpFileName , const DWORD MODE , const DWORD ShareMode )
 {
 	WCHAR*const tmp = WQSG_char_W( lpFileName );
 
-	const BOOL rev = OpenFile( tmp , MODE , ShareMode ) ;
+	const bool rev = OpenFile( tmp , MODE , ShareMode ) ;
 
 	delete[]tmp;
 
@@ -336,9 +335,9 @@ inline HANDLE	CWQSG_File::GetFileHANDLE( void )const
 	return m_hFile;
 }
 
-inline BOOL	CWQSG_File::Flush( void )
+inline bool	CWQSG_File::Flush( void )
 {
-	return FlushFileBuffers( m_hFile );
+	return FlushFileBuffers( m_hFile ) != FALSE;
 }
 //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 inline void CMemTextW::Clear()
@@ -653,8 +652,7 @@ _gt_start:
 			newname = tmpNew;
 			if( WQSG_strlen ( newFileName ) > ( MAX_PATH - 10 ) )
 				return FALSE;
-#pragma warning( push )
-#pragma warning( disable : 4996 )
+WQSG_WIN_DISABLE_WARNING_BEGIN(4996)
 			_wsplitpath( newFileName , path , B , C , extName );
 			_wmakepath( path , tmpNew , B , C , L"" );
 #pragma warning(pop )
