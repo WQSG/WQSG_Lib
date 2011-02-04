@@ -55,4 +55,34 @@ typedef s16	n16;
 typedef s32	n32;
 typedef s64	n64;
 
+
+#if _MSC_VER
+#define WQSG_WIN_DISABLE_WARNING_BEGIN(x) __pragma(warning(push)) __pragma(warning(disable : x))
+#define WQSG_WIN_DISABLE_WARNING_END() __pragma(warning(pop))
+
+#define WQSG_WIN_PACK_BEGIN() __pragma(pack(push,1))
+#define WQSG_WIN_PACK_END() __pragma(pack(pop))
+#define WQSG_LINUX_PACK
+#else
+#define override 
+#define WQSG_WIN_DISABLE_WARNING_BEGIN(x)
+#define WQSG_WIN_DISABLE_WARNING_END()
+
+#define WQSG_WIN_PACK_BEGIN()
+#define WQSG_WIN_PACK_END()
+#define WQSG_LINUX_PACK __attribute__ ((packed))
 #endif
+
+#if defined(_M_IX86)
+#define WQSG_BIG_ENDIAN 0
+#elif defined(_M_AMD64)
+#error _M_AMD64
+#define WQSG_BIG_ENDIAN 0
+#elif defined(CELL_DATA_DIR)
+#define WQSG_BIG_ENDIAN 1
+#else
+#error WQSG_BIG_ENDIAN 1
+#define WQSG_BIG_ENDIAN 1
+#endif
+
+#endif //__WQSG_DEF_H__
