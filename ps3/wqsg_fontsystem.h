@@ -4,6 +4,7 @@
 #include "wqsg_def.h"
 #include "wqsg_font.h"
 #include <new>
+#include <sys/paths.h>
 
 class CFontSystem : public CSingletonT<CFontSystem>
 {

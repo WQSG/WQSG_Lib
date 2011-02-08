@@ -2,21 +2,12 @@
 #define __WQSG_DISPLAY_H__
 #include "wqsg_def.h"
 
+#define RGBA( r , g , b , a ) ((u32(u8(r))<<24) | (u32(u8(g))<<16) | (u32(u8(b))<<8) | (u32(u8(a))<<0))
+
 #define PSGL 1
 #include <PSGL/psgl.h>
-#include <vectormath/cpp/vectormath_aos.h>
-using namespace Vectormath::Aos;
-// default values for display
-#ifdef CELL_DISPLAY_MODE
-#define FWDISPLAYINFO_DEFAULT_MODE			CELL_DISPLAY_MODE
-#else
-#define FWDISPLAYINFO_DEFAULT_MODE			DisplayMode_720p
-#endif
-
-
-#define FWDISPLAYINFO_DEFAULT_PERSISTENT_MEMORY_SIZE	(160 << 20)
-#define FWDISPLAYINFO_DEFAULT_PSGL_RAW_SPUS		1
-#define FWDISPLAYINFO_DEFAULT_HOST_MEMORY_SIZE		0
+//#include <vectormath/cpp/vectormath_aos.h>
+//using namespace Vectormath::Aos;
 
 class CDisplayInfo
 {
@@ -233,9 +224,9 @@ inline void CDisplay::createDeviceAndSurfaces()
 	GLenum multisamplingMode = (m_DispInfo.m_AntiAlias == true) ?GL_MULTISAMPLING_4X_SQUARE_CENTERED_SCE : GL_MULTISAMPLING_NONE_SCE;
 
 	// create PSGL device and context
-	m_pDevice = psglCreateDeviceAuto(colorFormat, depthFormat, multisamplingMode);
+	m_pDevice = psglCreateDeviceAuto( colorFormat , depthFormat , multisamplingMode );
 	m_DispInfo.m_GlContext = psglCreateContext();
-	psglMakeCurrent( m_DispInfo.m_GlContext, m_pDevice );
+	psglMakeCurrent( m_DispInfo.m_GlContext , m_pDevice );
 
 	// reset the context and setup buffers
 	psglResetCurrentContext();
@@ -253,6 +244,8 @@ inline void CDisplay::createDeviceAndSurfaces()
 	glClientActiveTexture(GL_TEXTURE0);
 
 	psglGetDeviceDimensions( m_pDevice , (GLuint*)&m_DispInfo.m_Width , (GLuint*)&m_DispInfo.m_Height);
+
+	glViewport( 0 , 0 , m_DispInfo.m_Width , m_DispInfo.m_Height );
 }
 
 
@@ -305,7 +298,7 @@ public:
 #endif
 	}
 
-	void dbgFontPrintf(float x,float y, float scale,char* fmt,...)
+	void dbgFontPrintf(float x,float y, float scale,const char* fmt,...)
 	{
 #if DEF_DDBFONT
 		//build the output string
