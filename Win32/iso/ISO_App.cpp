@@ -70,9 +70,9 @@ public:
 		return m_nFileSzie;
 	}
 
-	virtual	BOOL		SetFileLength( const s64 Length )
+	virtual	bool		SetFileLength( const s64 Length )
 	{
-		return FALSE;
+		return false;
 	}
 
 	virtual	s64			Tell		( void )const
@@ -80,10 +80,10 @@ public:
 		return m_nFileOffset;
 	}
 
-	virtual	BOOL		Seek		( const s64 offset )
+	virtual	bool		Seek		( const s64 offset )
 	{
 		m_nFileOffset = offset;
-		return TRUE;
+		return false;
 	}
 
 	virtual	u32			GetCRC32	( void )
@@ -91,18 +91,18 @@ public:
 		return 0;
 	}
 
-	virtual	BOOL		IsOpen		( void )const
+	virtual	bool		IsOpen		( void )const
 	{
 		return (m_pFile && m_pFile->IsOpen());
 	}
 
-	virtual	BOOL		IsCanRead	( void )const
+	virtual	bool		IsCanRead	( void )const
 	{
-		return TRUE;
+		return true;
 	}
-	virtual	BOOL		IsCanWrite	( void )const
+	virtual	bool		IsCanWrite	( void )const
 	{
-		return FALSE;
+		return false;
 	}
 	//=================================================
 	BOOL Init( CWQSG_xFile* a_pFile , s64 a_nStartOffset , s64 a_nFileSize )
@@ -499,7 +499,7 @@ BOOL CISO_App::ExportDir( CStringW a_strOutPath , CStringA a_strIsoPathA )
 		}
 		else
 		{
-			if( !ExportFile( a_strOutPath , a_strIsoPathA , data.name ) )
+			if( !ExportFile( strPathName, a_strIsoPathA , data.name ) )
 			{
 				bRt = FALSE;
 				goto __gtSaveDirExit;

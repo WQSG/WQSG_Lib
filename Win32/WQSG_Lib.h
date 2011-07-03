@@ -20,7 +20,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <windows.h>
+#include <afxwin.h>
 #include <crtdbg.h>
 #include <tchar.h>
 #include <crtdbg.h>

@@ -19,6 +19,8 @@
 #ifndef __WQSG_ISO_LONG_H__
 #define __WQSG_ISO_LONG_H__
 
+#include <afxwin.h>
+
 const WCHAR*const g_WQSG_ISO_String[] = {
 	L"???",//0
 	L"未知的 2352 Mode",

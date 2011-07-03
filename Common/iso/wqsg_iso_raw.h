@@ -19,6 +19,8 @@
 #define __WQSG_ISO_RAW__
 #include "../../Interface/wqsg_def.h"
 #include "../cwqsg_str.h"
+#include "../wqsg_xfile.h"
+#include "../../Win32/wqsg_file.h"
 
 #define DEF_ISO_SET_ERRMSG( __def_fmt , ... ) do{\
 	CWQSG_str str;str.Format( L"file: %hs\r\nline: %d\r\n" , __FILE__ , __LINE__ );\

@@ -20,13 +20,19 @@
 #define __WQSG_CxFILE_H__
 #include <stdio.h>
 #include <string.h>
+#include <afxwin.h>
 #include "../Interface/wqsg_def.h"
 #define	__i__
 //------------------------------------------------------------------------------------------------------------------------
 class CWQSG_CxFILE
 {
 protected:
-	CWQSG_CxFILE(){}
+	CRITICAL_SECTION m_csLock;
+
+	CWQSG_CxFILE(){
+		memset(&m_csLock, 0, sizeof(CRITICAL_SECTION));
+		InitializeCriticalSection(&m_csLock);
+	}
 	virtual	~CWQSG_CxFILE(){}
 public:
 	__i__	virtual	int			fgetc		( void )	=	0;

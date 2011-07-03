@@ -16,6 +16,7 @@
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 #include "wqsg_iso_lang.h"
+#include "..\..\Interface\wqsg.h"
 
 static inline void GetLastErrorText( CString& a_str , DWORD a_dwErrId )
 {

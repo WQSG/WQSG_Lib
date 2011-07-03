@@ -131,8 +131,11 @@ protected:
 /////////////////////////////////////////////////////////////////////////////
 // Basic types
 // abstract iteration position
+/*
+//already in afx.h
 struct __POSITION {};
 typedef __POSITION* POSITION;
+*/
 
 class CWQSGFileDialog
 {

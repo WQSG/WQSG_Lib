@@ -122,6 +122,11 @@ public:
 public:
 	BOOL ImportFile( BOOL& a_bIsoBreak , CStringA a_strPathA , CStringA a_strNameA , CStringW a_strInPathName );
 	BOOL ImportDir( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringW a_strInPathName );
+	BOOL CreateDir( BOOL& a_bIsoBreak , CStringA a_strIsoName , CStringA a_strIsoPath )
+	{
+		return zzz_CreateDir(a_bIsoBreak, a_strIsoName, a_strIsoPath);
+	}
+
  	BOOL EasyImport(  BOOL& a_bIsoBreak , CStringW a_strInPathName , CStringA a_strIsoPathA );
  	BOOL WriteFile( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringA a_strIsoNameA , s32 a_nOffset , CStringW a_strInPathName );
 
