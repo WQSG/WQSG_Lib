@@ -708,7 +708,7 @@ __gtReTest:
 		//	dirEnt.attr;	dirEnt.sp1;	dirEnt.sp2;
 
 		dirEnt_File.sp3_LE = H2L(1);
-		dirEnt_File.sp3_BE = H2B(1);
+		dirEnt_File.sp3_BE = H2B(dirEnt_File.sp3_LE);
 
 		dirEnt_File.nameLen = (u8)strlen(a_fileName);
 		//----------------------------------------------------------
