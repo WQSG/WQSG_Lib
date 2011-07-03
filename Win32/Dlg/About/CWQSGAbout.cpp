@@ -17,7 +17,8 @@
 */
 #pragma once
 
-#include <afxwin.h>
+#include <windows.h>
+//#include <afxwin.h> //基础库不能有MFC相关的
 #include <shellapi.h>
 #include <commctrl.h>
 #include <objbase.h>

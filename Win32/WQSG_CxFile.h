@@ -20,8 +20,9 @@
 #define __WQSG_CxFILE_H__
 #include <stdio.h>
 #include <string.h>
-#include <afxwin.h>
+//#include <afxwin.h> //基础库不能有MFC相关的
 #include "../Interface/wqsg_def.h"
+#include <windows.h>
 #define	__i__
 //------------------------------------------------------------------------------------------------------------------------
 class CWQSG_CxFILE

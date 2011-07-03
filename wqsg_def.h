@@ -85,8 +85,4 @@ typedef s64	n64;
 #define WQSG_BIG_ENDIAN 1
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <afxwin.h>
-
 #endif //__WQSG_DEF_H__

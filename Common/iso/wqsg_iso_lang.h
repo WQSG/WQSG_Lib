@@ -19,7 +19,7 @@
 #ifndef __WQSG_ISO_LONG_H__
 #define __WQSG_ISO_LONG_H__
 
-#include <afxwin.h>
+//#include <afxwin.h> //基础库不能有MFC相关的
 
 const WCHAR*const g_WQSG_ISO_String[] = {
 	L"???",//0

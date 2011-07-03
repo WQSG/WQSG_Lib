@@ -213,6 +213,9 @@ public:
 	{
 		return m_ISOfp.Flush();
 	}
+
+	bool CanCheckLba()const;
+	bool CheckLba( s32 a_nLBA );
 };
 
 inline void CWQSG_ISO_Raw::SetErrMsg( WCHAR const*const a_msg )

@@ -20,7 +20,8 @@
 
 #define WIN32_LEAN_AND_MEAN
 
-#include <afxwin.h>
+#include <windows.h>
+//#include <afxwin.h> //基础库不能有MFC相关的
 #include <crtdbg.h>
 #include <tchar.h>
 #include <crtdbg.h>
