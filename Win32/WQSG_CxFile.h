@@ -28,12 +28,7 @@
 class CWQSG_CxFILE
 {
 protected:
-	CRITICAL_SECTION m_csLock;
-
-	CWQSG_CxFILE(){
-		memset(&m_csLock, 0, sizeof(CRITICAL_SECTION));
-		InitializeCriticalSection(&m_csLock);
-	}
+	CWQSG_CxFILE(){}
 	virtual	~CWQSG_CxFILE(){}
 public:
 	__i__	virtual	int			fgetc		( void )	=	0;

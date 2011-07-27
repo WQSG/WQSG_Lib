@@ -19,38 +19,30 @@
 //--------------------------------------------------------------------------------------------
 int CWQSG_CFILE::fgetc		( void )
 {
-	EnterCriticalSection(&m_csLock);
 	int rt = EOF;
 	if( IsOpen() )
 		rt = ::fgetc( m_fp );
-	LeaveCriticalSection(&m_csLock);
 	return rt;
 }
 int CWQSG_CFILE::fputc		( const int _Ch )
 {
-	EnterCriticalSection(&m_csLock);
 	int rt = EOF;
 	if( IsOpen() )
 		rt = ::fputc( _Ch , m_fp );
-	LeaveCriticalSection(&m_csLock);
 	return rt;
 }
 size_t CWQSG_CFILE::fread		( void *buffer , size_t size , size_t count )
 {
-	EnterCriticalSection(&m_csLock);
 	size_t rt = 0;
 	if( IsOpen() )
 		rt = ::fread( buffer , size , count , m_fp );
-	LeaveCriticalSection(&m_csLock);
 	return rt;
 }
 size_t CWQSG_CFILE::fwrite		( const void *buffer , size_t size , size_t count )
 {
-	EnterCriticalSection(&m_csLock);
 	size_t rt = 0;
 	if( IsOpen() )
 		rt = ::fwrite( buffer , size , count , m_fp );
-	LeaveCriticalSection(&m_csLock);
 	return rt;
 }
 int CWQSG_CFILE::fclose		( void )
