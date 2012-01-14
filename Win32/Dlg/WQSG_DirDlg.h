@@ -22,6 +22,13 @@
 #include <shtypes.h>
 #include <shlobj.h>
 
+#if !defined(_AFX) && !defined(__ATLCOLL_H__)
+struct __POSITION
+{
+};
+typedef __POSITION* POSITION;
+#endif
+
 class CWQSG_DirDlg
 {
 	HWND m_hWnd;
@@ -129,13 +136,6 @@ protected:
 #include <commdlg.h>
 #define DEF_USE_WQSGFileDialog
 /////////////////////////////////////////////////////////////////////////////
-// Basic types
-// abstract iteration position
-/*
-//already in afx.h
-struct __POSITION {};
-typedef __POSITION* POSITION;
-*/
 
 class CWQSGFileDialog
 {
