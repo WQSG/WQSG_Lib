@@ -351,15 +351,17 @@ inline BOOL CISO_App::ImportDir( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CS
 
 BOOL CISO_App::EasyImport( BOOL& a_bIsoBreak , CStringW a_strInPathName , CStringA a_strIsoPathA )
 {
+	a_strInPathName.Replace( L'/' , L'\\' );
+
 	a_bIsoBreak = FALSE;
 	CStringA strNameA;
 	{
 		const int pos = a_strInPathName.ReverseFind( '\\' );
-		if( pos <= 0 )
-		{
-			SetErr( GetLangString(28) , a_strInPathName.GetString() );
-			return FALSE;
-		}
+// 		if( pos < 0 )
+// 		{
+// 			SetErr( GetLangString(28) , a_strInPathName.GetString() );
+// 			return FALSE;
+// 		}
 
 		CString strNameW( a_strInPathName.Mid( pos + 1 ) );
 		strNameA = strNameW;
