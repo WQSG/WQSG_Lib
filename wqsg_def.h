@@ -18,7 +18,7 @@
 #ifndef __WQSG_DEF_H__
 #define __WQSG_DEF_H__
 
-#if WIN32
+#if defined(WIN32)
 typedef signed	char		s8;
 typedef signed	short		s16;
 typedef signed	long		s32;

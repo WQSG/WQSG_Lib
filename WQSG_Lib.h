@@ -15,10 +15,10 @@
 *  along with this program; if not, write to the Free Software
 *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
-#if WIN32
+#if defined(WIN32)
 #include "Win32/WQSG_Lib_Include.h"
-#endif //WIN32
+#endif //defined(WIN32)
 
-#if !WIN32
+#if !defined(WIN32)
 #include "ps3/WQSG_Lib_Include.h"
-#endif //!WIN32
+#endif //!defined(WIN32)

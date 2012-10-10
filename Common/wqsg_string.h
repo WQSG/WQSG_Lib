@@ -565,7 +565,7 @@ inline BOOL	WQSG_IsDecText	( WCHAR const*const _TXT )
 	return TRUE;
 }
 //-------------------------------------------------------------------------------
-#if WIN32
+#if defined(WIN32)
 inline int	WQSG_CheckFileName( WCHAR const*const pFileName )
 {
 	bool blank = true;

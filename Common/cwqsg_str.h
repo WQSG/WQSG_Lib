@@ -28,7 +28,7 @@ class CWQSG_StrHelperA
 public:
 	static inline int FormatVLen( const char* pszFormat , va_list args )
 	{
-#if WIN32
+#if defined(WIN32)
 		return _vscprintf( pszFormat , args );
 #else
 		return vfprintf( stderr , pszFormat , args );
@@ -48,7 +48,7 @@ class CWQSG_StrHelperW
 public:
 	static inline int FormatVLen( const WCHAR* pszFormat , va_list args )
 	{
-#if WIN32
+#if defined(WIN32)
 		return _vscwprintf( pszFormat , args );
 #else
 		return vfwprintf( stderr , pszFormat , args );
