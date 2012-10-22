@@ -519,6 +519,91 @@ __gtSaveDirExit:
 	return bRt;
 }
 
+BOOL CISO_App::ExportList( CStringW w_strListFileName  , CStringA a_strIsoPathA )
+{
+	if( NULL == m_pIso )
+		return FALSE;
+
+	SIsoFileFind* pFind = FindIsoFile( a_strIsoPathA );
+	if( !pFind )
+	{
+		SetErr( GetLangString(24) , a_strIsoPathA.GetString() );
+		return FALSE;
+	}
+
+	if( a_strIsoPathA.Right(1) != L'/' )
+		a_strIsoPathA += L'/';
+
+	BOOL bRt = TRUE;
+	CStringW strPathName;
+	SIsoFileData data;
+
+	HANDLE h_List=NULL;
+
+	while( FindNextIsoFile( pFind , data ) )
+	{
+		if( data.isDir )
+		{
+			if ( h_List != NULL )
+			{
+				CloseHandle ( h_List ) ;
+				h_List = NULL;
+			}
+			if( !ExportList( w_strListFileName , a_strIsoPathA + data.name ) )
+			{
+				bRt = FALSE;
+				goto __gtSaveDirExit;
+			}
+		}
+		else
+		{
+			if ( h_List==NULL )
+			{
+				h_List=::CreateFileW(w_strListFileName,GENERIC_WRITE|GENERIC_READ,0,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL ,NULL);
+				if ( h_List == INVALID_HANDLE_VALUE )
+				{
+					bRt=FALSE;
+					goto __gtSaveDirExit;
+				}
+			}
+
+			CStringA DataInfo;
+			DataInfo.Format("%08X,%08X,%s\r\n",data.lba,data.size,a_strIsoPathA + data.name);
+			DWORD dwBytesWritten;
+			if(SetFilePointer(h_List,0,NULL,FILE_END)==0)
+			{
+				CStringA ColumnInfo="LBA offset, file size, path\r\n";
+				bRt=::WriteFile(h_List,ColumnInfo.GetString(),ColumnInfo.GetLength(),&dwBytesWritten,NULL);
+				if (!bRt)
+				{
+					bRt=FALSE;
+					goto __gtSaveDirExit;
+				}
+			}
+			bRt=::WriteFile(h_List,DataInfo.GetString(),DataInfo.GetLength(),&dwBytesWritten,NULL);
+			if (!bRt)
+			{
+				bRt=FALSE;
+				goto __gtSaveDirExit;
+			}
+		}
+	}
+
+__gtSaveDirExit:
+	if( pFind )
+	{
+		CloseFindIsoFile( pFind );
+		pFind = NULL;
+	}
+
+	if ( (h_List != NULL) && (h_List != INVALID_HANDLE_VALUE) )
+	{
+		CloseHandle ( h_List ) ;
+		h_List = NULL;
+	}
+	return bRt;
+}
+
 BOOL CISO_App::WriteFile( BOOL& a_bIsoBreak , CStringA a_strIsoPathA , CStringA a_strIsoNameA , s32 a_nOffset , CStringW a_strInPathName )
 {
 	a_bIsoBreak = FALSE;

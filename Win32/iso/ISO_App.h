@@ -132,6 +132,7 @@ public:
 
 	BOOL ExportFile( CStringW a_strOutPathName , CStringA a_strIsoPathA , CStringA a_strIsoNameA );
 	BOOL ExportDir( CStringW a_strOutPath , CStringA a_strIsoPathA );
+	BOOL ExportList( CStringW a_strListFileName ,  CStringA a_strIsoPathA );
 
 	BOOL ImportFilePackage( BOOL& a_bIsoBreak , CWQSG_xFile& a_InFp , BOOL a_bCheckCrc32 );
 	BOOL MakeFilePackage( CISO_App& a_Iso , CWQSG_xFile& a_OutFp , BOOL a_bCheckCrc32 );
