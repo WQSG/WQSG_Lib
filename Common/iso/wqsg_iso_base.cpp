@@ -56,6 +56,7 @@ BOOL CWQSG_ISO_Base::InitLbaList( u32 a_uLbaCount )
 
 CWQSG_ISO_Base::CWQSG_ISO_Base()
 : m_pLBA_List(NULL)
+, a_pImportTime(NULL)
 {
 
 }
@@ -762,6 +763,10 @@ __gtReTest:
 	if( a_pTime )
 	{
 		dirEnt_File.time = *a_pTime;
+	}
+	else if ( a_pImportTime )
+	{
+		dirEnt_File.time=*a_pImportTime;
 	}
 	else
 	{

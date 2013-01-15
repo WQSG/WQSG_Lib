@@ -170,6 +170,16 @@ public:
 	{
 		return ( m_pIso )?m_pIso->Flush():FALSE;
 	}
+
+	inline void SetImportTime(int iYear,int iMonth,int iDay,int iHours,int iMinutes, int iSeconds)
+	{
+		m_pIso->SetImportTime(iYear,iMonth,iDay,iHours,iMinutes,iSeconds);
+	}
+
+	inline void SetImportTimeLocalTime(void)
+	{
+		m_pIso->SetImportTimeLocalTime();
+	}
 };
 
 inline void CISO_App::CloseISO()
@@ -250,5 +260,4 @@ inline void CISO_App::Base_SetLangString( const WCHAR*const* a_szUserString , co
 	if( m_pIso )
 		m_pIso->SetLangString( a_szUserString , a_uUserString );
 }
-
 #endif //__ISO_APP_H__

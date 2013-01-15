@@ -27,6 +27,7 @@ class CWQSG_ISO_Base : public CWQSG_ISO_Raw
 	BOOL InitLbaList( u32 a_uLbaCount );
 protected:
 	SISO_Head2048 m_tHead;
+	SIsoTime *a_pImportTime;
 protected:
 	CWQSG_ISO_Base();
 	virtual ~CWQSG_ISO_Base();
@@ -107,6 +108,28 @@ public:
 			return TRUE;
 		}
 		return FALSE;
+	}
+
+	inline void SetImportTime(int iYear,int iMonth,int iDay,int iHours,int iMinutes, int iSeconds)
+	{
+		SetImportTimeLocalTime();
+		a_pImportTime =new SIsoTime;
+		a_pImportTime->uYear = (u8)(iYear - 1900);
+		a_pImportTime->uMonth = (u8)iMonth ;
+		a_pImportTime->uDay = (u8)iDay;
+		a_pImportTime->uHours = (u8)iHours;
+		a_pImportTime->uMinutes = (u8)iMinutes;
+		a_pImportTime->uSeconds = (u8)iSeconds;
+		a_pImportTime->uUnknown = 0;
+	}
+
+	inline void SetImportTimeLocalTime(void)
+	{
+		if (a_pImportTime)
+		{
+			delete a_pImportTime;
+			a_pImportTime=NULL;
+		}
 	}
 };
 
